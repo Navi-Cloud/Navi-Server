@@ -1,0 +1,27 @@
+name: BuildTest
+
+# Every push, we do build and testing process.
+on: push
+
+jobs:
+  BuildTest:
+    # Name the Job
+    name: Build the code, Test code using Gradlew
+
+    # Set the type of machine to run on
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checks out a copy of your repository on the ubuntu-latest machine
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Run Build operation
+      - name: Compiling Code
+        run: |
+          ./gradlew clean build --info --stacktrace
+
+      # Run Test operation
+      - name: Testing Code
+        run: |
+          ./gradlew clean test --info --stacktrace
