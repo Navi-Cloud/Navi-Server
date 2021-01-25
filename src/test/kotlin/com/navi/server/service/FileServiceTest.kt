@@ -21,6 +21,12 @@ class FileServiceTest {
     @Autowired
     private lateinit var fileService: FileService
 
+    // Test variable
+    private val fileNameTest: String = "TESTING_FILENAME"
+    private val fileTypeTest: String = "Folder"
+    private val nextTokenTest: String = "TEST_TOKEN"
+    private val lastModifiedTimeTest: String = "TEST_TIME"
+
     @After
     fun clearDB() {
         fileRepository.deleteAll()
@@ -28,20 +34,14 @@ class FileServiceTest {
 
     @Test
     fun isSavingWorks() {
-        // Let
-        val fileNameI: String = "TESTING_FILENAME"
-        val fileTypeI: String = "Folder"
-        val nextTokenI: String = "TEST_TOKEN"
-        val lastModifiedTimeI: String = "TEST_TIME"
-
         // save it to DB with fileService
         val retId: Long = fileService.save(
             FileSaveRequestDTO(
                 id = 0,
-                fileName = fileNameI,
-                fileType = fileTypeI,
-                nextToken = nextTokenI,
-                lastModifiedTime = lastModifiedTimeI
+                fileName = fileNameTest,
+                fileType = fileTypeTest,
+                nextToken = nextTokenTest,
+                lastModifiedTime = lastModifiedTimeTest
             )
         )
 
@@ -50,29 +50,30 @@ class FileServiceTest {
 
         // Assert
         with (results) {
-            assertThat(fileName).isEqualTo(fileNameI)
-            assertThat(fileType).isEqualTo(fileTypeI)
-            assertThat(nextToken).isEqualTo(nextTokenI)
-            assertThat(lastModifiedTime).isEqualTo(lastModifiedTimeI)
+            assertThat(fileName).isEqualTo(fileNameTest)
+            assertThat(fileType).isEqualTo(fileTypeTest)
+            assertThat(nextToken).isEqualTo(nextTokenTest)
+            assertThat(lastModifiedTime).isEqualTo(lastModifiedTimeTest)
         }
     }
 
     @Test
-    fun isFindAllDescWorks() {
-        // Let
-        val fileNameI: String = "TESTING_FILENAME"
-        val fileTypeI: String = "Folder"
-        val nextTokenI: String = "TEST_TOKEN"
-        val lastModifiedTimeI: String = "TEST_TIME"
+    fun isEmptyDescWorks() {
+        val listFile: List<FileResponseDTO> = fileService.findAllDesc()
 
+        assertThat(listFile.size).isEqualTo(0)
+    }
+
+    @Test
+    fun isFindAllDescWorks() {
         // save it to DB with fileService
         val retId: Long = fileService.save(
             FileSaveRequestDTO(
                 id = 0,
-                fileName = fileNameI,
-                fileType = fileTypeI,
-                nextToken = nextTokenI,
-                lastModifiedTime = lastModifiedTimeI
+                fileName = fileNameTest,
+                fileType = fileTypeTest,
+                nextToken = nextTokenTest,
+                lastModifiedTime = lastModifiedTimeTest
             )
         )
 
@@ -82,10 +83,10 @@ class FileServiceTest {
         // Assert
         assertThat(listFile.size).isEqualTo(1)
         with (listFile[0]) {
-            assertThat(fileName).isEqualTo(fileNameI)
-            assertThat(fileType).isEqualTo(fileTypeI)
-            assertThat(nextToken).isEqualTo(nextTokenI)
-            assertThat(lastModifiedTime).isEqualTo(lastModifiedTimeI)
+            assertThat(fileName).isEqualTo(fileNameTest)
+            assertThat(fileType).isEqualTo(fileTypeTest)
+            assertThat(nextToken).isEqualTo(nextTokenTest)
+            assertThat(lastModifiedTime).isEqualTo(lastModifiedTimeTest)
         }
     }
 }
