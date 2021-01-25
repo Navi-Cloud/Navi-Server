@@ -15,6 +15,20 @@ buildscript {
 
 plugins {
     kotlin("jvm") version "1.4.21"
+    kotlin("plugin.jpa") version "1.3.61"
+    kotlin("plugin.allopen") version "1.4.21"
+}
+
+noArg {
+    annotation("javax.persistence.Entity")
+    annotation("javax.persistence.MappedSuperclass")
+    annotation("javax.persistence.Embeddable")
+}
+
+allOpen {
+    annotation("javax.persistence.Entity")
+    annotation("javax.persistence.MappedSuperclass")
+    annotation("javax.persistence.Embeddable")
 }
 
 group = "me.kangdroid"
@@ -33,13 +47,17 @@ repositories {
 dependencies {
     compile("org.springframework.boot:spring-boot-starter-web")
     compile("org.jetbrains.kotlin:kotlin-reflect")
+    compile("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
     testCompile("org.springframework.security:spring-security-test")
     testCompile("org.springframework.boot:spring-boot-starter-test")
+    compile("com.h2database:h2")
+    compileOnly("org.springframework.boot:spring-boot-configuration-processor")
     testImplementation(kotlin("test-junit"))
 }
 
 tasks.test {
+    systemProperty("navi.isTesting", "test")
     useJUnit()
 }
 
