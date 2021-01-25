@@ -58,6 +58,13 @@ class FileServiceTest {
     }
 
     @Test
+    fun isEmptyDescWorks() {
+        val listFile: List<FileResponseDTO> = fileService.findAllDesc()
+
+        assertThat(listFile.size).isEqualTo(0)
+    }
+
+    @Test
     fun isFindAllDescWorks() {
         // Let
         val fileNameI: String = "TESTING_FILENAME"
