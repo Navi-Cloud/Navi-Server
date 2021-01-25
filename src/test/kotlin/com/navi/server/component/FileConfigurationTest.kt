@@ -46,4 +46,26 @@ class FileConfigurationTest {
             trashRootObject.deleteRecursively()
         }
     }
+
+    // The False test
+    @Test
+    fun isListingEmptyWorks() {
+        // Create trash directory
+        val trashRootObject: File = File(fileConfigurationComponent.serverRoot)
+        trashRootObject.mkdir()
+
+        // Do work
+        val listSize: Long = fileConfigurationComponent.populateInitialDB()
+
+        // Get Results
+        val listFile: List<FileResponseDTO> = fileService.findAllDesc()
+
+        // Assert
+        assertThat(listFile.size).isEqualTo(0)
+
+        // Cleanup
+        if (trashRootObject.exists()) {
+            trashRootObject.deleteRecursively()
+        }
+    }
 }
