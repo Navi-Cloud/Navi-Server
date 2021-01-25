@@ -32,13 +32,13 @@ class FileConfigurationTest {
             fileObject.createNewFile()
         }
         // Do work
-        fileConfigurationComponent.populateInitialDB()
+        val listSize: Long = fileConfigurationComponent.populateInitialDB()
 
         // Get Results
         val listFile: List<FileResponseDTO> = fileService.findAllDesc()
 
         // Assert
-        assertThat(listFile.size).isGreaterThan(0)
+        assertThat(listFile.size).isEqualTo(listSize)
         assertThat(listFile[0].fileName).isEqualTo(fileObject.absolutePath)
         assertThat(listFile[0].fileType).isEqualTo("File")
 

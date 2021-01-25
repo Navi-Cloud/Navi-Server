@@ -21,7 +21,7 @@ class FileConfigurationComponent(val fileService: FileService) {
         populateInitialDB()
     }
 
-    fun populateInitialDB() {
+    fun populateInitialDB(): Long {
         val fileObject: File = File(serverRoot)
         if (!fileObject.exists()) {
             throw IllegalArgumentException("Server Root: $serverRoot does not exist!")
@@ -44,5 +44,6 @@ class FileConfigurationComponent(val fileService: FileService) {
                 )
             )
         }
+        return fileObject.list()?.size?.toLong() ?: 0
     }
 }
