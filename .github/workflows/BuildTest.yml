@@ -6,7 +6,7 @@ on: push
 jobs:
   BuildLinux:
     # Name the Job
-    name: Build the code, Test code using Gradlew
+    name: Build on Linux
 
     # Set the type of machine to run on
     runs-on: ubuntu-latest
@@ -28,7 +28,7 @@ jobs:
 
   BuildWindows:
       # Name the Job
-      name: Build the code, Test code using Gradlew
+      name: Build on Windows
 
       # Set the type of machine to run on
       runs-on: windows-latest
@@ -47,3 +47,25 @@ jobs:
         - name: Testing Code
           run: |
             ./gradlew.bat clean test --info --stacktrace
+
+  BuildmacOS:
+    # Name the Job
+    name: Build on macOS
+
+    # Set the type of machine to run on
+    runs-on: macos-latest
+
+    steps:
+      # Checks out a copy of your repository on the ubuntu-latest machine
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Run Build operation
+      - name: Compiling Code
+        run: |
+          ./gradlew clean build --info --stacktrace
+
+      # Run Test operation
+      - name: Testing Code
+        run: |
+          ./gradlew clean test --info --stacktrace
