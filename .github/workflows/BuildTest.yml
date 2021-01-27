@@ -41,9 +41,9 @@ jobs:
         # Run Build operation
         - name: Compiling Code
           run: |
-             gradlew.bat clean build --info --stacktrace
+             ./gradlew.bat clean build --info --stacktrace
 
         # Run Test operation
         - name: Testing Code
           run: |
-            gradlew.bat clean test --info --stacktrace
+            ./gradlew.bat clean test --info --stacktrace
