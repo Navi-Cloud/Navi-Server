@@ -47,3 +47,25 @@ jobs:
         - name: Testing Code
           run: |
             ./gradlew.bat clean test --info --stacktrace
+
+  BuildmacOS:
+    # Name the Job
+    name: Build the code, Test code using Gradlew
+
+    # Set the type of machine to run on
+    runs-on: macos-11.0
+
+    steps:
+      # Checks out a copy of your repository on the ubuntu-latest machine
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Run Build operation
+      - name: Compiling Code
+        run: |
+          ./gradlew clean build --info --stacktrace
+
+      # Run Test operation
+      - name: Testing Code
+        run: |
+          ./gradlew clean test --info --stacktrace
