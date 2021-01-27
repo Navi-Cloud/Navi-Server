@@ -53,7 +53,7 @@ jobs:
     name: Build the code, Test code using Gradlew
 
     # Set the type of machine to run on
-    runs-on: macos-11.0
+    runs-on: macos-latest
 
     steps:
       # Checks out a copy of your repository on the ubuntu-latest machine
