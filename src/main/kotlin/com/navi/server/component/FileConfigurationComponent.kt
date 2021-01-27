@@ -16,6 +16,7 @@ class FileConfigurationComponent(val fileService: FileService) {
     @PostConstruct
     fun initPostConstruct() {
         if (System.getProperty("navi.isTesting") == "test") {
+            serverRoot = File(System.getProperty("java.io.tmpdir"), "naviServerTesting").absolutePath
             return
         }
         populateInitialDB()
