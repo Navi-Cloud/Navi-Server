@@ -25,6 +25,7 @@ class FileServiceTest {
     private val fileNameTest: String = "TESTING_FILENAME"
     private val fileTypeTest: String = "Folder"
     private val nextTokenTest: String = "TEST_TOKEN"
+    private val prevTokenTest: String = "PREV_TEST_TOKEN"
     private val lastModifiedTimeTest: String = "TEST_TIME"
 
     @After
@@ -41,6 +42,7 @@ class FileServiceTest {
                 fileName = fileNameTest,
                 fileType = fileTypeTest,
                 nextToken = nextTokenTest,
+                prevToken = prevTokenTest,
                 lastModifiedTime = lastModifiedTimeTest
             )
         )
@@ -53,6 +55,7 @@ class FileServiceTest {
             assertThat(fileName).isEqualTo(fileNameTest)
             assertThat(fileType).isEqualTo(fileTypeTest)
             assertThat(nextToken).isEqualTo(nextTokenTest)
+            assertThat(prevToken).isEqualTo(prevTokenTest)
             assertThat(lastModifiedTime).isEqualTo(lastModifiedTimeTest)
         }
     }
@@ -73,6 +76,7 @@ class FileServiceTest {
                 fileName = fileNameTest,
                 fileType = fileTypeTest,
                 nextToken = nextTokenTest,
+                prevToken = prevTokenTest,
                 lastModifiedTime = lastModifiedTimeTest
             )
         )
@@ -86,6 +90,7 @@ class FileServiceTest {
             assertThat(fileName).isEqualTo(fileNameTest)
             assertThat(fileType).isEqualTo(fileTypeTest)
             assertThat(nextToken).isEqualTo(nextTokenTest)
+            assertThat(prevToken).isEqualTo(prevTokenTest)
             assertThat(lastModifiedTime).isEqualTo(lastModifiedTimeTest)
         }
     }

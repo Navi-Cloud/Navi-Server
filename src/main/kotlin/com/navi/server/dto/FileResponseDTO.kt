@@ -7,6 +7,7 @@ class FileResponseDTO(
     var fileName: String,
     var fileType: String,
     var nextToken: String,
+    var prevToken: String,
     var lastModifiedTime: String,
 ) {
 
@@ -15,6 +16,7 @@ class FileResponseDTO(
         fileName = entity.fileName,
         fileType = entity.fileType,
         nextToken = entity.nextToken,
+        prevToken = entity.prevToken,
         lastModifiedTime = entity.lastModifiedTime
     )
 
@@ -24,6 +26,7 @@ class FileResponseDTO(
             fileName = this.fileName,
             fileType = this.fileType,
             nextToken = this.nextToken,
+            prevToken = this.prevToken,
             lastModifiedTime = this.lastModifiedTime
         )
     }

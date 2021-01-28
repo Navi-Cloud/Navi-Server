@@ -42,12 +42,14 @@ class FileApiControllerTest {
         val fileName = "fileName"
         val fileType = "fileType"
         val nextToken = "token"
+        val testingToken = "TestingPrevToken"
         val lastModifiedTime = "time"
 
         val requestDto = FileSaveRequestDTO(
             fileName = fileName,
             fileType = fileType,
             nextToken = nextToken,
+            prevToken = testingToken,
             lastModifiedTime = lastModifiedTime
         )
         val url = "http://localhost:$port/api/navi/files"
@@ -73,10 +75,10 @@ class FileApiControllerTest {
         val fileName2 = "fileName2"
         val fileName3 = "fileName3"
         val fileName4 = "fileName4"
-        fileRepository.save(FileEntity(fileName = fileName1, fileType = "fileType", nextToken = "token", lastModifiedTime = "Time"))
-        fileRepository.save(FileEntity(fileName = fileName2, fileType = "fileType", nextToken = "token", lastModifiedTime = "Time"))
-        fileRepository.save(FileEntity(fileName = fileName3, fileType = "fileType", nextToken = "token", lastModifiedTime = "Time"))
-        fileRepository.save(FileEntity(fileName = fileName4, fileType = "fileType", nextToken = "token", lastModifiedTime = "Time"))
+        fileRepository.save(FileEntity(fileName = fileName1, fileType = "fileType", nextToken = "token", prevToken = "token", lastModifiedTime = "Time"))
+        fileRepository.save(FileEntity(fileName = fileName2, fileType = "fileType", nextToken = "token", prevToken = "token", lastModifiedTime = "Time"))
+        fileRepository.save(FileEntity(fileName = fileName3, fileType = "fileType", nextToken = "token", prevToken = "token", lastModifiedTime = "Time"))
+        fileRepository.save(FileEntity(fileName = fileName4, fileType = "fileType", nextToken = "token", prevToken = "token", lastModifiedTime = "Time"))
 
         //send api request
         val url = "http://localhost:$port/api/navi/fileList"

@@ -41,6 +41,7 @@ class FileConfigurationComponent(val fileService: FileService) {
                         "File"
                     },
                     nextToken = "TMP_TOKEN",
+                    prevToken = "TMP_TOKEN",
                     lastModifiedTime = simpleDateFormat.format(tmpFileObject.lastModified())
                 )
             )
