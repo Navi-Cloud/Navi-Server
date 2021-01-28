@@ -53,7 +53,7 @@ class FileConfigurationComponent(val fileService: FileService) {
                             id = 0,
                             fileName = absolutePath,
                             fileType = if (isDirectory) "Folder" else "File",
-                            nextToken = if (isDirectory) getSHA256(absolutePath) else "",
+                            nextToken = getSHA256(absolutePath),
                             prevToken = if (isDirectory) getSHA256(parent) else "",
                             lastModifiedTime = simpleDateFormat.format(lastModified())
                         )
