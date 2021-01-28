@@ -26,7 +26,7 @@ class FileConfigurationComponent(val fileService: FileService) {
         populateInitialDB()
     }
 
-    fun getSHA256(input: String): String {
+    private fun getSHA256(input: String): String {
         val messageDigest: MessageDigest = MessageDigest.getInstance("SHA-256").also {
             it.update(input.toByteArray())
         }
@@ -41,23 +41,25 @@ class FileConfigurationComponent(val fileService: FileService) {
         }
 
         fileObject.walk().forEach {
-            val tmpFileObject: File = it
             val simpleDateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd-HH:mm:ss")
-            if (tmpFileObject.absolutePath == serverRoot) {
+            if (it.absolutePath == serverRoot) {
                 fileSaveList.add(
-                    FileSaveRequestDTO(0, tmpFileObject.absolutePath, "Folder", getSHA256(serverRoot), "", simpleDateFormat.format(tmpFileObject.lastModified()))
+                    FileSaveRequestDTO(0, it.absolutePath, "Folder", getSHA256(serverRoot), "", simpleDateFormat.format(it.lastModified()))
                 )
             } else {
-                fileSaveList.add(
-                    FileSaveRequestDTO(
-                        id = 0,
-                        fileName = tmpFileObject.absolutePath,
-                        fileType = if (tmpFileObject.isDirectory) "Folder" else "File",
-                        nextToken = if (tmpFileObject.isDirectory) getSHA256(tmpFileObject.absolutePath) else "",
-                        prevToken = if (tmpFileObject.isDirectory) getSHA256(tmpFileObject.parent) else "",
-                        lastModifiedTime = simpleDateFormat.format(tmpFileObject.lastModified())
+                with (it) {
+                    fileSaveList.add(
+                        FileSaveRequestDTO(
+                            id = 0,
+                            fileName = absolutePath,
+                            fileType = if (isDirectory) "Folder" else "File",
+                            nextToken = if (isDirectory) getSHA256(absolutePath) else "",
+                            prevToken = if (isDirectory) getSHA256(parent) else "",
+                            lastModifiedTime = simpleDateFormat.format(lastModified())
+                        )
                     )
-                )
+                }
+
             }
         }
         fileService.saveAll(fileSaveList)
