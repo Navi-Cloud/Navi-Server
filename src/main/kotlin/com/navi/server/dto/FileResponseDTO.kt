@@ -30,4 +30,13 @@ class FileResponseDTO(
             lastModifiedTime = this.lastModifiedTime
         )
     }
+
+    override fun toString(): String {
+        return "ID: $id\n" +
+                "File Name:\t $fileName\n" +
+                "File Type:\t $fileType\n" +
+                "Next Token:\t $nextToken\n" +
+                "Prev Token:\t $prevToken\n" +
+                "LMT:\t $lastModifiedTime\n"
+    }
 }
