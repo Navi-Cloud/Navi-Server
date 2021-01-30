@@ -28,7 +28,7 @@ class FileServiceTest {
     private val prevTokenTest: String = "PREV_TEST_TOKEN"
     private val lastModifiedTimeTest: String = "TEST_TIME"
     private val fileCreatedDate: String = "TEST_CREATED_DATE"
-    private val fileSize: Long = 5000
+    private val fileSize: String = "500Byte"
 
     @After
     fun clearDB() {

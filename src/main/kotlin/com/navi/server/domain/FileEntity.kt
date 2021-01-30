@@ -27,5 +27,5 @@ class FileEntity(
     var fileCreatedDate: String,
 
     @Column(length = 500, nullable = false)
-    var fileSize: Long
+    var fileSize: String
 )

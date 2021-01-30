@@ -6,13 +6,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
 import java.io.File
 import java.nio.file.Files
-import java.nio.file.Path
+import kotlin.math.log
 import java.nio.file.attribute.BasicFileAttributes
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.annotation.PostConstruct
 import javax.xml.bind.DatatypeConverter
+import kotlin.math.pow
 
 @Component
 @ConfigurationProperties("navi")
@@ -33,6 +34,16 @@ class FileConfigurationComponent(val fileService: FileService) {
             it.update(input.toByteArray())
         }
         return DatatypeConverter.printHexBinary(messageDigest.digest())
+    }
+
+    fun convertSize(fileSize: Long): String {
+        val fileUnit: String = "KMGTE"
+        val logValue: Int = log(fileSize.toDouble(), 1024.0).toInt()
+        if (logValue == 0 || fileSize == 0.toLong()) {
+            return "${fileSize}B"
+        }
+        val calculatedValue: Double = fileSize / 1024.0.pow(logValue)
+        return String.format("%.1f%ciB", calculatedValue, fileUnit[logValue-1])
     }
 
     fun populateInitialDB(): Long {
@@ -60,7 +71,7 @@ class FileConfigurationComponent(val fileService: FileService) {
                         "",
                         simpleDateFormat.format(it.lastModified()),
                         simpleDateFormat.format(basicFileAttribute.creationTime().toMillis()),
-                        basicFileAttribute.size()
+                        convertSize(basicFileAttribute.size())
                     )
                 )
             } else {
@@ -74,7 +85,7 @@ class FileConfigurationComponent(val fileService: FileService) {
                             prevToken = getSHA256(parent),
                             lastModifiedTime = simpleDateFormat.format(lastModified()),
                             fileCreatedDate = simpleDateFormat.format(basicFileAttribute.creationTime().toMillis()),
-                            fileSize = basicFileAttribute.size()
+                            fileSize = convertSize(basicFileAttribute.size())
                         )
                     )
                 }

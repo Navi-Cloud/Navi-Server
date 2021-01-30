@@ -26,7 +26,7 @@ class FileRepositoryTest {
         val time = "time"
         val testingToken = "TestingPrevToken"
         val createdDate = "TestingCreatedDate"
-        val fileSize: Long = 5000
+        val fileSize: String = "5MB"
 
         fileRepository.save(FileEntity(fileName = name, fileType = type, token = token, prevToken = testingToken, lastModifiedTime = time, fileCreatedDate = createdDate, fileSize = fileSize))
         fileRepository.save(FileEntity(fileName = name, fileType = type, token = token, prevToken = testingToken, lastModifiedTime = time, fileCreatedDate = createdDate, fileSize = fileSize))

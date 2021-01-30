@@ -10,7 +10,7 @@ class FileSaveRequestDTO(
     var prevToken: String,
     var lastModifiedTime: String,
     var fileCreatedDate: String,
-    var fileSize: Long
+    var fileSize: String
 ) {
 
     fun toEntity(): FileEntity {
