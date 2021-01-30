@@ -1,6 +1,7 @@
 package com.navi.server.web
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.navi.server.component.FileConfigurationComponent
 import com.navi.server.domain.FileEntity
 import com.navi.server.domain.FileRepository
 import com.navi.server.dto.FileResponseDTO
@@ -15,10 +16,12 @@ import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.http.ResponseEntity
 import org.springframework.test.context.junit4.SpringRunner
 import org.assertj.core.api.Assertions.assertThat;
+import org.junit.Before
 import org.springframework.http.HttpStatus
 import java.lang.reflect.Type
 
 import org.springframework.boot.test.web.client.getForEntity
+import java.io.File
 import java.util.ArrayList
 
 @RunWith(SpringRunner::class)
@@ -34,8 +37,31 @@ class FileApiControllerTest {
     @Autowired
     lateinit var fileRepository: FileRepository
 
+    @Autowired
+    private lateinit var fileConfigurationComponent: FileConfigurationComponent
+
+    private lateinit var trashRootObject: File
+
+    @Before
+    fun initEnvironment() {
+        // Create trash directory
+        trashRootObject = File(fileConfigurationComponent.serverRoot)
+        trashRootObject.mkdir()
+    }
+
+    @After
+    fun destroyEnvironment() {
+        if (trashRootObject.exists()) {
+            trashRootObject.deleteRecursively()
+        }
+        fileRepository.deleteAll()
+    }
+
+    /*
     @After
     fun cleanUp() = fileRepository.deleteAll()
+
+     */
 
     @Test
     fun testSaveFile() {
@@ -71,27 +97,110 @@ class FileApiControllerTest {
     @Test
     fun testFindAllDesc() {
         //insert data
-        val fileName1 = "fileName1"
-        val fileName2 = "fileName2"
-        val fileName3 = "fileName3"
-        val fileName4 = "fileName4"
-        fileRepository.save(FileEntity(fileName = fileName1, fileType = "fileType", nextToken = "token", prevToken = "token", lastModifiedTime = "Time"))
-        fileRepository.save(FileEntity(fileName = fileName2, fileType = "fileType", nextToken = "token", prevToken = "token", lastModifiedTime = "Time"))
-        fileRepository.save(FileEntity(fileName = fileName3, fileType = "fileType", nextToken = "token", prevToken = "token", lastModifiedTime = "Time"))
-        fileRepository.save(FileEntity(fileName = fileName4, fileType = "fileType", nextToken = "token", prevToken = "token", lastModifiedTime = "Time"))
-
+        val fileName = listOf<String>("fileName1", "fileName2", "fileName3", "fileName4")
+        fileName.forEach {
+            val id = fileRepository.save(FileEntity(fileName = it, fileType = "fileType", nextToken = "token", prevToken = "token", lastModifiedTime = "Time"))
+        }
         //send api request
         val url = "http://localhost:$port/api/navi/fileList"
-        //val listType: Type = object : TypeToken<List<FileResponseDTO?>?>() {}.getType()
-        val typeRef: Type = object : TypeReference<ArrayList<String?>?>() {}.getType()
-        var responseEntity : ResponseEntity<List<FileResponseDTO>> = restTemplate.getForEntity(url, typeRef)
-        //var tmp : List<FileResponseDTO> = restTemplate.getForEntity(url, List::class.java) as List<FileResponseDTO>
+        var responseEntity : ResponseEntity<Array<FileResponseDTO>> = restTemplate.getForEntity(url, Array<FileResponseDTO>::class.java)
 
         //Assert
         assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
         assertThat(responseEntity.body.size).isEqualTo(4)
-        //val resultList = responseEntity.body
-        //println(resultList.get(0).fileName)
+        var i: Int = fileName.size-1
+        responseEntity.body.forEach {
+            assertThat(it.fileName).isEqualTo(fileName[i--])
+        }
+    }
 
+    @Test
+    fun testFindRootToken() {
+        // At least create one empty file to root
+        val fileName: String = "KDRTesting.txt"
+        val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
+        if (!fileObject.exists()) {
+            fileObject.createNewFile()
+        }
+        // Do work
+        val listSize: Long = fileConfigurationComponent.populateInitialDB()
+
+        // Get Api
+        val url = "http://localhost:$port/api/navi/rootToken"
+        var responseEntity : ResponseEntity<String> = restTemplate.getForEntity(url, String::class.java)
+
+
+        // Assert
+        assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
+        assertThat(responseEntity.body).isEqualTo(fileConfigurationComponent.getSHA256(fileConfigurationComponent.serverRoot))
+
+    }
+
+    @Test
+    fun testFindInsideFiles() {
+        // before findInsideFiles Test, Create test file/folder
+
+        // one empty file to root
+        val fileName: String = "Testing.txt"
+        val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
+        if (!fileObject.exists()) {
+            fileObject.createNewFile()
+        }
+
+        // Create one empty Folder to root
+        val folderName : String = "TestFolder"
+        val folderObject: File = File(fileConfigurationComponent.serverRoot, folderName)
+        if (!folderObject.exists()) {
+            folderObject.mkdir()
+        }
+
+        // Creat 3 Child Files in Folder [folderName]
+        val folderPath = folderObject.absolutePath
+        val childFiles = listOf<File>(
+            File(folderPath, "file1.txt"),
+            File(folderPath, "file2.txt"),
+            File(folderPath, "file3.txt"),
+        )
+        childFiles.forEach {
+            if (!it.exists()) {
+                it.createNewFile()
+            }
+        }
+
+        // Do work
+        val listSize: Long = fileConfigurationComponent.populateInitialDB()
+        println("listSize: $listSize")
+
+
+        // Api test 1 :: under Root
+        val rootToken = fileConfigurationComponent.getSHA256(fileConfigurationComponent.serverRoot)
+        val url = "http://localhost:$port/api/navi/findInsideFiles/${rootToken}"
+        var responseEntity : ResponseEntity<Array<FileResponseDTO>> = restTemplate.getForEntity(url, Array<FileResponseDTO>::class.java)
+
+
+        // Assert
+        assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
+        assertThat(responseEntity.body.size).isEqualTo(2) //one File and one Folder
+        var result = responseEntity.body
+        //assertThat(result.get(1).fileName).isEqualTo(fileObject.absolutePath)
+        //assertThat(result.get(0).fileName).isEqualTo(folderObject.absolutePath)
+        result.forEach {
+            assertThat(it.prevToken).isEqualTo(rootToken)
+        }
+
+
+        //Api test 2 :: under folderName
+        val folderToken = fileConfigurationComponent.getSHA256(folderPath)
+        val url2 = "http://localhost:$port/api/navi/findInsideFiles/${folderToken}"
+        var responseEntity2 : ResponseEntity<Array<FileResponseDTO>> = restTemplate.getForEntity(url2, Array<FileResponseDTO>::class.java)
+
+        // Assert
+        assertThat(responseEntity2.statusCode).isEqualTo(HttpStatus.OK)
+        assertThat(responseEntity2.body.size).isEqualTo(3) //3 files
+
+        var result2 = responseEntity2.body
+        result2.forEach {
+            assertThat(it.prevToken).isEqualTo(folderToken)
+        }
     }
 }

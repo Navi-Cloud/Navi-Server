@@ -26,7 +26,7 @@ class FileConfigurationComponent(val fileService: FileService) {
         populateInitialDB()
     }
 
-    private fun getSHA256(input: String): String {
+    fun getSHA256(input: String): String {
         val messageDigest: MessageDigest = MessageDigest.getInstance("SHA-256").also {
             it.update(input.toByteArray())
         }
@@ -40,9 +40,14 @@ class FileConfigurationComponent(val fileService: FileService) {
             throw IllegalArgumentException("Server Root: $serverRoot does not exist!")
         }
 
+        //save root token
+        fileService.rootToken = getSHA256(serverRoot)
+
         fileObject.walk().forEach {
             val simpleDateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd-HH:mm:ss")
+            println(it.absolutePath)
             if (it.absolutePath == serverRoot) {
+                println(it.absolutePath)
                 fileSaveList.add(
                         FileSaveRequestDTO(0, it.absolutePath, "Folder", getSHA256(serverRoot), "", simpleDateFormat.format(it.lastModified()))
                         )
@@ -65,4 +70,5 @@ class FileConfigurationComponent(val fileService: FileService) {
         fileService.saveAll(fileSaveList)
         return fileSaveList.size.toLong()
     }
+
 }
