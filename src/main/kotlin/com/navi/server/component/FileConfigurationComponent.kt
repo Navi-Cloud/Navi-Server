@@ -5,6 +5,9 @@ import com.navi.server.service.FileService
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.attribute.BasicFileAttributes
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.*
@@ -43,15 +46,19 @@ class FileConfigurationComponent(val fileService: FileService) {
         fileService.rootToken = getSHA256(serverRoot)
 
         fileObject.walk().forEach {
+            val basicFileAttribute: BasicFileAttributes = Files.readAttributes(it.toPath(), BasicFileAttributes::class.java)
+
             val simpleDateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd-HH:mm:ss")
             println(it.absolutePath)
             if (it.absolutePath == serverRoot) {
                 println(it.absolutePath)
                 fileSaveList.add(
-                        FileSaveRequestDTO(0, it.absolutePath, "Folder", getSHA256(serverRoot), "", simpleDateFormat.format(it.lastModified()))
-                        )
+                    FileSaveRequestDTO(
+                        0, it.absolutePath, "Folder", getSHA256(serverRoot), "", simpleDateFormat.format(it.lastModified()), simpleDateFormat.format(basicFileAttribute.creationTime().toMillis())
+                    )
+                )
             } else {
-                with (it) {
+                with(it) {
                     fileSaveList.add(
                         FileSaveRequestDTO(
                             id = 0,
@@ -59,7 +66,8 @@ class FileConfigurationComponent(val fileService: FileService) {
                             fileType = if (isDirectory) "Folder" else "File",
                             token = getSHA256(absolutePath),
                             prevToken = getSHA256(parent),
-                            lastModifiedTime = simpleDateFormat.format(lastModified())
+                            lastModifiedTime = simpleDateFormat.format(lastModified()),
+                            fileCreatedDate = simpleDateFormat.format(basicFileAttribute.creationTime().toMillis())
                         )
                     )
                 }

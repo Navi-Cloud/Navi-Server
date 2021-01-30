@@ -25,9 +25,10 @@ class FileRepositoryTest {
         val token = "nextToken"
         val time = "time"
         val testingToken = "TestingPrevToken"
+        val createdDate = "TestingCreatedDate"
 
-        fileRepository.save(FileEntity(fileName = name, fileType = type, token = token, prevToken = testingToken, lastModifiedTime = time))
-        fileRepository.save(FileEntity(fileName = name, fileType = type, token = token, prevToken = testingToken, lastModifiedTime = time))
+        fileRepository.save(FileEntity(fileName = name, fileType = type, token = token, prevToken = testingToken, lastModifiedTime = time, fileCreatedDate = createdDate))
+        fileRepository.save(FileEntity(fileName = name, fileType = type, token = token, prevToken = testingToken, lastModifiedTime = time, fileCreatedDate = createdDate))
 
 
         val filesList : List<FileEntity> = fileRepository.findAll()
