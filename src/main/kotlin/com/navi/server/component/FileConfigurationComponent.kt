@@ -44,8 +44,8 @@ class FileConfigurationComponent(val fileService: FileService) {
             val simpleDateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd-HH:mm:ss")
             if (it.absolutePath == serverRoot) {
                 fileSaveList.add(
-                    FileSaveRequestDTO(0, it.absolutePath, "Folder", getSHA256(serverRoot), "", simpleDateFormat.format(it.lastModified()))
-                )
+                        FileSaveRequestDTO(0, it.absolutePath, "Folder", getSHA256(serverRoot), "", simpleDateFormat.format(it.lastModified()))
+                        )
             } else {
                 with (it) {
                     fileSaveList.add(
@@ -54,7 +54,7 @@ class FileConfigurationComponent(val fileService: FileService) {
                             fileName = absolutePath,
                             fileType = if (isDirectory) "Folder" else "File",
                             nextToken = getSHA256(absolutePath),
-                            prevToken = if (isDirectory) getSHA256(parent) else "",
+                            prevToken = getSHA256(parent),
                             lastModifiedTime = simpleDateFormat.format(lastModified())
                         )
                     )
