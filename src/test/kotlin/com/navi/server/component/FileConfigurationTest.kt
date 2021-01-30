@@ -35,6 +35,7 @@ class FileConfigurationTest {
         if (trashRootObject.exists()) {
             trashRootObject.deleteRecursively()
         }
+        fileService.fileRepository.deleteAll()
     }
 
     @Test
@@ -67,6 +68,6 @@ class FileConfigurationTest {
         val listFile: List<FileResponseDTO> = fileService.findAllDesc()
 
         // Assert
-        assertThat(listFile.size).isEqualTo(0)
+        assertThat(listFile.size).isEqualTo(listSize)
     }
 }

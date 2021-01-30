@@ -18,5 +18,8 @@ class FileEntity(
     var nextToken: String,
 
     @Column(length = 500, nullable = false)
+    var prevToken: String,
+
+    @Column(length = 500, nullable = false)
     var lastModifiedTime: String
 )
