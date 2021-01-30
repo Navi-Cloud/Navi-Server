@@ -41,7 +41,7 @@ class FileServiceTest {
                 id = 0,
                 fileName = fileNameTest,
                 fileType = fileTypeTest,
-                nextToken = nextTokenTest,
+                token = nextTokenTest,
                 prevToken = prevTokenTest,
                 lastModifiedTime = lastModifiedTimeTest
             )
@@ -54,7 +54,7 @@ class FileServiceTest {
         with (results) {
             assertThat(fileName).isEqualTo(fileNameTest)
             assertThat(fileType).isEqualTo(fileTypeTest)
-            assertThat(nextToken).isEqualTo(nextTokenTest)
+            assertThat(token).isEqualTo(nextTokenTest)
             assertThat(prevToken).isEqualTo(prevTokenTest)
             assertThat(lastModifiedTime).isEqualTo(lastModifiedTimeTest)
         }
@@ -75,7 +75,7 @@ class FileServiceTest {
                 id = 0,
                 fileName = fileNameTest,
                 fileType = fileTypeTest,
-                nextToken = nextTokenTest,
+                token = nextTokenTest,
                 prevToken = prevTokenTest,
                 lastModifiedTime = lastModifiedTimeTest
             )
@@ -89,7 +89,7 @@ class FileServiceTest {
         with (listFile[0]) {
             assertThat(fileName).isEqualTo(fileNameTest)
             assertThat(fileType).isEqualTo(fileTypeTest)
-            assertThat(nextToken).isEqualTo(nextTokenTest)
+            assertThat(token).isEqualTo(nextTokenTest)
             assertThat(prevToken).isEqualTo(prevTokenTest)
             assertThat(lastModifiedTime).isEqualTo(lastModifiedTimeTest)
         }

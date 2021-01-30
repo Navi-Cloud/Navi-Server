@@ -6,7 +6,7 @@ class FileSaveRequestDTO(
     var id: Long = 0,
     var fileName: String,
     var fileType: String,
-    var nextToken: String,
+    var token: String,
     var prevToken: String,
     var lastModifiedTime: String,
 ) {
@@ -16,7 +16,7 @@ class FileSaveRequestDTO(
             id = this.id,
             fileName = this.fileName,
             fileType = this.fileType,
-            nextToken = this.nextToken,
+            token = this.token,
             prevToken = this.prevToken,
             lastModifiedTime = this.lastModifiedTime
         )

@@ -1,6 +1,5 @@
 package com.navi.server.component
 
-import com.navi.server.domain.FileEntity
 import com.navi.server.dto.FileSaveRequestDTO
 import com.navi.server.service.FileService
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -58,7 +57,7 @@ class FileConfigurationComponent(val fileService: FileService) {
                             id = 0,
                             fileName = absolutePath,
                             fileType = if (isDirectory) "Folder" else "File",
-                            nextToken = getSHA256(absolutePath),
+                            token = getSHA256(absolutePath),
                             prevToken = getSHA256(parent),
                             lastModifiedTime = simpleDateFormat.format(lastModified())
                         )

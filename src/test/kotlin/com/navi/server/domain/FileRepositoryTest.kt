@@ -26,8 +26,8 @@ class FileRepositoryTest {
         val time = "time"
         val testingToken = "TestingPrevToken"
 
-        fileRepository.save(FileEntity(fileName = name, fileType = type, nextToken = token, prevToken = testingToken, lastModifiedTime = time))
-        fileRepository.save(FileEntity(fileName = name, fileType = type, nextToken = token, prevToken = testingToken, lastModifiedTime = time))
+        fileRepository.save(FileEntity(fileName = name, fileType = type, token = token, prevToken = testingToken, lastModifiedTime = time))
+        fileRepository.save(FileEntity(fileName = name, fileType = type, token = token, prevToken = testingToken, lastModifiedTime = time))
 
 
         val filesList : List<FileEntity> = fileRepository.findAll()
@@ -36,7 +36,7 @@ class FileRepositoryTest {
         println(file.id)
         assertThat(file.fileName).isEqualTo(name)
         assertThat(file.fileType).isEqualTo(type)
-        assertThat(file.nextToken).isEqualTo(token)
+        assertThat(file.token).isEqualTo(token)
         assertThat(file.prevToken).isEqualTo(testingToken)
         assertThat(file.lastModifiedTime).isEqualTo(time)
 
