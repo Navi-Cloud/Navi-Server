@@ -35,4 +35,13 @@ class FileService(val fileRepository: FileRepository) {
             fileRepository.saveAll(tmpList)
         }
     }
+
+    fun findInsideFiles(token: String) : List<FileResponseDTO> {
+        return fileRepository.findInsideFiles(token).stream()
+            .map { FileResponseDTO(it) }
+            .collect(Collectors.toList())
+    }
+
+    var rootToken: String? = null
+
 }
