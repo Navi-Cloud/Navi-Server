@@ -96,6 +96,8 @@ class FileApiControllerTest {
         assertThat(result.fileType).isEqualTo(fileType)
         assertThat(result.token).isEqualTo(nextToken)
         assertThat(result.lastModifiedTime).isEqualTo(lastModifiedTime)
+        assertThat(result.fileCreatedDate).isEqualTo(fileCreatedDate)
+        assertThat(result.fileSize).isEqualTo(fileSize)
     }
 
     @Test

@@ -27,8 +27,8 @@ class FileServiceTest {
     private val nextTokenTest: String = "TEST_TOKEN"
     private val prevTokenTest: String = "PREV_TEST_TOKEN"
     private val lastModifiedTimeTest: String = "TEST_TIME"
-    private val fileCreatedDate: String = "TEST_CREATED_DATE"
-    private val fileSize: String = "500Byte"
+    private val fileCreatedDateTest: String = "TEST_CREATED_DATE"
+    private val fileSizeTest: String = "500Byte"
 
     @After
     fun clearDB() {
@@ -46,8 +46,8 @@ class FileServiceTest {
                 token = nextTokenTest,
                 prevToken = prevTokenTest,
                 lastModifiedTime = lastModifiedTimeTest,
-                fileCreatedDate = fileCreatedDate,
-                fileSize = fileSize
+                fileCreatedDate = fileCreatedDateTest,
+                fileSize = fileSizeTest
             )
         )
 
@@ -61,6 +61,8 @@ class FileServiceTest {
             assertThat(token).isEqualTo(nextTokenTest)
             assertThat(prevToken).isEqualTo(prevTokenTest)
             assertThat(lastModifiedTime).isEqualTo(lastModifiedTimeTest)
+            assertThat(fileCreatedDate).isEqualTo(fileCreatedDateTest)
+            assertThat(fileSize).isEqualTo(fileSizeTest)
         }
     }
 
@@ -82,8 +84,8 @@ class FileServiceTest {
                 token = nextTokenTest,
                 prevToken = prevTokenTest,
                 lastModifiedTime = lastModifiedTimeTest,
-                fileCreatedDate = fileCreatedDate,
-                fileSize = fileSize
+                fileCreatedDate = fileCreatedDateTest,
+                fileSize = fileSizeTest
             )
         )
 
@@ -98,6 +100,8 @@ class FileServiceTest {
             assertThat(token).isEqualTo(nextTokenTest)
             assertThat(prevToken).isEqualTo(prevTokenTest)
             assertThat(lastModifiedTime).isEqualTo(lastModifiedTimeTest)
+            assertThat(fileCreatedDate).isEqualTo(fileCreatedDateTest)
+            assertThat(fileSize).isEqualTo(fileSizeTest)
         }
     }
 }

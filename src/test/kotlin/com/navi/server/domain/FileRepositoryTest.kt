@@ -41,6 +41,8 @@ class FileRepositoryTest {
         assertThat(file.token).isEqualTo(token)
         assertThat(file.prevToken).isEqualTo(testingToken)
         assertThat(file.lastModifiedTime).isEqualTo(time)
+        assertThat(file.fileCreatedDate).isEqualTo(createdDate)
+        assertThat(file.fileSize).isEqualTo(fileSize)
 
         println(filesList.get(1).id)
     }
