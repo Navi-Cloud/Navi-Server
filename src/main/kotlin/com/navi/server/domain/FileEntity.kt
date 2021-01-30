@@ -25,4 +25,7 @@ class FileEntity(
 
     @Column(length = 500, nullable = false)
     var fileCreatedDate: String,
+
+    @Column(length = 500, nullable = false)
+    var fileSize: Long
 )

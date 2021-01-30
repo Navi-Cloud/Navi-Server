@@ -71,6 +71,7 @@ class FileApiControllerTest {
         val testingToken = "TestingPrevToken"
         val lastModifiedTime = "time"
         val fileCreatedDate = "testCreatedTime"
+        val fileSize: Long = 5000
 
         val requestDto = FileSaveRequestDTO(
             fileName = fileName,
@@ -78,7 +79,8 @@ class FileApiControllerTest {
             token = nextToken,
             prevToken = testingToken,
             lastModifiedTime = lastModifiedTime,
-            fileCreatedDate = fileCreatedDate
+            fileCreatedDate = fileCreatedDate,
+            fileSize = fileSize
         )
         val url = "http://localhost:$port/api/navi/files"
 
@@ -101,7 +103,7 @@ class FileApiControllerTest {
         //insert data
         val fileName = listOf<String>("fileName1", "fileName2", "fileName3", "fileName4")
         fileName.forEach {
-            val id = fileRepository.save(FileEntity(fileName = it, fileType = "fileType", token = "token", prevToken = "token", lastModifiedTime = "Time", fileCreatedDate = "testCreatedTime"))
+            val id = fileRepository.save(FileEntity(fileName = it, fileType = "fileType", token = "token", prevToken = "token", lastModifiedTime = "Time", fileCreatedDate = "testCreatedTime", fileSize = 5000))
         }
         //send api request
         val url = "http://localhost:$port/api/navi/fileList"

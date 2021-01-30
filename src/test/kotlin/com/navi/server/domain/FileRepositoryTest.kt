@@ -26,9 +26,10 @@ class FileRepositoryTest {
         val time = "time"
         val testingToken = "TestingPrevToken"
         val createdDate = "TestingCreatedDate"
+        val fileSize: Long = 5000
 
-        fileRepository.save(FileEntity(fileName = name, fileType = type, token = token, prevToken = testingToken, lastModifiedTime = time, fileCreatedDate = createdDate))
-        fileRepository.save(FileEntity(fileName = name, fileType = type, token = token, prevToken = testingToken, lastModifiedTime = time, fileCreatedDate = createdDate))
+        fileRepository.save(FileEntity(fileName = name, fileType = type, token = token, prevToken = testingToken, lastModifiedTime = time, fileCreatedDate = createdDate, fileSize = fileSize))
+        fileRepository.save(FileEntity(fileName = name, fileType = type, token = token, prevToken = testingToken, lastModifiedTime = time, fileCreatedDate = createdDate, fileSize = fileSize))
 
 
         val filesList : List<FileEntity> = fileRepository.findAll()

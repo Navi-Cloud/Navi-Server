@@ -9,7 +9,8 @@ class FileResponseDTO(
     var token: String,
     var prevToken: String,
     var lastModifiedTime: String,
-    var fileCreatedDate: String
+    var fileCreatedDate: String,
+    var fileSize: Long
 ) {
 
     constructor(entity: FileEntity): this(
@@ -19,7 +20,8 @@ class FileResponseDTO(
         token = entity.token,
         prevToken = entity.prevToken,
         lastModifiedTime = entity.lastModifiedTime,
-        fileCreatedDate = entity.fileCreatedDate
+        fileCreatedDate = entity.fileCreatedDate,
+        fileSize = entity.fileSize
     )
 
     fun toEntity(): FileEntity {
@@ -30,7 +32,8 @@ class FileResponseDTO(
             token = this.token,
             prevToken = this.prevToken,
             lastModifiedTime = this.lastModifiedTime,
-            fileCreatedDate = this.fileCreatedDate
+            fileCreatedDate = this.fileCreatedDate,
+            fileSize = this.fileSize
         )
     }
 
@@ -41,6 +44,7 @@ class FileResponseDTO(
                 "Next Token:\t $token\n" +
                 "Prev Token:\t $prevToken\n" +
                 "LMT:\t $lastModifiedTime\n" +
-                "File Created:\t $fileCreatedDate"
+                "File Created:\t $fileCreatedDate" +
+                "File Size:\t $fileSize"
     }
 }

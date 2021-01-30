@@ -28,6 +28,7 @@ class FileServiceTest {
     private val prevTokenTest: String = "PREV_TEST_TOKEN"
     private val lastModifiedTimeTest: String = "TEST_TIME"
     private val fileCreatedDate: String = "TEST_CREATED_DATE"
+    private val fileSize: Long = 5000
 
     @After
     fun clearDB() {
@@ -45,7 +46,8 @@ class FileServiceTest {
                 token = nextTokenTest,
                 prevToken = prevTokenTest,
                 lastModifiedTime = lastModifiedTimeTest,
-                fileCreatedDate = fileCreatedDate
+                fileCreatedDate = fileCreatedDate,
+                fileSize = fileSize
             )
         )
 
@@ -80,7 +82,8 @@ class FileServiceTest {
                 token = nextTokenTest,
                 prevToken = prevTokenTest,
                 lastModifiedTime = lastModifiedTimeTest,
-                fileCreatedDate = fileCreatedDate
+                fileCreatedDate = fileCreatedDate,
+                fileSize = fileSize
             )
         )
 

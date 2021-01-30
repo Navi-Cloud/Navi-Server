@@ -54,7 +54,13 @@ class FileConfigurationComponent(val fileService: FileService) {
                 println(it.absolutePath)
                 fileSaveList.add(
                     FileSaveRequestDTO(
-                        0, it.absolutePath, "Folder", getSHA256(serverRoot), "", simpleDateFormat.format(it.lastModified()), simpleDateFormat.format(basicFileAttribute.creationTime().toMillis())
+                        0, it.absolutePath,
+                        "Folder",
+                        getSHA256(serverRoot),
+                        "",
+                        simpleDateFormat.format(it.lastModified()),
+                        simpleDateFormat.format(basicFileAttribute.creationTime().toMillis()),
+                        basicFileAttribute.size()
                     )
                 )
             } else {
@@ -67,7 +73,8 @@ class FileConfigurationComponent(val fileService: FileService) {
                             token = getSHA256(absolutePath),
                             prevToken = getSHA256(parent),
                             lastModifiedTime = simpleDateFormat.format(lastModified()),
-                            fileCreatedDate = simpleDateFormat.format(basicFileAttribute.creationTime().toMillis())
+                            fileCreatedDate = simpleDateFormat.format(basicFileAttribute.creationTime().toMillis()),
+                            fileSize = basicFileAttribute.size()
                         )
                     )
                 }
