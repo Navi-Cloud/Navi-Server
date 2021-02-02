@@ -15,11 +15,17 @@ class FileEntity(
     var fileType: String,
 
     @Column(length = 500, nullable = false)
-    var nextToken: String,
+    var token: String,
 
     @Column(length = 500, nullable = false)
     var prevToken: String,
 
     @Column(length = 500, nullable = false)
-    var lastModifiedTime: String
+    var lastModifiedTime: String,
+
+    @Column(length = 500, nullable = false)
+    var fileCreatedDate: String,
+
+    @Column(length = 500, nullable = false)
+    var fileSize: String
 )

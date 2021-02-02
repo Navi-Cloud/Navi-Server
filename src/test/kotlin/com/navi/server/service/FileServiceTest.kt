@@ -27,6 +27,8 @@ class FileServiceTest {
     private val nextTokenTest: String = "TEST_TOKEN"
     private val prevTokenTest: String = "PREV_TEST_TOKEN"
     private val lastModifiedTimeTest: String = "TEST_TIME"
+    private val fileCreatedDateTest: String = "TEST_CREATED_DATE"
+    private val fileSizeTest: String = "500Byte"
 
     @After
     fun clearDB() {
@@ -41,9 +43,11 @@ class FileServiceTest {
                 id = 0,
                 fileName = fileNameTest,
                 fileType = fileTypeTest,
-                nextToken = nextTokenTest,
+                token = nextTokenTest,
                 prevToken = prevTokenTest,
-                lastModifiedTime = lastModifiedTimeTest
+                lastModifiedTime = lastModifiedTimeTest,
+                fileCreatedDate = fileCreatedDateTest,
+                fileSize = fileSizeTest
             )
         )
 
@@ -54,9 +58,11 @@ class FileServiceTest {
         with (results) {
             assertThat(fileName).isEqualTo(fileNameTest)
             assertThat(fileType).isEqualTo(fileTypeTest)
-            assertThat(nextToken).isEqualTo(nextTokenTest)
+            assertThat(token).isEqualTo(nextTokenTest)
             assertThat(prevToken).isEqualTo(prevTokenTest)
             assertThat(lastModifiedTime).isEqualTo(lastModifiedTimeTest)
+            assertThat(fileCreatedDate).isEqualTo(fileCreatedDateTest)
+            assertThat(fileSize).isEqualTo(fileSizeTest)
         }
     }
 
@@ -75,9 +81,11 @@ class FileServiceTest {
                 id = 0,
                 fileName = fileNameTest,
                 fileType = fileTypeTest,
-                nextToken = nextTokenTest,
+                token = nextTokenTest,
                 prevToken = prevTokenTest,
-                lastModifiedTime = lastModifiedTimeTest
+                lastModifiedTime = lastModifiedTimeTest,
+                fileCreatedDate = fileCreatedDateTest,
+                fileSize = fileSizeTest
             )
         )
 
@@ -89,9 +97,11 @@ class FileServiceTest {
         with (listFile[0]) {
             assertThat(fileName).isEqualTo(fileNameTest)
             assertThat(fileType).isEqualTo(fileTypeTest)
-            assertThat(nextToken).isEqualTo(nextTokenTest)
+            assertThat(token).isEqualTo(nextTokenTest)
             assertThat(prevToken).isEqualTo(prevTokenTest)
             assertThat(lastModifiedTime).isEqualTo(lastModifiedTimeTest)
+            assertThat(fileCreatedDate).isEqualTo(fileCreatedDateTest)
+            assertThat(fileSize).isEqualTo(fileSizeTest)
         }
     }
 }

@@ -70,13 +70,17 @@ class FileApiControllerTest {
         val nextToken = "token"
         val testingToken = "TestingPrevToken"
         val lastModifiedTime = "time"
+        val fileCreatedDate = "testCreatedTime"
+        val fileSize: String = "5000mb"
 
         val requestDto = FileSaveRequestDTO(
             fileName = fileName,
             fileType = fileType,
-            nextToken = nextToken,
+            token = nextToken,
             prevToken = testingToken,
-            lastModifiedTime = lastModifiedTime
+            lastModifiedTime = lastModifiedTime,
+            fileCreatedDate = fileCreatedDate,
+            fileSize = fileSize
         )
         val url = "http://localhost:$port/api/navi/files"
 
@@ -90,8 +94,10 @@ class FileApiControllerTest {
         val result : FileEntity = fileRepository.findAll().get(0)
         assertThat(result.fileName).isEqualTo(fileName)
         assertThat(result.fileType).isEqualTo(fileType)
-        assertThat(result.nextToken).isEqualTo(nextToken)
+        assertThat(result.token).isEqualTo(nextToken)
         assertThat(result.lastModifiedTime).isEqualTo(lastModifiedTime)
+        assertThat(result.fileCreatedDate).isEqualTo(fileCreatedDate)
+        assertThat(result.fileSize).isEqualTo(fileSize)
     }
 
     @Test
@@ -99,7 +105,7 @@ class FileApiControllerTest {
         //insert data
         val fileName = listOf<String>("fileName1", "fileName2", "fileName3", "fileName4")
         fileName.forEach {
-            val id = fileRepository.save(FileEntity(fileName = it, fileType = "fileType", nextToken = "token", prevToken = "token", lastModifiedTime = "Time"))
+            val id = fileRepository.save(FileEntity(fileName = it, fileType = "fileType", token = "token", prevToken = "token", lastModifiedTime = "Time", fileCreatedDate = "testCreatedTime", fileSize = "5000"))
         }
         //send api request
         val url = "http://localhost:$port/api/navi/fileList"
