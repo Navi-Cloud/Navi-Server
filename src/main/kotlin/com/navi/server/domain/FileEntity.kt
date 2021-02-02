@@ -21,7 +21,7 @@ class FileEntity(
     var prevToken: String,
 
     @Column(length = 500, nullable = false)
-    var lastModifiedTime: String,
+    var lastModifiedTime: Long,
 
     @Column(length = 500, nullable = false)
     var fileCreatedDate: String,

@@ -8,7 +8,7 @@ class FileSaveRequestDTO(
     var fileType: String,
     var token: String,
     var prevToken: String,
-    var lastModifiedTime: String,
+    var lastModifiedTime: Long,
     var fileCreatedDate: String,
     var fileSize: String
 ) {
