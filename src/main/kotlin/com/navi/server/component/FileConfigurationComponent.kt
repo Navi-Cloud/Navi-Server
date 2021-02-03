@@ -73,7 +73,7 @@ class FileConfigurationComponent(val fileService: FileService) {
                         mimeType = "Folder",
                         token = getSHA256(serverRoot),
                         prevToken = "",
-                        lastModifiedTime = simpleDateFormat.format(it.lastModified()),
+                        lastModifiedTime = it.lastModified(),
                         fileCreatedDate = simpleDateFormat.format(basicFileAttribute.creationTime().toMillis()),
                         fileSize = convertSize(basicFileAttribute.size())
                     )
@@ -88,7 +88,7 @@ class FileConfigurationComponent(val fileService: FileService) {
                             mimeType = if(isDirectory) "Folder" else tika.detect(it),
                             token = getSHA256(absolutePath),
                             prevToken = getSHA256(parent),
-                            lastModifiedTime = simpleDateFormat.format(lastModified()),
+                            lastModifiedTime = lastModified(),
                             fileCreatedDate = simpleDateFormat.format(basicFileAttribute.creationTime().toMillis()),
                             fileSize = convertSize(basicFileAttribute.size())
                         )

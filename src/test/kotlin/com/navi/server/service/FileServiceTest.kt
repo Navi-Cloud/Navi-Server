@@ -27,7 +27,7 @@ class FileServiceTest {
     private val mimeTypeTest: String = "text/plain"
     private val nextTokenTest: String = "TEST_TOKEN"
     private val prevTokenTest: String = "PREV_TEST_TOKEN"
-    private val lastModifiedTimeTest: String = "TEST_TIME"
+    private val lastModifiedTimeTest: Long = 5000
     private val fileCreatedDateTest: String = "TEST_CREATED_DATE"
     private val fileSizeTest: String = "500Byte"
 
