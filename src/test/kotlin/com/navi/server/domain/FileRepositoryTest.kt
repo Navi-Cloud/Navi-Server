@@ -23,7 +23,7 @@ class FileRepositoryTest {
         val name = "테스트 파일"
         val type = "file"
         val token = "nextToken"
-        val time = "time"
+        val time: Long = 5000
         val testingToken = "TestingPrevToken"
         val createdDate = "TestingCreatedDate"
         val fileSize: String = "5MB"

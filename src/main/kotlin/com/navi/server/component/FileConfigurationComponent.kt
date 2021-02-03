@@ -69,7 +69,7 @@ class FileConfigurationComponent(val fileService: FileService) {
                         "Folder",
                         getSHA256(serverRoot),
                         "",
-                        simpleDateFormat.format(it.lastModified()),
+                        it.lastModified(),
                         simpleDateFormat.format(basicFileAttribute.creationTime().toMillis()),
                         convertSize(basicFileAttribute.size())
                     )
@@ -83,7 +83,7 @@ class FileConfigurationComponent(val fileService: FileService) {
                             fileType = if (isDirectory) "Folder" else "File",
                             token = getSHA256(absolutePath),
                             prevToken = getSHA256(parent),
-                            lastModifiedTime = simpleDateFormat.format(lastModified()),
+                            lastModifiedTime = lastModified(),
                             fileCreatedDate = simpleDateFormat.format(basicFileAttribute.creationTime().toMillis()),
                             fileSize = convertSize(basicFileAttribute.size())
                         )
