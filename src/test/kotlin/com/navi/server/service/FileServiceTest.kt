@@ -24,6 +24,7 @@ class FileServiceTest {
     // Test variable
     private val fileNameTest: String = "TESTING_FILENAME"
     private val fileTypeTest: String = "Folder"
+    private val mimeTypeTest: String = "text/plain"
     private val nextTokenTest: String = "TEST_TOKEN"
     private val prevTokenTest: String = "PREV_TEST_TOKEN"
     private val lastModifiedTimeTest: Long = 5000
@@ -43,6 +44,7 @@ class FileServiceTest {
                 id = 0,
                 fileName = fileNameTest,
                 fileType = fileTypeTest,
+                mimeType = mimeTypeTest,
                 token = nextTokenTest,
                 prevToken = prevTokenTest,
                 lastModifiedTime = lastModifiedTimeTest,
@@ -58,6 +60,7 @@ class FileServiceTest {
         with (results) {
             assertThat(fileName).isEqualTo(fileNameTest)
             assertThat(fileType).isEqualTo(fileTypeTest)
+            assertThat(mimeType).isEqualTo(mimeTypeTest)
             assertThat(token).isEqualTo(nextTokenTest)
             assertThat(prevToken).isEqualTo(prevTokenTest)
             assertThat(lastModifiedTime).isEqualTo(lastModifiedTimeTest)
@@ -81,6 +84,7 @@ class FileServiceTest {
                 id = 0,
                 fileName = fileNameTest,
                 fileType = fileTypeTest,
+                mimeType = mimeTypeTest,
                 token = nextTokenTest,
                 prevToken = prevTokenTest,
                 lastModifiedTime = lastModifiedTimeTest,
@@ -97,6 +101,7 @@ class FileServiceTest {
         with (listFile[0]) {
             assertThat(fileName).isEqualTo(fileNameTest)
             assertThat(fileType).isEqualTo(fileTypeTest)
+            assertThat(mimeType).isEqualTo(mimeTypeTest)
             assertThat(token).isEqualTo(nextTokenTest)
             assertThat(prevToken).isEqualTo(prevTokenTest)
             assertThat(lastModifiedTime).isEqualTo(lastModifiedTimeTest)

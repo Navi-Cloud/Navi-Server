@@ -54,6 +54,7 @@ dependencies {
     compile("com.h2database:h2")
     compileOnly("org.springframework.boot:spring-boot-configuration-processor")
     testImplementation(kotlin("test-junit"))
+    implementation("org.apache.tika:tika-parsers:1.25")
 }
 
 tasks.test {

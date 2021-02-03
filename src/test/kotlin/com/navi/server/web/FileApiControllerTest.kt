@@ -67,6 +67,7 @@ class FileApiControllerTest {
     fun testSaveFile() {
         val fileName = "fileName"
         val fileType = "fileType"
+        val mimeType = "text/plain"
         val nextToken = "token"
         val testingToken = "TestingPrevToken"
         val lastModifiedTime: Long = 5000
@@ -76,6 +77,7 @@ class FileApiControllerTest {
         val requestDto = FileSaveRequestDTO(
             fileName = fileName,
             fileType = fileType,
+            mimeType = mimeType,
             token = nextToken,
             prevToken = testingToken,
             lastModifiedTime = lastModifiedTime,
@@ -94,6 +96,7 @@ class FileApiControllerTest {
         val result : FileEntity = fileRepository.findAll().get(0)
         assertThat(result.fileName).isEqualTo(fileName)
         assertThat(result.fileType).isEqualTo(fileType)
+        assertThat(result.mimeType).isEqualTo(mimeType)
         assertThat(result.token).isEqualTo(nextToken)
         assertThat(result.lastModifiedTime).isEqualTo(lastModifiedTime)
         assertThat(result.fileCreatedDate).isEqualTo(fileCreatedDate)
@@ -105,7 +108,7 @@ class FileApiControllerTest {
         //insert data
         val fileName = listOf<String>("fileName1", "fileName2", "fileName3", "fileName4")
         fileName.forEach {
-            val id = fileRepository.save(FileEntity(fileName = it, fileType = "fileType", token = "token", prevToken = "token", lastModifiedTime = 5000, fileCreatedDate = "testCreatedTime", fileSize = "5000"))
+            val id = fileRepository.save(FileEntity(fileName = it, fileType = "fileType", mimeType = "text/plain", token = "token", prevToken = "token", lastModifiedTime = 5000, fileCreatedDate = "testCreatedTime", fileSize = "5000"))
         }
         //send api request
         val url = "http://localhost:$port/api/navi/fileList"
@@ -188,8 +191,6 @@ class FileApiControllerTest {
         assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
         assertThat(responseEntity.body.size).isEqualTo(2) //one File and one Folder
         var result = responseEntity.body
-        //assertThat(result.get(1).fileName).isEqualTo(fileObject.absolutePath)
-        //assertThat(result.get(0).fileName).isEqualTo(folderObject.absolutePath)
         result.forEach {
             assertThat(it.prevToken).isEqualTo(rootToken)
         }

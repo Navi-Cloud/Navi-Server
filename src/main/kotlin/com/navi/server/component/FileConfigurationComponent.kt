@@ -2,6 +2,7 @@ package com.navi.server.component
 
 import com.navi.server.dto.FileSaveRequestDTO
 import com.navi.server.service.FileService
+import org.apache.tika.Tika
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
 import java.io.File
@@ -52,6 +53,7 @@ class FileConfigurationComponent(val fileService: FileService) {
         if (!fileObject.exists()) {
             throw IllegalArgumentException("Server Root: $serverRoot does not exist!")
         }
+        val tika : Tika = Tika()
 
         //save root token
         fileService.rootToken = getSHA256(serverRoot)
@@ -65,13 +67,15 @@ class FileConfigurationComponent(val fileService: FileService) {
                 println(it.absolutePath)
                 fileSaveList.add(
                     FileSaveRequestDTO(
-                        0, it.absolutePath,
-                        "Folder",
-                        getSHA256(serverRoot),
-                        "",
-                        it.lastModified(),
-                        simpleDateFormat.format(basicFileAttribute.creationTime().toMillis()),
-                        convertSize(basicFileAttribute.size())
+                        id = 0,
+                        fileName = it.absolutePath,
+                        fileType = "Folder",
+                        mimeType = "Folder",
+                        token = getSHA256(serverRoot),
+                        prevToken = "",
+                        lastModifiedTime = it.lastModified(),
+                        fileCreatedDate = simpleDateFormat.format(basicFileAttribute.creationTime().toMillis()),
+                        fileSize = convertSize(basicFileAttribute.size())
                     )
                 )
             } else {
@@ -81,6 +85,7 @@ class FileConfigurationComponent(val fileService: FileService) {
                             id = 0,
                             fileName = absolutePath,
                             fileType = if (isDirectory) "Folder" else "File",
+                            mimeType = if(isDirectory) "Folder" else tika.detect(it),
                             token = getSHA256(absolutePath),
                             prevToken = getSHA256(parent),
                             lastModifiedTime = lastModified(),

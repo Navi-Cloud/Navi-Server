@@ -15,6 +15,9 @@ class FileEntity(
     var fileType: String,
 
     @Column(length = 500, nullable = false)
+    var mimeType: String,
+
+    @Column(length = 500, nullable = false)
     var token: String,
 
     @Column(length = 500, nullable = false)

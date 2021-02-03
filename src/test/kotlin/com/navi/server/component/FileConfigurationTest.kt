@@ -80,4 +80,36 @@ class FileConfigurationTest {
         // Assert
         assertThat(listFile.size).isEqualTo(listSize)
     }
+
+    @Test
+    fun isTikaWorks() {
+        // make test files
+        val testRootFolder = File(fileConfigurationComponent.serverRoot, "testTika")
+        if(!testRootFolder.exists()) testRootFolder.mkdir()
+        val rootPath = testRootFolder.absolutePath
+        val childFiles = listOf<File>(
+            File(rootPath, "file1.txt"),
+            File(rootPath, "file2.css"),
+            File(rootPath, "file3.pdf")
+        )
+        childFiles.forEach {
+            if (!it.exists()) {
+                it.createNewFile()
+            }
+        }
+        val listSize: Long = fileConfigurationComponent.populateInitialDB()
+
+        // Assert
+        val result = fileService.findInsideFiles(fileConfigurationComponent.getSHA256(rootPath))
+
+        val findDto = result.find { it.fileName == childFiles[0].absolutePath }
+        findDto?.let { assertThat(findDto.mimeType).isEqualTo("text/plain") } ?: throw Exception("ERROR::NOFILE")
+
+        val findDto2 = result.find { it.fileName == childFiles[1].absolutePath }
+        findDto2?.let { assertThat(findDto2.mimeType).isEqualTo("text/css") } ?: throw Exception("ERROR::NOFILE")
+
+        val findDto3 = result.find { it.fileName == childFiles[2].absolutePath }
+        findDto3?.let { assertThat(findDto3.mimeType).isEqualTo("application/pdf") } ?: throw Exception("ERROR::NOFILE")
+
+    }
 }
