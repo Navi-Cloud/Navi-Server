@@ -103,22 +103,13 @@ class FileConfigurationTest {
         val result = fileService.findInsideFiles(fileConfigurationComponent.getSHA256(rootPath))
 
         val findDto = result.find { it.fileName == childFiles[0].absolutePath }
-        if (findDto != null) {
-            assertThat(findDto.mimeType).isEqualTo("text/plain")
-        }
-        else println("ERROR::NOFILE")
+        findDto?.let { assertThat(findDto.mimeType).isEqualTo("text/plain") } ?: throw Exception("ERROR::NOFILE")
 
         val findDto2 = result.find { it.fileName == childFiles[1].absolutePath }
-        if (findDto2 != null) {
-            assertThat(findDto2.mimeType).isEqualTo("text/css")
-        }
-        else println("ERROR::NOFILE")
+        findDto2?.let { assertThat(findDto2.mimeType).isEqualTo("text/css") } ?: throw Exception("ERROR::NOFILE")
 
         val findDto3 = result.find { it.fileName == childFiles[2].absolutePath }
-        if (findDto3 != null) {
-            assertThat(findDto3.mimeType).isEqualTo("application/pdf")
-        }
-        else println("ERROR::NOFILE")
+        findDto3?.let { assertThat(findDto3.mimeType).isEqualTo("application/pdf") } ?: throw Exception("ERROR::NOFILE")
 
     }
 }
