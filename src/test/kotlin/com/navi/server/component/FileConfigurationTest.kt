@@ -1,6 +1,7 @@
 package com.navi.server.component
 
 import com.navi.server.dto.FileResponseDTO
+import com.navi.server.dto.FileSaveRequestDTO
 import com.navi.server.service.FileService
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.After
@@ -28,6 +29,7 @@ class FileConfigurationTest {
         // Create trash directory
         trashRootObject = File(fileConfigurationComponent.serverRoot)
         trashRootObject.mkdir()
+        fileService.fileRepository.deleteAll()
     }
 
     @After
@@ -43,9 +45,9 @@ class FileConfigurationTest {
         val testFileSizeMib: Long = 1024 * 1024 * 2 // 2 Mib
         val testFileSizeKib: Long = 1024 * 4 // 4.0Kib
         val testFileSizeB: Long = 800 //800B
-        assertThat(fileConfigurationComponent.convertSize(testFileSizeMib)).isEqualTo("2.0MiB")
-        assertThat(fileConfigurationComponent.convertSize(testFileSizeKib)).isEqualTo("4.0KiB")
-        assertThat(fileConfigurationComponent.convertSize(testFileSizeB)).isEqualTo("800B")
+        assertThat(fileService.convertSize(testFileSizeMib)).isEqualTo("2.0MiB")
+        assertThat(fileService.convertSize(testFileSizeKib)).isEqualTo("4.0KiB")
+        assertThat(fileService.convertSize(testFileSizeB)).isEqualTo("800B")
     }
 
     @Test
@@ -100,7 +102,7 @@ class FileConfigurationTest {
         val listSize: Long = fileConfigurationComponent.populateInitialDB()
 
         // Assert
-        val result = fileService.findInsideFiles(fileConfigurationComponent.getSHA256(rootPath))
+        val result = fileService.findInsideFiles(fileService.getSHA256(rootPath))
 
         val findDto = result.find { it.fileName == childFiles[0].absolutePath }
         findDto?.let { assertThat(findDto.mimeType).isEqualTo("text/plain") } ?: throw Exception("ERROR::NOFILE")
@@ -110,6 +112,60 @@ class FileConfigurationTest {
 
         val findDto3 = result.find { it.fileName == childFiles[2].absolutePath }
         findDto3?.let { assertThat(findDto3.mimeType).isEqualTo("application/pdf") } ?: throw Exception("ERROR::NOFILE")
+    }
 
+    @Test
+    fun deleteByTokenWorksWell() {
+        // Let
+        val tmpPath: File = File(System.getProperty("java.io.tmpdir"), "naviTesting.txt")
+        val targetSHA256: String = fileService.getSHA256(tmpPath.absolutePath)
+        fileService.save(
+            FileSaveRequestDTO(
+                id = 50,
+                fileName = tmpPath.name,
+                fileType = "File",
+                mimeType = "mime/application/json",
+                token = targetSHA256,
+                prevToken = fileService.getSHA256(tmpPath.parent),
+                lastModifiedTime = 5000,
+                fileCreatedDate = "createdDateTest",
+                fileSize = "50B"
+            )
+        )
+        val beforeId: Long = fileService.fileRepository.count()
+
+        // do work
+        fileService.deleteByToken(targetSHA256)
+        println("BeforeID: $beforeId, Actual: ${fileService.fileRepository.count()}")
+
+        // Assert!
+        assertThat(fileService.fileRepository.count()).isEqualTo(beforeId-1)
+    }
+
+    @Test
+    fun findByTokenWorksWell() {
+        // Let
+        val tmpPath: File = File(System.getProperty("java.io.tmpdir"), "naviTesting.txt")
+        val targetSHA256: String = fileService.getSHA256(tmpPath.absolutePath)
+        fileService.save(
+            FileSaveRequestDTO(
+                id = 50,
+                fileName = tmpPath.name,
+                fileType = "File",
+                mimeType = "mime/application/json",
+                token = targetSHA256,
+                prevToken = fileService.getSHA256(tmpPath.parent),
+                lastModifiedTime = 5000,
+                fileCreatedDate = "createdDateTest",
+                fileSize = "50B"
+            )
+        )
+
+        // do work
+        val responseDto: FileResponseDTO = fileService.findByToken(targetSHA256)
+
+        // Assert
+        assertThat(responseDto.fileName).isEqualTo(tmpPath.name)
+        assertThat(responseDto.fileType).isEqualTo("File")
     }
 }
