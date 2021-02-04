@@ -2,6 +2,9 @@ package com.navi.server.component
 
 import com.navi.server.dto.FileSaveRequestDTO
 import com.navi.server.service.FileService
+import com.navi.server.watcher.InternalFileWatcher
+import com.navi.server.watcher.JVMWatcher
+import kotlinx.coroutines.*
 import org.apache.tika.Tika
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
@@ -13,12 +16,16 @@ import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.annotation.PostConstruct
+import javax.annotation.PreDestroy
 import javax.xml.bind.DatatypeConverter
 import kotlin.math.pow
 
 @Component
 @ConfigurationProperties("navi")
 class FileConfigurationComponent(val fileService: FileService) {
+    private val coroutineScope: CoroutineScope = CoroutineScope(Job() + Dispatchers.IO)
+    private var internalFileWatcher: InternalFileWatcher? = null
+    private var job: Job? = null
     lateinit var serverRoot: String
 
     @PostConstruct
@@ -28,6 +35,20 @@ class FileConfigurationComponent(val fileService: FileService) {
             return
         }
         populateInitialDB()
+        job = coroutineScope.launch {
+            runInterruptible {
+                internalFileWatcher = JVMWatcher(serverRoot, fileService)
+                internalFileWatcher?.watchFolder()
+            }
+        }
+    }
+
+    @PreDestroy
+    fun finishWatcher() = runBlocking {
+        if (job?.isActive == true) {
+            internalFileWatcher?.closeWatcher()
+            job?.cancelAndJoin()
+        }
     }
 
     fun populateInitialDB(): Long {
