@@ -85,7 +85,14 @@ class FileConfigurationComponent(val fileService: FileService) {
                             id = 0,
                             fileName = absolutePath,
                             fileType = if (isDirectory) "Folder" else "File",
-                            mimeType = if(isDirectory) "Folder" else tika.detect(it),
+                            mimeType = if(isDirectory) "Folder" else {
+                                try {
+                                    tika.detect(it)
+                                } catch (e: Exception) {
+                                    println("Failed to detect mimeType for: ${e.message}")
+                                    "File"
+                                }
+                             },
                             token = getSHA256(absolutePath),
                             prevToken = getSHA256(parent),
                             lastModifiedTime = lastModified(),
