@@ -61,11 +61,11 @@ class JVMWatcher(rootDirectory: String, fileService: FileService): InternalFileW
                     val kind = event.kind()
                     val absolutePath: Path = parentPath.resolve(event.context() as Path)
                     val fileObject: File = File(absolutePath.toUri())
-                    val basicFileAttribute: BasicFileAttributes = Files.readAttributes(fileObject.toPath(), BasicFileAttributes::class.java)
 
                     when (kind) {
                         // Note: FileSaveRequestDto does not require ID anyway though
                         StandardWatchEventKinds.ENTRY_CREATE -> {
+                            val basicFileAttribute: BasicFileAttributes = Files.readAttributes(fileObject.toPath(), BasicFileAttributes::class.java)
                             fileService.save(FileSaveRequestDTO(
                                 fileName = absolutePath.toString(),
                                 fileType = if (fileObject.isDirectory) "Folder" else "File",
@@ -90,6 +90,7 @@ class JVMWatcher(rootDirectory: String, fileService: FileService): InternalFileW
                             println("Deleted: $absolutePath")
                         }
                         StandardWatchEventKinds.ENTRY_MODIFY -> {
+                            val basicFileAttribute: BasicFileAttributes = Files.readAttributes(fileObject.toPath(), BasicFileAttributes::class.java)
                             val token: String = fileService.getSHA256(fileObject.absolutePath)
                             val toEdit: FileResponseDTO = fileService.findByToken(token).also {
                                 it.lastModifiedTime = fileObject.lastModified()
