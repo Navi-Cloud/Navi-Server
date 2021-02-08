@@ -4,9 +4,24 @@ import com.navi.server.domain.FileEntity
 import com.navi.server.domain.FileRepository
 import com.navi.server.dto.FileResponseDTO
 import com.navi.server.dto.FileSaveRequestDTO
+import org.apache.tika.Tika
+import org.springframework.core.io.InputStreamResource
+import org.springframework.core.io.Resource
 import org.springframework.stereotype.Service
+import org.springframework.web.multipart.MultipartFile
+import java.io.File
+import java.lang.Exception
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.attribute.BasicFileAttributes
+import java.security.MessageDigest
+import java.text.SimpleDateFormat
 import java.util.ArrayList
 import java.util.stream.Collectors
+import javax.xml.bind.DatatypeConverter
+import kotlin.math.log
+import kotlin.math.pow
 
 @Service
 class FileService(val fileRepository: FileRepository) {
@@ -42,6 +57,70 @@ class FileService(val fileRepository: FileRepository) {
             .collect(Collectors.toList())
     }
 
+    var rootPath: String? = null
     var rootToken: String? = null
+    val tika = Tika()
+
+    fun fileUpload(files: MultipartFile) : Long {
+        try {
+            // upload to root path..
+            // If the destination file already exists, it will be deleted first.
+            println("rootPath at fileService ==> ${rootPath?.let{ rootPath } ?: "is NULLLLL"}" )
+            val uploadFile = File(rootPath, files.originalFilename)
+            files.transferTo(uploadFile)
+
+
+            // upload to DB
+            val basicFileAttribute: BasicFileAttributes = Files.readAttributes(uploadFile.toPath(), BasicFileAttributes::class.java)
+            val simpleDateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd-HH:mm:ss")
+
+            var fileSaveRequestDTO = FileSaveRequestDTO (
+                fileName = uploadFile.absolutePath,
+                fileType = if (uploadFile.isDirectory) "Folder" else "File",
+                mimeType = if(uploadFile.isDirectory) "Folder" else {
+                    try {
+                        tika.detect(uploadFile)
+                    } catch (e: Exception) {
+                        println("Failed to detect mimeType for: ${e.message}")
+                        "File"
+                    }
+                },
+                token = getSHA256(uploadFile.absolutePath),
+                prevToken = getSHA256(rootPath?.let { rootPath } ?: "rootToken"),
+                lastModifiedTime = uploadFile.lastModified(),
+                fileCreatedDate = simpleDateFormat.format(basicFileAttribute.creationTime().toMillis()),
+                fileSize = convertSize(basicFileAttribute.size())
+                )
+            return this.save(fileSaveRequestDTO)
+        } catch (e: Exception){
+            e.printStackTrace()
+        }
+        return -1
+    }
+
+    fun fileDownload(token: String) : Resource {
+        val file : FileEntity = fileRepository.findFile(token)
+        val resource : Resource = InputStreamResource(Files.newInputStream(Paths.get(file.fileName)))
+        return resource
+    }
+
+
+    //will be deleted
+    fun getSHA256(input: String): String {
+        val messageDigest: MessageDigest = MessageDigest.getInstance("SHA-256").also {
+            it.update(input.toByteArray())
+        }
+        return DatatypeConverter.printHexBinary(messageDigest.digest())
+    }
+
+    fun convertSize(fileSize: Long): String {
+        val fileUnit: String = "KMGTE"
+        val logValue: Int = log(fileSize.toDouble(), 1024.0).toInt()
+        if (logValue == 0 || fileSize == 0.toLong()) {
+            return "${fileSize}B"
+        }
+        val calculatedValue: Double = fileSize / 1024.0.pow(logValue)
+        return String.format("%.1f%ciB", calculatedValue, fileUnit[logValue-1])
+    }
 
 }

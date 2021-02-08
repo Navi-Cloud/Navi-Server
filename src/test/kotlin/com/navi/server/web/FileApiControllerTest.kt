@@ -21,6 +21,7 @@ import org.springframework.http.HttpStatus
 import java.lang.reflect.Type
 
 import org.springframework.boot.test.web.client.getForEntity
+import org.springframework.mock.web.MockMultipartFile
 import java.io.File
 import java.util.ArrayList
 
@@ -209,5 +210,27 @@ class FileApiControllerTest {
         result2.forEach {
             assertThat(it.prevToken).isEqualTo(folderToken)
         }
+    }
+
+    @Test
+    fun testFileUpload(){
+        val folderName : String = "UploadFolder"
+        val folderObject: File = File(fileConfigurationComponent.serverRoot, folderName)
+        if (!folderObject.exists()) {
+            folderObject.mkdir()
+        }
+        // Do work
+        val listSize: Long = fileConfigurationComponent.populateInitialDB()
+
+        val uploadFileName = "uploadTest.txt"
+        val file = File(uploadFileName)
+        var content = "file upload test file!".toByteArray()
+        val multipartFile = MockMultipartFile(uploadFileName, uploadFileName, "text/plain", content)
+
+        val url = "http://localhost:$port/api/navi/fileUpload"
+        val responseEntity : ResponseEntity<Long> = restTemplate.postForEntity(url, multipartFile.bytes, Long::class.java)
+        //assert
+        assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
+        assertThat(responseEntity.body).isGreaterThan(0L)
     }
 }

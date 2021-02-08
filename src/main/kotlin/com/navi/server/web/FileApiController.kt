@@ -3,7 +3,9 @@ package com.navi.server.web
 import com.navi.server.dto.FileResponseDTO
 import com.navi.server.dto.FileSaveRequestDTO
 import com.navi.server.service.FileService
+import org.apache.commons.logging.Log
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 import java.util.stream.Collectors
 
 @RestController
@@ -29,4 +31,9 @@ class FileApiController (val fileService: FileService){
         return fileService.findInsideFiles(token)
     }
 
+    @PostMapping("/api/navi/fileUpload")
+    fun fileUpload(@RequestParam("uploadFile") file: MultipartFile) : Long {
+        print("file input ==> "+ file.originalFilename)
+        return fileService.fileUpload(file)
+    }
 }
