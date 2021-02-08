@@ -60,6 +60,7 @@ class FileConfigurationComponent(val fileService: FileService) {
         val tika : Tika = Tika()
 
         //save root token
+        fileService.rootPath = serverRoot
         fileService.rootToken = fileService.getSHA256(serverRoot)
 
         fileObject.walk().forEach {
