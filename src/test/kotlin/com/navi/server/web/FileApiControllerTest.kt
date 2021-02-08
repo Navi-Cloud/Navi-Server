@@ -6,6 +6,7 @@ import com.navi.server.domain.FileEntity
 import com.navi.server.domain.FileRepository
 import com.navi.server.dto.FileResponseDTO
 import com.navi.server.dto.FileSaveRequestDTO
+import com.navi.server.service.FileService
 import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -39,6 +40,9 @@ class FileApiControllerTest {
 
     @Autowired
     private lateinit var fileConfigurationComponent: FileConfigurationComponent
+
+    @Autowired
+    private lateinit var fileService: FileService
 
     private lateinit var trashRootObject: File
 
@@ -141,7 +145,7 @@ class FileApiControllerTest {
 
         // Assert
         assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
-        assertThat(responseEntity.body).isEqualTo(fileConfigurationComponent.getSHA256(fileConfigurationComponent.serverRoot))
+        assertThat(responseEntity.body).isEqualTo(fileService.getSHA256(fileConfigurationComponent.serverRoot))
 
     }
 
@@ -182,7 +186,7 @@ class FileApiControllerTest {
 
 
         // Api test 1 :: under Root
-        val rootToken = fileConfigurationComponent.getSHA256(fileConfigurationComponent.serverRoot)
+        val rootToken = fileService.getSHA256(fileConfigurationComponent.serverRoot)
         val url = "http://localhost:$port/api/navi/findInsideFiles/${rootToken}"
         var responseEntity : ResponseEntity<Array<FileResponseDTO>> = restTemplate.getForEntity(url, Array<FileResponseDTO>::class.java)
 
@@ -197,7 +201,7 @@ class FileApiControllerTest {
 
 
         //Api test 2 :: under folderName
-        val folderToken = fileConfigurationComponent.getSHA256(folderPath)
+        val folderToken = fileService.getSHA256(folderPath)
         val url2 = "http://localhost:$port/api/navi/findInsideFiles/${folderToken}"
         var responseEntity2 : ResponseEntity<Array<FileResponseDTO>> = restTemplate.getForEntity(url2, Array<FileResponseDTO>::class.java)
 

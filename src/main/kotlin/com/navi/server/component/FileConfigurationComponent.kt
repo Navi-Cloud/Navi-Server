@@ -2,6 +2,9 @@ package com.navi.server.component
 
 import com.navi.server.dto.FileSaveRequestDTO
 import com.navi.server.service.FileService
+import com.navi.server.watcher.InternalFileWatcher
+import com.navi.server.watcher.JVMWatcher
+import kotlinx.coroutines.*
 import org.apache.tika.Tika
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
@@ -13,12 +16,16 @@ import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.annotation.PostConstruct
+import javax.annotation.PreDestroy
 import javax.xml.bind.DatatypeConverter
 import kotlin.math.pow
 
 @Component
 @ConfigurationProperties("navi")
 class FileConfigurationComponent(val fileService: FileService) {
+    private val coroutineScope: CoroutineScope = CoroutineScope(Job() + Dispatchers.IO)
+    private var internalFileWatcher: InternalFileWatcher? = null
+    private var job: Job? = null
     lateinit var serverRoot: String
 
     @PostConstruct
@@ -28,23 +35,20 @@ class FileConfigurationComponent(val fileService: FileService) {
             return
         }
         populateInitialDB()
+        job = coroutineScope.launch {
+            runInterruptible {
+                internalFileWatcher = JVMWatcher(serverRoot, fileService)
+                internalFileWatcher?.watchFolder()
+            }
+        }
     }
 
-    fun getSHA256(input: String): String {
-        val messageDigest: MessageDigest = MessageDigest.getInstance("SHA-256").also {
-            it.update(input.toByteArray())
+    @PreDestroy
+    fun finishWatcher() = runBlocking {
+        if (job?.isActive == true) {
+            internalFileWatcher?.closeWatcher()
+            job?.cancelAndJoin()
         }
-        return DatatypeConverter.printHexBinary(messageDigest.digest())
-    }
-
-    fun convertSize(fileSize: Long): String {
-        val fileUnit: String = "KMGTE"
-        val logValue: Int = log(fileSize.toDouble(), 1024.0).toInt()
-        if (logValue == 0 || fileSize == 0.toLong()) {
-            return "${fileSize}B"
-        }
-        val calculatedValue: Double = fileSize / 1024.0.pow(logValue)
-        return String.format("%.1f%ciB", calculatedValue, fileUnit[logValue-1])
     }
 
     fun populateInitialDB(): Long {
@@ -56,7 +60,7 @@ class FileConfigurationComponent(val fileService: FileService) {
         val tika : Tika = Tika()
 
         //save root token
-        fileService.rootToken = getSHA256(serverRoot)
+        fileService.rootToken = fileService.getSHA256(serverRoot)
 
         fileObject.walk().forEach {
             val basicFileAttribute: BasicFileAttributes = Files.readAttributes(it.toPath(), BasicFileAttributes::class.java)
@@ -71,11 +75,11 @@ class FileConfigurationComponent(val fileService: FileService) {
                         fileName = it.absolutePath,
                         fileType = "Folder",
                         mimeType = "Folder",
-                        token = getSHA256(serverRoot),
+                        token = fileService.getSHA256(serverRoot),
                         prevToken = "",
                         lastModifiedTime = it.lastModified(),
                         fileCreatedDate = simpleDateFormat.format(basicFileAttribute.creationTime().toMillis()),
-                        fileSize = convertSize(basicFileAttribute.size())
+                        fileSize = fileService.convertSize(basicFileAttribute.size())
                     )
                 )
             } else {
@@ -92,12 +96,12 @@ class FileConfigurationComponent(val fileService: FileService) {
                                     println("Failed to detect mimeType for: ${e.message}")
                                     "File"
                                 }
-                             },
-                            token = getSHA256(absolutePath),
-                            prevToken = getSHA256(parent),
+                            },
+                            token = fileService.getSHA256(absolutePath),
+                            prevToken = fileService.getSHA256(parent),
                             lastModifiedTime = lastModified(),
                             fileCreatedDate = simpleDateFormat.format(basicFileAttribute.creationTime().toMillis()),
-                            fileSize = convertSize(basicFileAttribute.size())
+                            fileSize = fileService.convertSize(basicFileAttribute.size())
                         )
                     )
                 }
