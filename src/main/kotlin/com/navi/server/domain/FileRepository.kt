@@ -16,4 +16,7 @@ interface FileRepository : JpaRepository<FileEntity, Long> {
 
     @Transactional(readOnly = false)
     fun deleteByToken(token: String): Long
+
+    @Query("FROM FileEntity WHERE token= ?1")
+    fun findFile(token: String) : FileEntity
 }

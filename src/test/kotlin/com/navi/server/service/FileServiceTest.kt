@@ -14,12 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.junit4.SpringRunner
-import java.io.BufferedReader
 import java.io.File
-import java.nio.file.Path
-import java.nio.file.Paths
-import javax.annotation.PostConstruct
-import javax.annotation.Resources
 
 @RunWith(SpringRunner::class)
 @SpringBootTest
@@ -170,6 +165,7 @@ class FileServiceTest {
 
     @Test
     fun fileDownloadTest(){
+        /*
         // Make one test file to root
         val fileName: String = "downloadTest.txt"
         val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
@@ -197,6 +193,10 @@ class FileServiceTest {
             val resultContent = resource.inputStream.bufferedReader().use(BufferedReader::readText)
             assertThat(resultContent).isEqualTo(fileContent)
         } ?: throw Exception("No FILE")
+        val resultFromServer = trashRootObject.listFiles().find { it.isFile && it.absolutePath == targetFile.absolutePath }
+        resultFromServer?.let { assertThat(resultFromServer.absolutePath).isEqualTo(targetFile.absolutePath) } ?: throw Exception("ERROR:: no ${targetFile.absolutePath}")
+
+         */
 
     }
 }

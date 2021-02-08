@@ -8,14 +8,14 @@ import org.apache.tika.Tika
 import org.springframework.core.io.InputStreamResource
 import org.springframework.core.io.Resource
 import org.springframework.stereotype.Service
-import java.security.MessageDigest
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
-import java.io.FileNotFoundException
-import java.lang.Exception
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.attribute.BasicFileAttributes
+import java.security.MessageDigest
+import java.io.FileNotFoundException
+import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.ArrayList
 import java.util.stream.Collectors
@@ -27,7 +27,7 @@ import kotlin.math.pow
 class FileService(val fileRepository: FileRepository) {
     fun findAllDesc(): List<FileResponseDTO> {
         return fileRepository.findAllDesc().stream()
-            .map {FileResponseDTO(it)}
+            .map { FileResponseDTO(it) }
             .collect(Collectors.toList())
     }
 
@@ -51,7 +51,7 @@ class FileService(val fileRepository: FileRepository) {
         }
     }
 
-    fun findInsideFiles(token: String) : List<FileResponseDTO> {
+    fun findInsideFiles(token: String): List<FileResponseDTO> {
         return fileRepository.findInsideFiles(token).stream()
             .map { FileResponseDTO(it) }
             .collect(Collectors.toList())
@@ -121,7 +121,6 @@ class FileService(val fileRepository: FileRepository) {
         return Pair(null, null)
     }
 
-
     fun getSHA256(input: String): String {
         val messageDigest: MessageDigest = MessageDigest.getInstance("SHA-256").also {
             it.update(input.toByteArray())
@@ -136,7 +135,7 @@ class FileService(val fileRepository: FileRepository) {
             return "${fileSize}B"
         }
         val calculatedValue: Double = fileSize / 1024.0.pow(logValue)
-        return String.format("%.1f%ciB", calculatedValue, fileUnit[logValue-1])
+        return String.format("%.1f%ciB", calculatedValue, fileUnit[logValue - 1])
     }
 
 }
