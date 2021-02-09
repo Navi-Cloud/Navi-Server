@@ -83,4 +83,22 @@ class FileApiController (val fileService: FileService){
                 .body(resource)
         } ?: ResponseEntity.badRequest().body(null);
     }
+
+    @GetMapping("api/navi/fileDownload/{token}")
+    fun fileDownload(@PathVariable token: String) : ResponseEntity<Resource>{
+        val pair : Pair<FileResponseDTO?, Resource?> = fileService.fileDownload(token)
+        val fileResponseDTO: FileResponseDTO? = pair.first
+        val originalFilename =
+            fileResponseDTO?.let {
+                fileResponseDTO.fileName.split("\\").last()
+            } ?: "tmp"
+
+        val resource: Resource? = pair.second
+        return resource?.let {
+            ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("application/octet-stream"))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"$originalFilename\"")
+                .body(resource)
+        } ?: ResponseEntity.badRequest().body(null);
+    }
 }
