@@ -55,6 +55,8 @@ dependencies {
     compileOnly("org.springframework.boot:spring-boot-configuration-processor")
     testImplementation(kotlin("test-junit"))
     implementation("org.apache.tika:tika-parsers:1.25")
+
+    implementation("org.springframework.boot:spring-boot-starter-mustache")
 }
 
 tasks.test {

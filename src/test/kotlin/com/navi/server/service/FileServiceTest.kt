@@ -136,7 +136,7 @@ class FileServiceTest {
 
     @Test
     fun fileUploadTest(){
-        /*
+
         fileConfigurationComponent.populateInitialDB()
 
         // make uploadFile
@@ -158,7 +158,5 @@ class FileServiceTest {
         resultFromServer?.let { assertThat(resultFromServer.absolutePath).isEqualTo(targetFile.absolutePath) } ?: throw Exception("ERROR:: no ${targetFile.absolutePath}")
 
 
-
-         */
     }
 }
