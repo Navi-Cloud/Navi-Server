@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service
 import java.security.MessageDigest
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
+import java.io.FileNotFoundException
 import java.lang.Exception
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -105,10 +106,17 @@ class FileService(val fileRepository: FileRepository) {
         return -1
     }
 
-    fun fileDownload(token: String) : Resource {
+    fun fileDownload(token: String) : Pair<FileResponseDTO?, Resource?> {
         val file : FileEntity = fileRepository.findByToken(token)
-        val resource : Resource = InputStreamResource(Files.newInputStream(Paths.get(file.fileName)))
-        return resource
+        try {
+            val resource: Resource? = InputStreamResource(Files.newInputStream(Paths.get(file.fileName)))
+            return Pair(FileResponseDTO(file), resource)
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
+        } catch (e: Exception) {
+            e.printStackTrace();
+        }
+        return Pair(null, null)
     }
 
 
