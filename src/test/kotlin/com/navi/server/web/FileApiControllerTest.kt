@@ -254,7 +254,6 @@ class FileApiControllerTest {
         ).andExpect { status(HttpStatus.OK) }
             .andDo(MockMvcResultHandlers.print())
 
-
         // Assert
         val targetFile = File(folderObject.absolutePath, uploadFileName)
 
