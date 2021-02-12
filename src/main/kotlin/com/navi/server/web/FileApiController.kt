@@ -36,8 +36,8 @@ class FileApiController (val fileService: FileService){
     }
 
     @PostMapping("/api/navi/fileUpload")
-    fun fileUpload(@RequestParam("uploadFile") file: MultipartFile) : Long {
-        print("file input ==> "+ file.originalFilename)
+    fun fileUpload(@RequestParam(value = "uploadFile") file: MultipartFile) : Long {
+        println("file input ==> "+ file.originalFilename)
         return fileService.fileUpload(file)
     }
 

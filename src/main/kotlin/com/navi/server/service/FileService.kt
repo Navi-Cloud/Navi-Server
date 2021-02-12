@@ -74,6 +74,7 @@ class FileService(val fileRepository: FileRepository) {
             // upload to root path..
             // If the destination file already exists, it will be deleted first.
             val uploadFile = File(rootPath, files.originalFilename)
+            println(uploadFile.absolutePath)
             files.transferTo(uploadFile)
 
             // upload to DB
