@@ -14,10 +14,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.junit4.SpringRunner
+import java.io.BufferedReader
 import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
 import javax.annotation.PostConstruct
+import javax.annotation.Resources
 
 @RunWith(SpringRunner::class)
 @SpringBootTest
@@ -156,6 +158,39 @@ class FileServiceTest {
 
         val resultFromServer = trashRootObject.listFiles().find { it.isFile && it.absolutePath == targetFile.absolutePath }
         resultFromServer?.let { assertThat(resultFromServer.absolutePath).isEqualTo(targetFile.absolutePath) } ?: throw Exception("ERROR:: no ${targetFile.absolutePath}")
+
+    }
+
+    @Test
+    fun fileDownloadTest(){
+
+        // Make one test file to root
+        val fileName: String = "downloadTest.txt"
+        val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
+        val fileContent = "test"
+        fileObject.writeText(fileContent);
+        if (!fileObject.exists()) {
+            fileObject.createNewFile()
+        }
+
+        fileConfigurationComponent.populateInitialDB()
+
+        // file Download
+        val targetToken = fileService.getSHA256(fileObject.absolutePath)
+        val result = fileService.fileDownload(targetToken)
+
+        val fileResponseDTO = result.first
+        val resource = result.second
+
+        // Assert
+        fileResponseDTO?.let {
+            assertThat(fileResponseDTO.fileName).isEqualTo(fileObject.absolutePath)
+        } ?: throw Exception("No FILE")
+
+        resource?.let {
+            val content = resource.inputStream.bufferedReader().use(BufferedReader::readText)
+            assertThat(content).isEqualTo(fileContent)
+        } ?: throw Exception("No FILE")
 
     }
 }
