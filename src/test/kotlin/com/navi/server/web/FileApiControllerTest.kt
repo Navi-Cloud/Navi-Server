@@ -18,12 +18,15 @@ import org.springframework.test.context.junit4.SpringRunner
 import org.assertj.core.api.Assertions.assertThat;
 import org.junit.Before
 import org.springframework.http.HttpStatus
-import java.lang.reflect.Type
-
-import org.springframework.boot.test.web.client.getForEntity
-import org.springframework.http.HttpEntity
-import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity.status
+import org.springframework.mock.web.MockMultipartFile
+import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import java.io.File
+import org.springframework.web.context.WebApplicationContext
+import java.io.BufferedReader
+
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -43,14 +46,18 @@ class FileApiControllerTest {
 
     @Autowired
     private lateinit var fileService: FileService
+    private lateinit var webApplicationContext: WebApplicationContext
 
     private lateinit var trashRootObject: File
+
+    private lateinit var mockMvc : MockMvc
 
     @Before
     fun initEnvironment() {
         // Create trash directory
         trashRootObject = File(fileConfigurationComponent.serverRoot)
         trashRootObject.mkdir()
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build()
     }
 
     @After
@@ -217,36 +224,46 @@ class FileApiControllerTest {
 
     @Test
     fun testFileUpload(){
-        /*
-        val folderName : String = "UploadFolder"
-        val folderObject: File = File(fileConfigurationComponent.serverRoot, folderName)
-        if (!folderObject.exists()) {
-            folderObject.mkdir()
-        }
-        // Do work
-        val listSize: Long = fileConfigurationComponent.populateInitialDB()
+        fileConfigurationComponent.populateInitialDB()
 
-        val uploadFileName = "uploadTest.txt"
-        val file = File(uploadFileName)
-        var content = "file upload test file!".toByteArray()
-        val multipartFile = MockMultipartFile(uploadFileName, uploadFileName, "text/plain", content)
-
-        val url = "http://localhost:$port/api/navi/fileUpload"
-        val responseEntity : ResponseEntity<Long> = restTemplate.postForEntity(url, multipartFile.bytes, null)
-
-        /*
-        var requestEntity : HttpEntity<MockMultipartFile> = HttpEntity(multipartFile)
-        val responseEntity = restTemplate.postForEntity(
-            url,  requestEntity,
-            Long::class.java
+        // Make uploadFile
+        val uploadFileName = "uploadApiTest.txt"
+        val uploadFileContent = "test upload API!"
+        val testMultipartFile = MockMultipartFile(
+            "uploadFile",
+            uploadFileName,
+            "text/plain",
+            uploadFileContent.toByteArray()
         )
 
-         */
+        // Perform
+        mockMvc.perform(
+            MockMvcRequestBuilders.multipart("/api/navi/fileUpload")
+            .file(testMultipartFile)
+        ).andExpect { status(HttpStatus.OK) }
 
-        //assert
-        assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
-        assertThat(responseEntity.body).isGreaterThan(0L)
 
-         */
+        // Assert
+        val targetFile = File(trashRootObject.absolutePath, uploadFileName)
+
+        val resultFromDB = fileRepository.findAll().find { it.fileName == targetFile.absolutePath }
+        resultFromDB?.let {
+            assertThat(resultFromDB.fileName).isEqualTo(targetFile.absolutePath)
+        } ?: throw Exception("ERROR:: no $uploadFileName")
+
+        val resultFromServer = trashRootObject.listFiles().find { it.isFile && it.absolutePath == targetFile.absolutePath }
+        resultFromServer?.let {
+            assertThat(resultFromServer.absolutePath).isEqualTo(targetFile.absolutePath)
+            val resultContent = resultFromServer.inputStream().bufferedReader().use(BufferedReader::readText)
+            assertThat(resultContent).isEqualTo(uploadFileContent)
+        } ?: throw Exception("ERROR:: no ${targetFile.absolutePath}")
+
+    }
+
+    @Test
+    fun testFileDownload(){
+
+
+
     }
 }

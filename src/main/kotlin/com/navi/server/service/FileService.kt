@@ -74,6 +74,7 @@ class FileService(val fileRepository: FileRepository) {
             // upload to root path..
             // If the destination file already exists, it will be deleted first.
             val uploadFile = File(rootPath, files.originalFilename)
+            println(uploadFile.absolutePath)
             files.transferTo(uploadFile)
 
             // upload to DB
@@ -83,7 +84,7 @@ class FileService(val fileRepository: FileRepository) {
             var fileSaveRequestDTO = FileSaveRequestDTO (
                 fileName = uploadFile.absolutePath,
                 fileType = if (uploadFile.isDirectory) "Folder" else "File",
-                mimeType = if(uploadFile.isDirectory) "Folder" else {
+                mimeType = if (uploadFile.isDirectory) "Folder" else {
                     try {
                         tika.detect(uploadFile)
                     } catch (e: Exception) {
