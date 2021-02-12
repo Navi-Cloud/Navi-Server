@@ -27,8 +27,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import java.io.File
 import org.springframework.web.context.WebApplicationContext
 import java.io.BufferedReader
-import java.security.MessageDigest
-import javax.xml.bind.DatatypeConverter
 
 
 @RunWith(SpringRunner::class)
@@ -49,6 +47,8 @@ class FileApiControllerTest {
 
     @Autowired
     private lateinit var fileService: FileService
+
+    @Autowired
     private lateinit var webApplicationContext: WebApplicationContext
 
     private lateinit var trashRootObject: File
@@ -230,7 +230,7 @@ class FileApiControllerTest {
         // Create one test Folder to root
         val folderName : String = "Upload"
         val folderObject: File = File(fileConfigurationComponent.serverRoot, folderName)
-        val folderObjectToken = getSHA256(folderObject.absolutePath)
+        val folderObjectToken = fileService.getSHA256(folderObject.absolutePath)
         if (!folderObject.exists()) {
             folderObject.mkdir()
         }
@@ -331,13 +331,5 @@ class FileApiControllerTest {
         } ?: throw Exception("ERROR:: no $downloadPath")
 
          */
-
-    }
-
-    fun getSHA256(input: String): String {
-        val messageDigest: MessageDigest = MessageDigest.getInstance("SHA-256").also {
-            it.update(input.toByteArray())
-        }
-        return DatatypeConverter.printHexBinary(messageDigest.digest())
     }
 }
