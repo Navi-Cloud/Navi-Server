@@ -143,9 +143,9 @@ class FileServiceTest {
 
         // make uploadFile
         val uploadFileName = "uploadTest.txt"
-        val file = File(uploadFileName)
-        var content = "file upload test file!".toByteArray()
-        val multipartFile = MockMultipartFile(uploadFileName, uploadFileName, "text/plain", content)
+        var uploadFileContent = "file upload test file!".toByteArray()
+        val multipartFile = MockMultipartFile(
+            uploadFileName, uploadFileName, "text/plain", uploadFileContent)
 
         // file upload
         fileService.fileUpload(multipartFile)
@@ -188,8 +188,8 @@ class FileServiceTest {
         } ?: throw Exception("No FILE")
 
         resource?.let {
-            val content = resource.inputStream.bufferedReader().use(BufferedReader::readText)
-            assertThat(content).isEqualTo(fileContent)
+            val resultContent = resource.inputStream.bufferedReader().use(BufferedReader::readText)
+            assertThat(resultContent).isEqualTo(fileContent)
         } ?: throw Exception("No FILE")
 
     }
