@@ -66,10 +66,8 @@ class FileService(val fileRepository: FileRepository) {
         try {
             // upload to root path..
             // If the destination file already exists, it will be deleted first.
-            println("rootPath at fileService ==> ${rootPath?.let{ rootPath } ?: "is NULLLLL"}" )
             val uploadFile = File(rootPath, files.originalFilename)
             files.transferTo(uploadFile)
-
 
             // upload to DB
             val basicFileAttribute: BasicFileAttributes = Files.readAttributes(uploadFile.toPath(), BasicFileAttributes::class.java)
@@ -113,7 +111,7 @@ class FileService(val fileRepository: FileRepository) {
     }
 
 
-    //will be deleted
+    //will be deleted?
     fun getSHA256(input: String): String {
         val messageDigest: MessageDigest = MessageDigest.getInstance("SHA-256").also {
             it.update(input.toByteArray())
