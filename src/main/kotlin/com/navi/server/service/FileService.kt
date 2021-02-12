@@ -73,10 +73,8 @@ class FileService(val fileRepository: FileRepository) {
         try {
             // upload to root path..
             // If the destination file already exists, it will be deleted first.
-            println("rootPath at fileService ==> ${rootPath?.let { rootPath } ?: "is NULLLLL"}")
             val uploadFile = File(rootPath, files.originalFilename)
             files.transferTo(uploadFile)
-
 
             // upload to DB
             val basicFileAttribute: BasicFileAttributes =
