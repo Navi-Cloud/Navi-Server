@@ -69,12 +69,15 @@ class FileService(val fileRepository: FileRepository) {
     var rootToken: String? = null
     val tika = Tika()
 
-    fun fileUpload(files: MultipartFile) : Long {
+    fun fileUpload(token: String, files: MultipartFile) : Long {
         try {
-            // upload to root path..
+            // find absolutePath from token
+            val uploadFolderPath = fileRepository.findByToken(token).fileName
+
+            // upload
             // If the destination file already exists, it will be deleted first.
-            val uploadFile = File(rootPath, files.originalFilename)
-            println(uploadFile.absolutePath)
+            val uploadFile = File(uploadFolderPath, files.originalFilename)
+            println("uploadFilePath -> ${uploadFile.absolutePath}")
             files.transferTo(uploadFile)
 
             // upload to DB

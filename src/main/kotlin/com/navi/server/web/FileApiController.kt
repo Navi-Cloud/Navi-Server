@@ -10,6 +10,7 @@ import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
+import java.io.File
 import java.util.stream.Collectors
 
 @RestController
@@ -36,13 +37,16 @@ class FileApiController (val fileService: FileService){
     }
 
     @PostMapping("/api/navi/fileUpload")
-    fun fileUpload(@RequestParam(value = "uploadFile") file: MultipartFile) : Long {
+    fun fileUpload(@RequestParam(value = "uploadPath") token : String,
+                   @RequestParam(value = "uploadFile") file: MultipartFile)
+    : Long {
         println("file input ==> "+ file.originalFilename)
-        return fileService.fileUpload(file)
+        return fileService.fileUpload(token, file)
     }
 
+
     @GetMapping("api/navi/fileDownload/{token}")
-    fun fileDownload(@PathVariable token: String) : ResponseEntity<Resource>{
+    fun fileDownloadFromToken(@PathVariable token: String) : ResponseEntity<Resource> {
         val pair : Pair<FileResponseDTO?, Resource?> = fileService.fileDownload(token)
         val fileResponseDTO: FileResponseDTO? = pair.first
         val originalFilename =
@@ -55,6 +59,29 @@ class FileApiController (val fileService: FileService){
             ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType("application/octet-stream"))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"$originalFilename\"")
+                .body(resource)
+        } ?: ResponseEntity.badRequest().body(null);
+    }
+
+
+
+    @GetMapping("api/navi/fileDownload")
+    fun fileDownload(@RequestParam(value = "token") token: String,
+                     @RequestParam(value = "path") path: String)
+    : ResponseEntity<Resource> {
+        val pair : Pair<FileResponseDTO?, Resource?> = fileService.fileDownload(token)
+        val fileResponseDTO: FileResponseDTO? = pair.first
+        val originalFilename =
+            fileResponseDTO?.let {
+                fileResponseDTO.fileName.split("\\").last()
+            } ?: "tmp"
+        val file = File(path, originalFilename)
+
+        val resource: Resource? = pair.second
+        return resource?.let {
+            ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("application/octet-stream"))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"${file.absolutePath}\"")
                 .body(resource)
         } ?: ResponseEntity.badRequest().body(null);
     }
