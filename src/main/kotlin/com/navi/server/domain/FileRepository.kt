@@ -11,5 +11,8 @@ interface FileRepository : JpaRepository<FileEntity, Long> {
     fun findInsideFiles(token: String) : List<FileEntity>
 
     @Query("FROM FileEntity WHERE token= ?1")
-    fun findFile(token: String) : FileEntity
+    fun findByToken(token: String) : FileEntity
+
+    @Query("FROM FileEntity WHERE fileName= ?1")
+    fun findTokenByPath(fileName: String) : FileEntity
 }

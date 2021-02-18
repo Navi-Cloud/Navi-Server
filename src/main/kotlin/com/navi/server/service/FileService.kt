@@ -62,12 +62,15 @@ class FileService(val fileRepository: FileRepository) {
     var rootToken: String? = null
     val tika = Tika()
 
-    fun fileUpload(files: MultipartFile) : Long {
+    fun fileUpload(token: String, files: MultipartFile) : Long {
         try {
-            // upload to root path..
+            // find absolutePath from token
+            val uploadFolderPath = fileRepository.findByToken(token).fileName
+
+            // upload
             // If the destination file already exists, it will be deleted first.
-            val uploadFile = File(rootPath, files.originalFilename)
-            println(uploadFile.absolutePath)
+            val uploadFile = File(uploadFolderPath, files.originalFilename)
+            println("uploadFilePath -> ${uploadFile.absolutePath}")
             files.transferTo(uploadFile)
 
             // upload to DB
@@ -99,7 +102,7 @@ class FileService(val fileRepository: FileRepository) {
     }
 
     fun fileDownload(token: String) : Pair<FileResponseDTO?, Resource?> {
-        val file : FileEntity = fileRepository.findFile(token)
+        val file : FileEntity = fileRepository.findByToken(token)
         try {
             val resource: Resource? = InputStreamResource(Files.newInputStream(Paths.get(file.fileName)))
             return Pair(FileResponseDTO(file), resource)
@@ -112,7 +115,6 @@ class FileService(val fileRepository: FileRepository) {
     }
 
 
-    //will be deleted?
     fun getSHA256(input: String): String {
         val messageDigest: MessageDigest = MessageDigest.getInstance("SHA-256").also {
             it.update(input.toByteArray())

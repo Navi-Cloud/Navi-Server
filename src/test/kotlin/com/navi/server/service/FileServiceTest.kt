@@ -138,6 +138,12 @@ class FileServiceTest {
 
     @Test
     fun fileUploadTest(){
+        // Create one test Folder to root
+        val folderName : String = "Upload"
+        val folderObject: File = File(fileConfigurationComponent.serverRoot, folderName)
+        if (!folderObject.exists()) {
+            folderObject.mkdir()
+        }
 
         fileConfigurationComponent.populateInitialDB()
 
@@ -148,22 +154,22 @@ class FileServiceTest {
             uploadFileName, uploadFileName, "text/plain", uploadFileContent)
 
         // file upload
-        fileService.fileUpload(multipartFile)
+        val uploadFolderToken = fileService.getSHA256(folderObject.absolutePath)
+        fileService.fileUpload(uploadFolderToken, multipartFile)
 
         // Assert
-        val targetFile = File(trashRootObject.absolutePath, uploadFileName)
+        val targetFile = File(folderObject.absolutePath, uploadFileName)
 
         val resultFromDB = fileRepository.findAll().find { it.fileName == targetFile.absolutePath }
         resultFromDB?.let { assertThat(resultFromDB.fileName).isEqualTo(targetFile.absolutePath) } ?: throw Exception("ERROR:: no $uploadFileName")
 
-        val resultFromServer = trashRootObject.listFiles().find { it.isFile && it.absolutePath == targetFile.absolutePath }
+        val resultFromServer = folderObject.listFiles().find { it.isFile && it.absolutePath == targetFile.absolutePath }
         resultFromServer?.let { assertThat(resultFromServer.absolutePath).isEqualTo(targetFile.absolutePath) } ?: throw Exception("ERROR:: no ${targetFile.absolutePath}")
 
     }
 
     @Test
     fun fileDownloadTest(){
-
         // Make one test file to root
         val fileName: String = "downloadTest.txt"
         val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
