@@ -14,6 +14,18 @@ class FileSaveRequestDTO(
     var fileSize: String
 ) {
 
+    constructor(responseDTO: FileResponseDTO): this(
+        id = responseDTO.id,
+        fileName = responseDTO.fileName,
+        fileType = responseDTO.fileType,
+        mimeType = responseDTO.mimeType,
+        token = responseDTO.token,
+        prevToken = responseDTO.prevToken,
+        lastModifiedTime = responseDTO.lastModifiedTime,
+        fileCreatedDate = responseDTO.fileCreatedDate,
+        fileSize = responseDTO.fileSize
+    )
+
     fun toEntity(): FileEntity {
         return FileEntity(
             id = this.id,

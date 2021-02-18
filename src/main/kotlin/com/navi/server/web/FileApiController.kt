@@ -62,9 +62,6 @@ class FileApiController (val fileService: FileService){
                 .body(resource)
         } ?: ResponseEntity.badRequest().body(null);
     }
-
-
-
     @GetMapping("api/navi/fileDownload")
     fun fileDownload(@RequestParam(value = "token") token: String,
                      @RequestParam(value = "path") path: String)

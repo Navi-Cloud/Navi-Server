@@ -5,7 +5,8 @@ import com.navi.server.domain.FileEntity
 import com.navi.server.domain.FileRepository
 import com.navi.server.dto.FileResponseDTO
 import com.navi.server.dto.FileSaveRequestDTO
-import org.apache.catalina.webresources.FileResource
+
+import com.navi.server.service.FileService
 import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -18,16 +19,9 @@ import org.springframework.test.context.junit4.SpringRunner
 import org.assertj.core.api.Assertions.assertThat;
 import org.junit.Before
 import org.springframework.http.HttpStatus
-import java.lang.reflect.Type
-
-import org.springframework.boot.test.web.client.getForEntity
-import org.springframework.core.io.Resource
-import org.springframework.http.HttpEntity
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity.status
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.MockMvcBuilder
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
@@ -53,6 +47,9 @@ class FileApiControllerTest {
 
     @Autowired
     private lateinit var fileConfigurationComponent: FileConfigurationComponent
+
+    @Autowired
+    private lateinit var fileService: FileService
 
     @Autowired
     private lateinit var webApplicationContext: WebApplicationContext
@@ -161,7 +158,7 @@ class FileApiControllerTest {
 
         // Assert
         assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
-        assertThat(responseEntity.body).isEqualTo(fileConfigurationComponent.getSHA256(fileConfigurationComponent.serverRoot))
+        assertThat(responseEntity.body).isEqualTo(fileService.getSHA256(fileConfigurationComponent.serverRoot))
 
     }
 
@@ -202,7 +199,7 @@ class FileApiControllerTest {
 
 
         // Api test 1 :: under Root
-        val rootToken = fileConfigurationComponent.getSHA256(fileConfigurationComponent.serverRoot)
+        val rootToken = fileService.getSHA256(fileConfigurationComponent.serverRoot)
         val url = "http://localhost:$port/api/navi/findInsideFiles/${rootToken}"
         var responseEntity : ResponseEntity<Array<FileResponseDTO>> = restTemplate.getForEntity(url, Array<FileResponseDTO>::class.java)
 
@@ -217,7 +214,7 @@ class FileApiControllerTest {
 
 
         //Api test 2 :: under folderName
-        val folderToken = fileConfigurationComponent.getSHA256(folderPath)
+        val folderToken = fileService.getSHA256(folderPath)
         val url2 = "http://localhost:$port/api/navi/findInsideFiles/${folderToken}"
         var responseEntity2 : ResponseEntity<Array<FileResponseDTO>> = restTemplate.getForEntity(url2, Array<FileResponseDTO>::class.java)
 
@@ -236,7 +233,7 @@ class FileApiControllerTest {
         // Create one test Folder to root
         val folderName : String = "Upload"
         val folderObject: File = File(fileConfigurationComponent.serverRoot, folderName)
-        val folderObjectToken = getSHA256(folderObject.absolutePath)
+        val folderObjectToken = fileService.getSHA256(folderObject.absolutePath)
         if (!folderObject.exists()) {
             folderObject.mkdir()
         }
@@ -339,12 +336,5 @@ class FileApiControllerTest {
 
          */
 
-    }
-
-    fun getSHA256(input: String): String {
-        val messageDigest: MessageDigest = MessageDigest.getInstance("SHA-256").also {
-            it.update(input.toByteArray())
-        }
-        return DatatypeConverter.printHexBinary(messageDigest.digest())
     }
 }
