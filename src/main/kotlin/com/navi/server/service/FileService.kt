@@ -72,6 +72,7 @@ class FileService(val fileRepository: FileRepository) {
     fun fileUpload(token: String, files: MultipartFile) : Long {
         try {
             // find absolutePath from token
+                println("Token: ${token}")
             val uploadFolderPath = fileRepository.findByToken(token).fileName
 
             // upload
