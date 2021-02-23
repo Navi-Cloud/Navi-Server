@@ -11,6 +11,7 @@ import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit4.SpringRunner
+import kotlin.math.pow
 
 @RunWith(SpringRunner::class)
 @SpringBootTest
@@ -141,5 +142,17 @@ class FileServiceTest {
         fileRepository.deleteAll()
         fileService.saveAll(fileSaveRequestDtoList)
         assertThat(fileRepository.count()).isEqualTo(targetIncreaseValue.toLong())
+    }
+
+    @Test
+    fun isConvertingCorrect() {
+        val testFileSizeMib: Long = 1024 * 1024 * 2 // 2 Mib
+        val testFileSizeKib: Long = 1024 * 4 // 4.0Kib
+        val testFileSizeB: Long = 800 //800B
+        val testFileSizeZero: Long = 0
+        assertThat(fileService.convertSize(testFileSizeMib)).isEqualTo("2.0MiB")
+        assertThat(fileService.convertSize(testFileSizeKib)).isEqualTo("4.0KiB")
+        assertThat(fileService.convertSize(testFileSizeB)).isEqualTo("800B")
+        assertThat(fileService.convertSize(testFileSizeZero)).isEqualTo("0B")
     }
 }

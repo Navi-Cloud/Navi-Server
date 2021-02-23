@@ -41,16 +41,6 @@ class FileConfigurationTest {
     }
 
     @Test
-    fun isConvertingCorrect() {
-        val testFileSizeMib: Long = 1024 * 1024 * 2 // 2 Mib
-        val testFileSizeKib: Long = 1024 * 4 // 4.0Kib
-        val testFileSizeB: Long = 800 //800B
-        assertThat(fileService.convertSize(testFileSizeMib)).isEqualTo("2.0MiB")
-        assertThat(fileService.convertSize(testFileSizeKib)).isEqualTo("4.0KiB")
-        assertThat(fileService.convertSize(testFileSizeB)).isEqualTo("800B")
-    }
-
-    @Test
     fun isListingWorks() {
         // At least create one empty file to root
         val fileName: String = "KDRTesting.txt"
