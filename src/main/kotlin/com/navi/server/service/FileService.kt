@@ -72,7 +72,6 @@ class FileService(val fileRepository: FileRepository) {
     fun fileUpload(token: String, files: MultipartFile) : Long {
         try {
             // find absolutePath from token
-                println("Token: ${token}")
             val uploadFolderPath = fileRepository.findByToken(token).fileName
 
             // upload
@@ -97,7 +96,7 @@ class FileService(val fileRepository: FileRepository) {
                     }
                 },
                 token = getSHA256(uploadFile.absolutePath),
-                prevToken = getSHA256(rootPath?.let { rootPath } ?: "rootToken"),
+                prevToken = getSHA256(uploadFolderPath),
                 lastModifiedTime = uploadFile.lastModified(),
                 fileCreatedDate = simpleDateFormat.format(basicFileAttribute.creationTime().toMillis()),
                 fileSize = convertSize(basicFileAttribute.size())
