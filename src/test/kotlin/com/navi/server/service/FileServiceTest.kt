@@ -155,4 +155,14 @@ class FileServiceTest {
         assertThat(fileService.convertSize(testFileSizeB)).isEqualTo("800B")
         assertThat(fileService.convertSize(testFileSizeZero)).isEqualTo("0B")
     }
+
+    @Test
+    fun isGettingSHA256WorksWell() {
+        val targetPlainText: String = "TestingKDR"
+        val hashedString: String = fileService.getSHA256(targetPlainText)
+
+        assertThat(hashedString).isNotEqualTo(null)
+        assertThat(hashedString).isNotEqualTo("")
+        assertThat(targetPlainText).isNotEqualTo(hashedString)
+    }
 }
