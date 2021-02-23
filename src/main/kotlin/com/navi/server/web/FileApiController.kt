@@ -2,6 +2,7 @@ package com.navi.server.web
 
 import com.navi.server.dto.FileResponseDTO
 import com.navi.server.dto.FileSaveRequestDTO
+import com.navi.server.dto.FileUploadRequestDTO
 import com.navi.server.service.FileService
 import org.springframework.core.io.Resource
 import org.springframework.http.HttpHeaders
@@ -35,11 +36,9 @@ class FileApiController (val fileService: FileService){
     }
 
     @PostMapping("/api/navi/fileUpload")
-    fun fileUpload(@RequestParam(value = "uploadPath") token : String,
-                   @RequestParam(value = "uploadFile") file: MultipartFile)
+    fun fileUpload(@RequestBody requestDto: FileUploadRequestDTO)
     : Long {
-        println("file input ==> "+ file.originalFilename)
-        return fileService.fileUpload(token, file)
+        return fileService.fileUpload(requestDto.uploadPath, requestDto.uploadFile)
     }
 
 
