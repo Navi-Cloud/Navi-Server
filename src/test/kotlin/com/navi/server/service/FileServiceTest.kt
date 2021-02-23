@@ -187,4 +187,32 @@ class FileServiceTest {
         val response: Long = fileService.deleteByToken(nextTokenTest)
         assertThat(fileRepository.count()).isEqualTo(0L)
     }
+
+    @Test
+    fun isFindByTokenWorksWell() {
+        fileRepository.save(
+            FileEntity(
+                id = 0,
+                fileName = fileNameTest,
+                fileType = fileTypeTest,
+                mimeType = mimeTypeTest,
+                token = nextTokenTest,
+                prevToken = prevTokenTest,
+                lastModifiedTime = lastModifiedTimeTest,
+                fileCreatedDate = fileCreatedDateTest,
+                fileSize = fileSizeTest
+            )
+        )
+
+        // do work
+        val response: FileResponseDTO = fileService.findByToken(nextTokenTest)
+        assertThat(response.fileName).isEqualTo(fileNameTest)
+        assertThat(response.fileType).isEqualTo(fileTypeTest)
+        assertThat(response.mimeType).isEqualTo(mimeTypeTest)
+        assertThat(response.token).isEqualTo(nextTokenTest)
+        assertThat(response.prevToken).isEqualTo(prevTokenTest)
+        assertThat(response.lastModifiedTime).isEqualTo(lastModifiedTimeTest)
+        assertThat(response.fileCreatedDate).isEqualTo(fileCreatedDateTest)
+        assertThat(response.fileSize).isEqualTo(fileSizeTest)
+    }
 }
