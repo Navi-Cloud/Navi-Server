@@ -244,4 +244,11 @@ class FileServiceTest {
         assertThat(response[0].fileCreatedDate).isEqualTo(fileCreatedDateTest)
         assertThat(response[0].fileSize).isEqualTo(fileSizeTest)
     }
+
+    // Do we even need this?
+    @Test
+    fun isGettingSettingsRootTokenWorksWell() {
+        fileService.rootToken = "2021"
+        assertThat(fileService.rootToken).isEqualTo("2021")
+    }
 }
