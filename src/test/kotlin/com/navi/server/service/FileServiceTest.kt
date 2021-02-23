@@ -109,4 +109,37 @@ class FileServiceTest {
             assertThat(fileSize).isEqualTo(fileSizeTest)
         }
     }
+
+    @Test
+    fun isSavingAllWorks() {
+        val digestValue: Int = 10
+        val targetIncreaseValue: Int = digestValue * 10
+        val fileSaveRequestDtoList: ArrayList<FileSaveRequestDTO> = ArrayList()
+
+        // actual list size > digestValue
+        for (i in 0 until targetIncreaseValue) {
+            fileSaveRequestDtoList.add(
+                FileSaveRequestDTO(
+                    id = 0,
+                    fileName = fileNameTest,
+                    fileType = fileTypeTest,
+                    mimeType = mimeTypeTest,
+                    token = nextTokenTest,
+                    prevToken = prevTokenTest,
+                    lastModifiedTime = lastModifiedTimeTest,
+                    fileCreatedDate = fileCreatedDateTest,
+                    fileSize = fileSizeTest
+                )
+            )
+        }
+
+        // Save Value
+        fileService.saveAll(fileSaveRequestDtoList, digestValue)
+        assertThat(fileRepository.count()).isEqualTo(targetIncreaseValue.toLong())
+
+        // actual list size < digestValue
+        fileRepository.deleteAll()
+        fileService.saveAll(fileSaveRequestDtoList)
+        assertThat(fileRepository.count()).isEqualTo(targetIncreaseValue.toLong())
+    }
 }
