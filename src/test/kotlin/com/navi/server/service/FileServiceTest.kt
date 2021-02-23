@@ -165,4 +165,26 @@ class FileServiceTest {
         assertThat(hashedString).isNotEqualTo("")
         assertThat(targetPlainText).isNotEqualTo(hashedString)
     }
+
+
+    @Test
+    fun isDeleteByTokenWorksWell() {
+        fileRepository.save(
+            FileEntity(
+                id = 0,
+                fileName = fileNameTest,
+                fileType = fileTypeTest,
+                mimeType = mimeTypeTest,
+                token = nextTokenTest,
+                prevToken = prevTokenTest,
+                lastModifiedTime = lastModifiedTimeTest,
+                fileCreatedDate = fileCreatedDateTest,
+                fileSize = fileSizeTest
+            )
+        )
+
+        // do work
+        val response: Long = fileService.deleteByToken(nextTokenTest)
+        assertThat(fileRepository.count()).isEqualTo(0L)
+    }
 }
