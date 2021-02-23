@@ -38,9 +38,9 @@ class FileApiController (val fileService: FileService){
     }
 
     @PostMapping("/api/navi/fileUpload")
-    fun fileUpload(@RequestBody requestDto: FileUploadRequestDTO)
+    fun fileUpload(@RequestPart("uploadFile") file: MultipartFile, @RequestPart("uploadPath") token: String)
     : Long {
-        return fileService.fileUpload(requestDto.uploadPath, requestDto.uploadFile)
+        return fileService.fileUpload(token.substring(1, token.length - 1), file)
     }
 
 
