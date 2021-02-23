@@ -215,4 +215,33 @@ class FileServiceTest {
         assertThat(response.fileCreatedDate).isEqualTo(fileCreatedDateTest)
         assertThat(response.fileSize).isEqualTo(fileSizeTest)
     }
+
+    @Test
+    fun isFindInsideFilesWorksWell() {
+        fileRepository.save(
+            FileEntity(
+                id = 0,
+                fileName = fileNameTest,
+                fileType = fileTypeTest,
+                mimeType = mimeTypeTest,
+                token = nextTokenTest,
+                prevToken = prevTokenTest,
+                lastModifiedTime = lastModifiedTimeTest,
+                fileCreatedDate = fileCreatedDateTest,
+                fileSize = fileSizeTest
+            )
+        )
+
+        // do work
+        val response: List<FileResponseDTO> = fileService.findInsideFiles(prevTokenTest)
+        assertThat(response.size).isEqualTo(1L)
+        assertThat(response[0].fileName).isEqualTo(fileNameTest)
+        assertThat(response[0].fileType).isEqualTo(fileTypeTest)
+        assertThat(response[0].mimeType).isEqualTo(mimeTypeTest)
+        assertThat(response[0].token).isEqualTo(nextTokenTest)
+        assertThat(response[0].prevToken).isEqualTo(prevTokenTest)
+        assertThat(response[0].lastModifiedTime).isEqualTo(lastModifiedTimeTest)
+        assertThat(response[0].fileCreatedDate).isEqualTo(fileCreatedDateTest)
+        assertThat(response[0].fileSize).isEqualTo(fileSizeTest)
+    }
 }
