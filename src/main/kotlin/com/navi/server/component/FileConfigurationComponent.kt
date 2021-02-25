@@ -2,30 +2,19 @@ package com.navi.server.component
 
 import com.navi.server.dto.FileSaveRequestDTO
 import com.navi.server.service.FileService
-import com.navi.server.watcher.InternalFileWatcher
-import com.navi.server.watcher.JVMWatcher
-import kotlinx.coroutines.*
 import org.apache.tika.Tika
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
 import java.io.File
 import java.nio.file.Files
-import kotlin.math.log
 import java.nio.file.attribute.BasicFileAttributes
-import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.annotation.PostConstruct
-import javax.annotation.PreDestroy
-import javax.xml.bind.DatatypeConverter
-import kotlin.math.pow
 
 @Component
 @ConfigurationProperties("navi")
 class FileConfigurationComponent(val fileService: FileService) {
-    private val coroutineScope: CoroutineScope = CoroutineScope(Job() + Dispatchers.IO)
-    private var internalFileWatcher: InternalFileWatcher? = null
-    private var job: Job? = null
     lateinit var serverRoot: String
 
     @PostConstruct
@@ -35,20 +24,6 @@ class FileConfigurationComponent(val fileService: FileService) {
             return
         }
         populateInitialDB()
-        job = coroutineScope.launch {
-            runInterruptible {
-                internalFileWatcher = JVMWatcher(serverRoot, fileService)
-                internalFileWatcher?.watchFolder()
-            }
-        }
-    }
-
-    @PreDestroy
-    fun finishWatcher() = runBlocking {
-        if (job?.isActive == true) {
-            internalFileWatcher?.closeWatcher()
-            job?.cancelAndJoin()
-        }
     }
 
     fun populateInitialDB(): Long {
@@ -57,13 +32,14 @@ class FileConfigurationComponent(val fileService: FileService) {
         if (!fileObject.exists()) {
             throw IllegalArgumentException("Server Root: $serverRoot does not exist!")
         }
-        val tika : Tika = Tika()
+        val tika: Tika = Tika()
 
         //save root token
         fileService.rootToken = fileService.getSHA256(serverRoot)
 
         fileObject.walk().forEach {
-            val basicFileAttribute: BasicFileAttributes = Files.readAttributes(it.toPath(), BasicFileAttributes::class.java)
+            val basicFileAttribute: BasicFileAttributes =
+                Files.readAttributes(it.toPath(), BasicFileAttributes::class.java)
 
             val simpleDateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd-HH:mm:ss")
             println(it.absolutePath)
@@ -89,7 +65,7 @@ class FileConfigurationComponent(val fileService: FileService) {
                             id = 0,
                             fileName = absolutePath,
                             fileType = if (isDirectory) "Folder" else "File",
-                            mimeType = if(isDirectory) "Folder" else {
+                            mimeType = if (isDirectory) "Folder" else {
                                 try {
                                     tika.detect(it)
                                 } catch (e: Exception) {
