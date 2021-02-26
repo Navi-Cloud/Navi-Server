@@ -2,7 +2,6 @@ package com.navi.server.web
 
 import com.navi.server.dto.FileResponseDTO
 import com.navi.server.dto.FileSaveRequestDTO
-import com.navi.server.dto.FileUploadRequestDTO
 import com.navi.server.service.FileService
 import org.springframework.core.io.Resource
 import org.springframework.http.HttpHeaders
@@ -43,24 +42,9 @@ class FileApiController (val fileService: FileService){
 
 
     @GetMapping("api/navi/fileDownload/{token}")
-    fun fileDownloadFromToken(@PathVariable token: String) : ResponseEntity<Resource> {
-        val pair : Pair<FileResponseDTO?, Resource?> = fileService.fileDownload(token)
-        val fileResponseDTO: FileResponseDTO? = pair.first
-        val originalFilename =
-            fileResponseDTO?.let {
-                fileResponseDTO.fileName.split("\\").last()
-            } ?: "tmp"
-
-        val resource: Resource? = pair.second
-        return resource?.let {
-            ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType("application/octet-stream"))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"$originalFilename\"")
-                .body(resource)
-        } ?: ResponseEntity.badRequest().body(null);
+    fun fileDownloadFromToken(@PathVariable token: String) : Pair<FileResponseDTO?, Resource?> {
+        return fileService.fileDownload(token)
     }
-
-
 
     @GetMapping("api/navi/fileDownload")
     fun fileDownload(@RequestParam(value = "token") token: String,
