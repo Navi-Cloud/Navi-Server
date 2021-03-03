@@ -5,6 +5,7 @@ import com.navi.server.domain.FileEntity
 import com.navi.server.domain.FileRepository
 import com.navi.server.dto.FileResponseDTO
 import com.navi.server.dto.FileSaveRequestDTO
+
 import com.navi.server.service.FileService
 import org.junit.After
 import org.junit.Test
@@ -27,6 +28,11 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import java.io.File
 import org.springframework.web.context.WebApplicationContext
 import java.io.BufferedReader
+<<<<<<< HEAD
+=======
+import java.security.MessageDigest
+import javax.xml.bind.DatatypeConverter
+>>>>>>> origin/je-upload-test
 
 
 @RunWith(SpringRunner::class)
@@ -264,6 +270,10 @@ class FileApiControllerTest {
         ).andExpect { status(HttpStatus.OK) }
             .andDo(MockMvcResultHandlers.print())
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/je-upload-test
         // Assert
         val targetFile = File(folderObject.absolutePath, uploadFileName)
 
@@ -341,5 +351,9 @@ class FileApiControllerTest {
         } ?: throw Exception("ERROR:: no $downloadPath")
 
          */
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/je-upload-test
     }
 }

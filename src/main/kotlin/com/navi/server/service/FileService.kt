@@ -107,18 +107,17 @@ class FileService(val fileRepository: FileRepository) {
         }
         return -1
     }
-
-    fun fileDownload(token: String) : Pair<FileResponseDTO?, Resource?> {
+    fun fileDownload(token: String) : Pair<FileResponseDTO, Resource>? {
         val file : FileEntity = fileRepository.findByToken(token)
         try {
-            val resource: Resource? = InputStreamResource(Files.newInputStream(Paths.get(file.fileName)))
+            val resource: Resource = InputStreamResource(Files.newInputStream(Paths.get(file.fileName)))
             return Pair(FileResponseDTO(file), resource)
         } catch (e: FileNotFoundException) {
             e.printStackTrace()
         } catch (e: Exception) {
             e.printStackTrace();
         }
-        return Pair(null, null)
+        return null
     }
 
     fun getSHA256(input: String): String {
