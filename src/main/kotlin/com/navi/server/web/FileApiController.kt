@@ -45,47 +45,6 @@ class FileApiController (val fileService: FileService){
 
 
     @GetMapping("api/navi/fileDownload/{token}")
-<<<<<<< HEAD
-    fun fileDownloadFromToken(@PathVariable token: String) : Pair<FileResponseDTO?, Resource?> {
-        return fileService.fileDownload(token)
-    }
-
-    @GetMapping("api/navi/fileDownload")
-    fun fileDownload(@RequestParam(value = "token") token: String,
-                     @RequestParam(value = "path") path: String)
-    : ResponseEntity<Resource> {
-        val pair : Pair<FileResponseDTO?, Resource?> = fileService.fileDownload(token)
-        val fileResponseDTO: FileResponseDTO? = pair.first
-        val originalFilename =
-            fileResponseDTO?.let {
-                fileResponseDTO.fileName.split("\\").last()
-            } ?: "tmp"
-        val file = File(path, originalFilename)
-
-        val resource: Resource? = pair.second
-        return resource?.let {
-            ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType("application/octet-stream"))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"${file.absolutePath}\"")
-                .body(resource)
-        } ?: ResponseEntity.badRequest().body(null);
-    }
-
-    @GetMapping("api/navi/fileDownload/{token}")
-    fun fileDownload(@PathVariable token: String) : ResponseEntity<Resource>{
-        val pair : Pair<FileResponseDTO?, Resource?> = fileService.fileDownload(token)
-        val fileResponseDTO: FileResponseDTO? = pair.first
-        val originalFilename =
-            fileResponseDTO?.let {
-                fileResponseDTO.fileName.split("\\").last()
-            } ?: "tmp"
-
-        val resource: Resource? = pair.second
-        return resource?.let {
-            ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType("application/octet-stream"))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"$originalFilename\"")
-=======
     fun fileDownloadFromToken(@PathVariable token: String) : ResponseEntity<Resource> {
         val pair : Pair<FileResponseDTO, Resource> = fileService.fileDownload(token) ?: run {
             return ResponseEntity.badRequest().body(null)
@@ -136,7 +95,6 @@ class FileApiController (val fileService: FileService){
             ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType("application/octet-stream"))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"${file.absolutePath}\"")
->>>>>>> origin/je-upload-test
                 .body(resource)
         } ?: ResponseEntity.badRequest().body(null);
     }
