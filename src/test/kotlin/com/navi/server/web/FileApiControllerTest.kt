@@ -18,18 +18,20 @@ import org.springframework.http.ResponseEntity
 import org.springframework.test.context.junit4.SpringRunner
 import org.assertj.core.api.Assertions.assertThat;
 import org.junit.Before
+import org.springframework.core.io.Resource
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity.status
 import org.springframework.mock.web.MockMultipartFile
+import org.springframework.mock.web.MockPart
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import java.io.File
 import org.springframework.web.context.WebApplicationContext
-import java.io.BufferedReader
-import java.security.MessageDigest
-import javax.xml.bind.DatatypeConverter
+import java.nio.charset.Charset
+import javax.servlet.http.Part
 
 
 @RunWith(SpringRunner::class)
@@ -251,18 +253,14 @@ class FileApiControllerTest {
         // Make uploadFile
         val uploadFileName = "uploadApiTest.txt"
         val uploadFileContent = "test upload API!"
-        val testMultipartFile = MockMultipartFile(
-            "uploadFile",
-            uploadFileName,
-            "text/plain",
-            uploadFileContent.toByteArray()
-        )
+        val multipartFile = MockMultipartFile("uploadFile", uploadFileName, "text/plain", uploadFileContent.toByteArray())
+        val uploadFolderPath = MockMultipartFile("uploadPath", "uploadPath", "text/plain", folderObjectToken.toByteArray())
 
         // Perform
         mockMvc.perform(
             MockMvcRequestBuilders.multipart("/api/navi/fileUpload")
-                .file(testMultipartFile)
-                .param("uploadPath", folderObjectToken)
+                .file(multipartFile)
+                .file(uploadFolderPath)
         ).andExpect { status(HttpStatus.OK) }
             .andDo(MockMvcResultHandlers.print())
 
@@ -277,15 +275,12 @@ class FileApiControllerTest {
         val resultFromServer = folderObject.listFiles().find { it.isFile && it.absolutePath == targetFile.absolutePath }
         resultFromServer?.let {
             assertThat(resultFromServer.absolutePath).isEqualTo(targetFile.absolutePath)
-            val resultContent = resultFromServer.inputStream().bufferedReader().use(BufferedReader::readText)
-            assertThat(resultContent).isEqualTo(uploadFileContent)
         } ?: throw Exception("ERROR:: no ${targetFile.absolutePath}")
 
     }
 
     @Test
     fun testFileDownload(){
-        /*
         // Make one test file to root
         val fileName: String = "downloadAPITest.txt"
         val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
@@ -295,53 +290,25 @@ class FileApiControllerTest {
             fileObject.createNewFile()
         }
 
-        // Create one test Folder to root
-        val folderName : String = "Download"
-        val folderObject: File = File(fileConfigurationComponent.serverRoot, folderName)
-        if (!folderObject.exists()) {
-            folderObject.mkdir()
-        }
-
         fileConfigurationComponent.populateInitialDB()
 
-        val targetToken = fileRepository.findTokenByPath(fileObject.absolutePath).token
+        val targetToken = fileService.getSHA256(fileObject.absolutePath)
 
         // Perform
         val url = "http://localhost:$port/api/navi/fileDownload/${targetToken}"
-        var responseEntity = restTemplate.getForEntity(url, Resource::class.java)
-        println(responseEntity.headers)
-
-
-
-        mockMvc.perform(MockMvcRequestBuilders
-                .get("/api/navi/fileDownload/$targetToken"))
-            .andExpect { status(HttpStatus.OK) }
-            .andDo(MockMvcResultHandlers.print())
-
-
+        val responseEntity = restTemplate.getForEntity(url, Resource::class.java)
+        val resource : Resource? = responseEntity.body
 
         // Assert
-        val downloadFolder = File(System.getProperty("user.home"), "Downloads")
-        println(downloadFolder.absolutePath)
-        val downloadPath = File(downloadFolder.absolutePath, fileName).absolutePath
+        val contentDisposition : String? = responseEntity.headers.get(HttpHeaders.CONTENT_DISPOSITION)!!.get(0)
+        contentDisposition?.let {
+            val resultFileName = it.split("=")[1]
+            assertThat(resultFileName.substring(1, resultFileName.length-1)).isEqualTo(fileName)
+        } ?: throw Exception("No File Name in ContentDisposition")
 
-        val downloadFile = downloadFolder.listFiles().find { it.isFile && it.absolutePath == downloadPath }
-        downloadFile?.let {
-            assertThat(downloadFile.absolutePath).isEqualTo(downloadPath)
-            val resultContent = downloadFile.inputStream().bufferedReader().use(BufferedReader::readText)
+        resource?.let {
+            val resultContent = resource.inputStream.readBytes().toString(Charsets.UTF_8)
             assertThat(resultContent).isEqualTo(fileContent)
-        } ?: throw Exception("ERROR:: no $downloadPath")
-
-         */
-        /*
-        val downloadPath = File(folderObject.absolutePath, fileName).absolutePath
-        val downloadFile = folderObject.listFiles().find { it.isFile && it.absolutePath == downloadPath }
-        downloadFile?.let {
-            assertThat(downloadFile.absolutePath).isEqualTo(downloadPath)
-            val resultContent = downloadFile.inputStream().bufferedReader().use(BufferedReader::readText)
-            assertThat(resultContent).isEqualTo(fileContent)
-        } ?: throw Exception("ERROR:: no $downloadPath")
-
-         */
+        } ?: throw Exception("No File : ${fileObject.absolutePath}")
     }
 }
