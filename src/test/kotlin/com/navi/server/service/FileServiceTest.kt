@@ -132,6 +132,145 @@ class FileServiceTest {
     }
 
     @Test
+    fun isSavingAllWorks() {
+        val digestValue: Int = 10
+        val targetIncreaseValue: Int = digestValue * 10
+        val fileSaveRequestDtoList: ArrayList<FileSaveRequestDTO> = ArrayList()
+
+        // actual list size > digestValue
+        for (i in 0 until targetIncreaseValue) {
+            fileSaveRequestDtoList.add(
+                FileSaveRequestDTO(
+                    id = 0,
+                    fileName = fileNameTest,
+                    fileType = fileTypeTest,
+                    mimeType = mimeTypeTest,
+                    token = nextTokenTest,
+                    prevToken = prevTokenTest,
+                    lastModifiedTime = lastModifiedTimeTest,
+                    fileCreatedDate = fileCreatedDateTest,
+                    fileSize = fileSizeTest
+                )
+            )
+        }
+
+        // Save Value
+        fileService.saveAll(fileSaveRequestDtoList, digestValue)
+        assertThat(fileRepository.count()).isEqualTo(targetIncreaseValue.toLong())
+
+        // actual list size < digestValue
+        fileRepository.deleteAll()
+        fileService.saveAll(fileSaveRequestDtoList)
+        assertThat(fileRepository.count()).isEqualTo(targetIncreaseValue.toLong())
+    }
+
+    @Test
+    fun isConvertingCorrect() {
+        val testFileSizeMib: Long = 1024 * 1024 * 2 // 2 Mib
+        val testFileSizeKib: Long = 1024 * 4 // 4.0Kib
+        val testFileSizeB: Long = 800 //800B
+        val testFileSizeZero: Long = 0
+        assertThat(fileService.convertSize(testFileSizeMib)).isEqualTo("2.0MiB")
+        assertThat(fileService.convertSize(testFileSizeKib)).isEqualTo("4.0KiB")
+        assertThat(fileService.convertSize(testFileSizeB)).isEqualTo("800B")
+        assertThat(fileService.convertSize(testFileSizeZero)).isEqualTo("0B")
+    }
+
+    @Test
+    fun isGettingSHA256WorksWell() {
+        val targetPlainText: String = "TestingKDR"
+        val hashedString: String = fileService.getSHA256(targetPlainText)
+
+        assertThat(hashedString).isNotEqualTo(null)
+        assertThat(hashedString).isNotEqualTo("")
+        assertThat(targetPlainText).isNotEqualTo(hashedString)
+    }
+
+
+    @Test
+    fun isDeleteByTokenWorksWell() {
+        fileRepository.save(
+            FileEntity(
+                id = 0,
+                fileName = fileNameTest,
+                fileType = fileTypeTest,
+                mimeType = mimeTypeTest,
+                token = nextTokenTest,
+                prevToken = prevTokenTest,
+                lastModifiedTime = lastModifiedTimeTest,
+                fileCreatedDate = fileCreatedDateTest,
+                fileSize = fileSizeTest
+            )
+        )
+
+        // do work
+        val response: Long = fileService.deleteByToken(nextTokenTest)
+        assertThat(fileRepository.count()).isEqualTo(0L)
+    }
+
+    @Test
+    fun isFindByTokenWorksWell() {
+        fileRepository.save(
+            FileEntity(
+                id = 0,
+                fileName = fileNameTest,
+                fileType = fileTypeTest,
+                mimeType = mimeTypeTest,
+                token = nextTokenTest,
+                prevToken = prevTokenTest,
+                lastModifiedTime = lastModifiedTimeTest,
+                fileCreatedDate = fileCreatedDateTest,
+                fileSize = fileSizeTest
+            )
+        )
+
+        // do work
+        val response: FileResponseDTO = fileService.findByToken(nextTokenTest)
+        assertThat(response.fileName).isEqualTo(fileNameTest)
+        assertThat(response.fileType).isEqualTo(fileTypeTest)
+        assertThat(response.mimeType).isEqualTo(mimeTypeTest)
+        assertThat(response.token).isEqualTo(nextTokenTest)
+        assertThat(response.prevToken).isEqualTo(prevTokenTest)
+        assertThat(response.lastModifiedTime).isEqualTo(lastModifiedTimeTest)
+        assertThat(response.fileCreatedDate).isEqualTo(fileCreatedDateTest)
+        assertThat(response.fileSize).isEqualTo(fileSizeTest)
+    }
+
+    @Test
+    fun isFindInsideFilesWorksWell() {
+        fileRepository.save(
+            FileEntity(
+                id = 0,
+                fileName = fileNameTest,
+                fileType = fileTypeTest,
+                mimeType = mimeTypeTest,
+                token = nextTokenTest,
+                prevToken = prevTokenTest,
+                lastModifiedTime = lastModifiedTimeTest,
+                fileCreatedDate = fileCreatedDateTest,
+                fileSize = fileSizeTest
+            )
+        )
+
+        // do work
+        val response: List<FileResponseDTO> = fileService.findInsideFiles(prevTokenTest)
+        assertThat(response.size).isEqualTo(1L)
+        assertThat(response[0].fileName).isEqualTo(fileNameTest)
+        assertThat(response[0].fileType).isEqualTo(fileTypeTest)
+        assertThat(response[0].mimeType).isEqualTo(mimeTypeTest)
+        assertThat(response[0].token).isEqualTo(nextTokenTest)
+        assertThat(response[0].prevToken).isEqualTo(prevTokenTest)
+        assertThat(response[0].lastModifiedTime).isEqualTo(lastModifiedTimeTest)
+        assertThat(response[0].fileCreatedDate).isEqualTo(fileCreatedDateTest)
+        assertThat(response[0].fileSize).isEqualTo(fileSizeTest)
+    }
+
+    // Do we even need this?
+    @Test
+    fun isGettingSettingsRootTokenWorksWell() {
+        fileService.rootToken = "2021"
+        assertThat(fileService.rootToken).isEqualTo("2021")
+    }
     fun fileUploadTest(){
         // Create one test Folder to root
         val folderName : String = "Upload"
@@ -166,6 +305,7 @@ class FileServiceTest {
     @Test
     fun fileDownloadTest(){
         /*
+    fun fileDownloadTest() {
         // Make one test file to root
         val fileName: String = "downloadTest.txt"
         val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
