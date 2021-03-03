@@ -14,16 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.junit4.SpringRunner
-<<<<<<< HEAD
 import java.io.File
-=======
-import java.io.BufferedReader
-import java.io.File
-import java.nio.file.Path
-import java.nio.file.Paths
-import javax.annotation.PostConstruct
-import javax.annotation.Resources
->>>>>>> origin/je-upload-test
 
 @RunWith(SpringRunner::class)
 @SpringBootTest
@@ -141,7 +132,6 @@ class FileServiceTest {
     }
 
     @Test
-<<<<<<< HEAD
     fun isSavingAllWorks() {
         val digestValue: Int = 10
         val targetIncreaseValue: Int = digestValue * 10
@@ -281,8 +271,7 @@ class FileServiceTest {
         fileService.rootToken = "2021"
         assertThat(fileService.rootToken).isEqualTo("2021")
     }
-=======
->>>>>>> origin/je-upload-test
+
     fun fileUploadTest(){
         // Create one test Folder to root
         val folderName : String = "Upload"
@@ -311,19 +300,12 @@ class FileServiceTest {
 
         val resultFromServer = folderObject.listFiles().find { it.isFile && it.absolutePath == targetFile.absolutePath }
         resultFromServer?.let { assertThat(resultFromServer.absolutePath).isEqualTo(targetFile.absolutePath) } ?: throw Exception("ERROR:: no ${targetFile.absolutePath}")
-<<<<<<< HEAD
 
-=======
->>>>>>> origin/je-upload-test
     }
 
     @Test
     fun fileDownloadTest(){
-<<<<<<< HEAD
         /*
-    fun fileDownloadTest() {
-=======
->>>>>>> origin/je-upload-test
         // Make one test file to root
         val fileName: String = "downloadTest.txt"
         val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
@@ -351,15 +333,9 @@ class FileServiceTest {
             val resultContent = resource.inputStream.bufferedReader().use(BufferedReader::readText)
             assertThat(resultContent).isEqualTo(fileContent)
         } ?: throw Exception("No FILE")
-<<<<<<< HEAD
         val resultFromServer = trashRootObject.listFiles().find { it.isFile && it.absolutePath == targetFile.absolutePath }
         resultFromServer?.let { assertThat(resultFromServer.absolutePath).isEqualTo(targetFile.absolutePath) } ?: throw Exception("ERROR:: no ${targetFile.absolutePath}")
 
          */
     }
-
-=======
-
-    }
->>>>>>> origin/je-upload-test
 }
