@@ -337,4 +337,65 @@ class FileServiceTest {
             assertThat(resultContent).isEqualTo(fileContent)
         } ?: throw Exception("No FILE")
     }
+
+    @Test
+    fun invalidFileUpload(){
+        fileConfigurationComponent.populateInitialDB()
+
+        // Create one test Folder to root
+        val folderName : String = "Upload"
+        val folderObject: File = File(fileConfigurationComponent.serverRoot, folderName)
+        if (!folderObject.exists()) {
+            folderObject.mkdir()
+        }
+
+        // file upload
+        val uploadFolderToken = fileService.getSHA256(folderObject.absolutePath) // invalid path (no such folder in DB)
+        val multipartFile = MockMultipartFile(
+            "uploadFileName", "uploadFileName", "text/plain", "uploadFileContent".toByteArray())
+        val result = fileService.fileUpload(uploadFolderToken, multipartFile)
+
+        // Assert
+        assertThat(result).isEqualTo(-1)
+
+    }
+
+    @Test
+    fun invalidFileDownload(){
+        fileConfigurationComponent.populateInitialDB()
+
+        val fileName: String = "downloadTest1.txt"
+        val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
+
+        // file Download 1
+        var targetToken = fileService.getSHA256(fileObject.absolutePath) // invalid path (no such file in server DB)
+        var result = fileService.fileDownload(targetToken)
+
+        // Assert
+        assertThat(result).isEqualTo(null)
+
+
+        // upload to DB
+        fileRepository.save(
+            FileEntity(
+                fileName = fileName,
+                fileType = "type",
+                mimeType = "text/plain",
+                token = targetToken,
+                prevToken = "prevToken",
+                lastModifiedTime = 1L,
+                fileCreatedDate = "now",
+                fileSize = "size"
+            )
+        )
+
+        // file Download 2
+        targetToken = fileService.getSHA256(fileObject.absolutePath) // invalid file (no such file at server)
+        //expecting FileNotFoundException
+        result = fileService.fileDownload(targetToken)
+
+        // Assert
+        assertThat(result).isEqualTo(null)
+
+    }
 }

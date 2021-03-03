@@ -13,6 +13,7 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.lang.Exception
 import java.nio.file.Files
+import java.nio.file.NoSuchFileException
 import java.nio.file.Paths
 import java.nio.file.attribute.BasicFileAttributes
 import java.security.MessageDigest
@@ -84,17 +85,19 @@ class FileService(val fileRepository: FileRepository) {
             val basicFileAttribute: BasicFileAttributes = Files.readAttributes(uploadFile.toPath(), BasicFileAttributes::class.java)
             val simpleDateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd-HH:mm:ss")
 
+
             var fileSaveRequestDTO = FileSaveRequestDTO (
                 fileName = uploadFile.absolutePath,
-                fileType = if (uploadFile.isDirectory) "Folder" else "File",
-                mimeType = if (uploadFile.isDirectory) "Folder" else {
+                // Since we are not handling folder[recursive] upload/download, its type must be somewhat non-folder
+                fileType = "File",
+                mimeType =
                     try {
                         tika.detect(uploadFile)
                     } catch (e: Exception) {
                         println("Failed to detect mimeType for: ${e.message}")
                         "File"
                     }
-                },
+                ,
                 token = getSHA256(uploadFile.absolutePath),
                 prevToken = getSHA256(uploadFolderPath),
                 lastModifiedTime = uploadFile.lastModified(),
@@ -107,17 +110,21 @@ class FileService(val fileRepository: FileRepository) {
         }
         return -1
     }
+
     fun fileDownload(token: String) : Pair<FileResponseDTO, Resource>? {
-        val file : FileEntity = fileRepository.findByToken(token)
+        var file : FileEntity;
+        var resource: Resource;
         try {
-            val resource: Resource = InputStreamResource(Files.newInputStream(Paths.get(file.fileName)))
-            return Pair(FileResponseDTO(file), resource)
-        } catch (e: FileNotFoundException) {
+            file = fileRepository.findByToken(token)
+            resource = InputStreamResource(Files.newInputStream(Paths.get(file.fileName)))
+        } catch (e: NoSuchFileException) {
             e.printStackTrace()
+            return null
         } catch (e: Exception) {
             e.printStackTrace();
+            return null
         }
-        return null
+        return Pair(FileResponseDTO(file), resource)
     }
 
     fun getSHA256(input: String): String {
