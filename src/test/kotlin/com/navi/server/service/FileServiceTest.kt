@@ -12,8 +12,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.core.io.Resource
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.junit4.SpringRunner
+import java.io.BufferedReader
 import java.io.File
 
 @RunWith(SpringRunner::class)
@@ -272,6 +274,7 @@ class FileServiceTest {
         assertThat(fileService.rootToken).isEqualTo("2021")
     }
 
+    @Test
     fun fileUploadTest(){
         // Create one test Folder to root
         val folderName : String = "Upload"
@@ -305,11 +308,11 @@ class FileServiceTest {
 
     @Test
     fun fileDownloadTest(){
-        /*
+
         // Make one test file to root
         val fileName: String = "downloadTest.txt"
         val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
-        val fileContent = "test"
+        val fileContent = "Test Download!"
         fileObject.writeText(fileContent);
         if (!fileObject.exists()) {
             fileObject.createNewFile()
@@ -321,21 +324,17 @@ class FileServiceTest {
         val targetToken = fileService.getSHA256(fileObject.absolutePath)
         val result = fileService.fileDownload(targetToken)
 
-        val fileResponseDTO = result.first
-        val resource = result.second
-
         // Assert
+        val fileResponseDTO = result?.first
+        val resource = result?.second
+
         fileResponseDTO?.let {
             assertThat(fileResponseDTO.fileName).isEqualTo(fileObject.absolutePath)
-        } ?: throw Exception("No FILE")
+        } ?: throw Exception("No File: ${fileObject.absolutePath}")
 
         resource?.let {
-            val resultContent = resource.inputStream.bufferedReader().use(BufferedReader::readText)
+            val resultContent = resource.inputStream.readBytes().toString(Charsets.UTF_8)
             assertThat(resultContent).isEqualTo(fileContent)
         } ?: throw Exception("No FILE")
-        val resultFromServer = trashRootObject.listFiles().find { it.isFile && it.absolutePath == targetFile.absolutePath }
-        resultFromServer?.let { assertThat(resultFromServer.absolutePath).isEqualTo(targetFile.absolutePath) } ?: throw Exception("ERROR:: no ${targetFile.absolutePath}")
-
-         */
     }
 }

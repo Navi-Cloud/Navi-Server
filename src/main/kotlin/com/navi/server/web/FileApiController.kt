@@ -43,9 +43,8 @@ class FileApiController (val fileService: FileService){
         return fileService.fileUpload(token.substring(1, token.length - 1), file)
     }
 
-
     @GetMapping("api/navi/fileDownload/{token}")
-    fun fileDownloadFromToken(@PathVariable token: String) : ResponseEntity<Resource> {
+    fun fileDownload(@PathVariable token: String) : ResponseEntity<Resource> {
         val pair : Pair<FileResponseDTO, Resource> = fileService.fileDownload(token) ?: run {
             return ResponseEntity.badRequest().body(null)
         }
@@ -64,37 +63,6 @@ class FileApiController (val fileService: FileService){
             ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType("application/octet-stream"))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"${fileResponseDTO.fileName}\"")
-                .body(resource)
-        } ?: ResponseEntity.badRequest().body(null);
-    }
-    @GetMapping("api/navi/fileDownload")
-    fun fileDownload(@RequestParam(value = "token") token: String,
-                     @RequestParam(value = "path") path: String)
-    : ResponseEntity<Resource> {
-        val pair : Pair<FileResponseDTO, Resource> = fileService.fileDownload(token) ?: run {
-            return ResponseEntity.badRequest().body(null)
-        }
-        val fileResponseDTO: FileResponseDTO = pair.first.apply {
-            val osType: String = System.getProperty("os.name").toLowerCase()
-
-            if (osType.indexOf("win") >= 0) {
-                this.fileName = this.fileName.split("\\").last()
-            } else {
-                this.fileName = this.fileName.split("/").last()
-            }
-        }
-
-        val originalFilename =
-            fileResponseDTO.let {
-                fileResponseDTO.fileName.split("\\").last()
-            } ?: "tmp"
-        val file = File(path, originalFilename)
-
-        val resource: Resource = pair.second
-        return resource.let {
-            ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType("application/octet-stream"))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"${file.absolutePath}\"")
                 .body(resource)
         } ?: ResponseEntity.badRequest().body(null);
     }
