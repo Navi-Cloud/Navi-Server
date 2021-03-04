@@ -148,11 +148,9 @@ class FileApiControllerTest {
         val url = "http://localhost:$port/api/navi/rootToken"
         var responseEntity : ResponseEntity<String> = restTemplate.getForEntity(url, String::class.java)
 
-
         // Assert
         assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
         assertThat(responseEntity.body).isEqualTo(fileService.getSHA256(fileConfigurationComponent.serverRoot))
-
     }
 
     @Test
@@ -226,11 +224,12 @@ class FileApiControllerTest {
         // Create one test Folder to root
         val folderName : String = "Upload"
         val folderObject: File = File(fileConfigurationComponent.serverRoot, folderName)
-        val folderObjectToken = fileService.getSHA256(folderObject.absolutePath)
         if (!folderObject.exists()) {
             folderObject.mkdir()
         }
-        fileConfigurationComponent.populateInitialDB()
+
+        insertFileEntityToDB(folderObject.absolutePath, "Folder")
+        val folderObjectToken = fileService.getSHA256(folderObject.absolutePath)
 
         // Make uploadFile
         val uploadFileName = "uploadTest-api.txt"
@@ -370,5 +369,18 @@ class FileApiControllerTest {
 
         // restore token
         fileService.rootToken = backupToken
+    }
+
+    fun insertFileEntityToDB(filename: String, fileType: String){
+        fileRepository.save(FileEntity(
+            fileName = filename,
+            fileType = fileType,
+            mimeType = "File",
+            token = fileService.getSHA256(filename),
+            prevToken = "",
+            lastModifiedTime = 1L,
+            fileCreatedDate = "date",
+            fileSize = "size"
+        ))
     }
 }
