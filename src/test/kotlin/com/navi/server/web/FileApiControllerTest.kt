@@ -267,10 +267,10 @@ class FileApiControllerTest {
         val fileName: String = "downloadTest-api.txt"
         val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
         val fileContent = "test download API!"
-        fileObject.writeText(fileContent);
         if (!fileObject.exists()) {
             fileObject.createNewFile()
         }
+        fileObject.writeText(fileContent);
 
         fileConfigurationComponent.populateInitialDB()
 
