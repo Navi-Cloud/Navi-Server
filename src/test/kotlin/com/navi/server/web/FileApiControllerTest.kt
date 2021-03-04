@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.test.context.junit4.SpringRunner
 import org.assertj.core.api.Assertions.assertThat;
 import org.junit.Before
+import org.springframework.boot.test.web.client.getForObject
 import org.springframework.core.io.Resource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -152,16 +153,6 @@ class FileApiControllerTest {
         assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
         assertThat(responseEntity.body).isEqualTo(fileService.getSHA256(fileConfigurationComponent.serverRoot))
 
-    }
-
-    @Test
-    fun testEmptyRoot(){
-        val str = "serverRoot does not exist!"
-        val url = "http://localhost:$port/api/navi/rootToken"
-        var responseEntity : ResponseEntity<String> = restTemplate.getForEntity(url, String::class.java)
-
-        assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
-        assertThat(responseEntity.body).isEqualTo(str)
     }
 
     @Test
@@ -362,5 +353,22 @@ class FileApiControllerTest {
         // Assert
         val resource : Resource? = responseEntity.body
         assertThat(resource).isEqualTo(null)
+    }
+
+    @Test
+    fun return_serverRootDoesNotExists_when_root_token_is_null() {
+        val url: String = "http://localhost:$port/api/navi/rootToken"
+        // There might be no change to be NULL, but we let them[probably hacker?]
+        val backupToken: String? = fileService.rootToken
+        fileService.rootToken = null
+
+        val response: String = restTemplate.getForObject(
+            url, String::class
+        ) ?: ""
+
+        assertThat(response).isEqualTo("serverRoot does not exist!")
+
+        // restore token
+        fileService.rootToken = backupToken
     }
 }
