@@ -143,15 +143,6 @@ class FileApiControllerTest {
 
     @Test
     fun testFindRootToken() {
-        // At least create one empty file to root
-        val fileName: String = "KDRTesting.txt"
-        val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
-        if (!fileObject.exists()) {
-            fileObject.createNewFile()
-        }
-        // Do work
-        val listSize: Long = fileConfigurationComponent.populateInitialDB()
-
         // Get Api
         val url = "http://localhost:$port/api/navi/rootToken"
         var responseEntity : ResponseEntity<String> = restTemplate.getForEntity(url, String::class.java)
