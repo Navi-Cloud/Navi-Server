@@ -285,7 +285,7 @@ class FileServiceTest {
         fileConfigurationComponent.populateInitialDB()
 
         // make uploadFile
-        val uploadFileName = "uploadTest.txt"
+        val uploadFileName = "uploadTest-service.txt"
         var uploadFileContent = "file upload test file!".toByteArray()
         val multipartFile = MockMultipartFile(
             uploadFileName, uploadFileName, "text/plain", uploadFileContent)
@@ -309,7 +309,7 @@ class FileServiceTest {
     fun fileDownloadTest(){
 
         // Make one test file to root
-        val fileName: String = "downloadTest.txt"
+        val fileName: String = "downloadTest-service.txt"
         val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
         val fileContent = "Test Download!"
         fileObject.writeText(fileContent);
@@ -363,7 +363,7 @@ class FileServiceTest {
     fun invalidFileDownload(){
         fileConfigurationComponent.populateInitialDB()
 
-        val fileName: String = "downloadTest1.txt"
+        val fileName: String = "invalidDownloadTest.txt"
         val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
 
         // file Download 1

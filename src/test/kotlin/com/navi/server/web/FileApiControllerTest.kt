@@ -251,7 +251,7 @@ class FileApiControllerTest {
         fileConfigurationComponent.populateInitialDB()
 
         // Make uploadFile
-        val uploadFileName = "uploadApiTest.txt"
+        val uploadFileName = "uploadTest-api.txt"
         val uploadFileContent = "test upload API!"
         val multipartFile = MockMultipartFile("uploadFile", uploadFileName, "text/plain", uploadFileContent.toByteArray())
         val uploadFolderPath = MockMultipartFile("uploadPath", "uploadPath", "text/plain", folderObjectToken.toByteArray())
@@ -282,7 +282,7 @@ class FileApiControllerTest {
     @Test
     fun testFileDownload(){
         // Make one test file to root
-        val fileName: String = "downloadAPITest.txt"
+        val fileName: String = "downloadTest-api.txt"
         val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
         val fileContent = "test download API!"
         fileObject.writeText(fileContent);
@@ -325,7 +325,7 @@ class FileApiControllerTest {
         fileConfigurationComponent.populateInitialDB()
 
         // Make uploadFile
-        val uploadFileName = "uploadApiTest.txt"
+        val uploadFileName = "quotationTest.txt"
         val uploadFileContent = "test upload API!"
         val multipartFile = MockMultipartFile("uploadFile", uploadFileName, "text/plain", uploadFileContent.toByteArray())
         val uploadFolderPath = MockMultipartFile("uploadPath", "uploadPath", "text/plain", folderObjectToken.toByteArray())
@@ -357,7 +357,7 @@ class FileApiControllerTest {
     fun invalidFileDownload() {
         fileConfigurationComponent.populateInitialDB()
 
-        val fileName: String = "downloadTest1.txt"
+        val fileName: String = "invalidDownloadTest-api.txt"
         val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
 
         // file Download
