@@ -2,17 +2,13 @@ package com.navi.server.web
 
 import com.navi.server.dto.FileResponseDTO
 import com.navi.server.dto.FileSaveRequestDTO
-import com.navi.server.dto.FileUploadRequestDTO
 import com.navi.server.service.FileService
-import org.apache.commons.logging.Log
 import org.springframework.core.io.Resource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
-import java.io.File
-import java.util.stream.Collectors
 
 @RestController
 class FileApiController (val fileService: FileService){
@@ -40,8 +36,10 @@ class FileApiController (val fileService: FileService){
     @PostMapping("/api/navi/fileUpload")
     fun fileUpload(@RequestPart("uploadFile") file: MultipartFile, @RequestPart("uploadPath") token: String)
     : Long {
+        // when client requests, quotation marks(") are automatically inserted.
+        if(token.contains("\""))
+            return fileService.fileUpload(token.substring(1, token.length - 1), file)
         return fileService.fileUpload(token, file)
-
     }
 
     @GetMapping("api/navi/fileDownload/{token}")
@@ -60,11 +58,9 @@ class FileApiController (val fileService: FileService){
         }
 
         val resource: Resource = pair.second
-        return resource.let {
-            ResponseEntity.ok()
+        return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType("application/octet-stream"))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"${fileResponseDTO.fileName}\"")
                 .body(resource)
-        } ?: ResponseEntity.badRequest().body(null);
     }
 }

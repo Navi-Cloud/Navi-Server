@@ -311,4 +311,65 @@ class FileApiControllerTest {
             assertThat(resultContent).isEqualTo(fileContent)
         } ?: throw Exception("No File : ${fileObject.absolutePath}")
     }
+
+    @Test
+    fun quotationMarkedFileNameUpload(){
+        // Create one test Folder to root
+        val folderName : String = "Upload"
+        val folderObject: File = File(fileConfigurationComponent.serverRoot, folderName)
+        // insert quotation mark
+        val folderObjectToken = "\"" + fileService.getSHA256(folderObject.absolutePath) + "\""
+        if (!folderObject.exists()) {
+            folderObject.mkdir()
+        }
+        fileConfigurationComponent.populateInitialDB()
+
+        // Make uploadFile
+        val uploadFileName = "uploadApiTest.txt"
+        val uploadFileContent = "test upload API!"
+        val multipartFile = MockMultipartFile("uploadFile", uploadFileName, "text/plain", uploadFileContent.toByteArray())
+        val uploadFolderPath = MockMultipartFile("uploadPath", "uploadPath", "text/plain", folderObjectToken.toByteArray())
+
+        // Perform
+        mockMvc.perform(
+            MockMvcRequestBuilders.multipart("/api/navi/fileUpload")
+                .file(multipartFile)
+                .file(uploadFolderPath)
+        ).andExpect { status(HttpStatus.OK) }
+            .andDo(MockMvcResultHandlers.print())
+
+        // Assert
+        val targetFile = File(folderObject.absolutePath, uploadFileName)
+
+        val resultFromDB = fileRepository.findAll().find { it.fileName == targetFile.absolutePath }
+        resultFromDB?.let {
+            assertThat(resultFromDB.fileName).isEqualTo(targetFile.absolutePath)
+        } ?: throw Exception("ERROR:: no $uploadFileName")
+
+        val resultFromServer = folderObject.listFiles().find { it.isFile && it.absolutePath == targetFile.absolutePath }
+        resultFromServer?.let {
+            assertThat(resultFromServer.absolutePath).isEqualTo(targetFile.absolutePath)
+        } ?: throw Exception("ERROR:: no ${targetFile.absolutePath}")
+
+    }
+
+    @Test
+    fun invalidFileDownload() {
+        fileConfigurationComponent.populateInitialDB()
+
+        val fileName: String = "downloadTest1.txt"
+        val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
+
+        // file Download
+        var targetToken = fileService.getSHA256(fileObject.absolutePath) // invalid path (no such file in server DB)
+        var result = fileService.fileDownload(targetToken)
+
+        // Perform
+        val url = "http://localhost:$port/api/navi/fileDownload/${targetToken}"
+        val responseEntity = restTemplate.getForEntity(url, Resource::class.java)
+
+        // Assert
+        val resource : Resource? = responseEntity.body
+        assertThat(resource).isEqualTo(null)
+    }
 }
