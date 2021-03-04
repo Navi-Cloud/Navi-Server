@@ -156,13 +156,13 @@ class FileApiControllerTest {
     @Test
     fun testFindInsideFiles() {
         // before findInsideFiles Test, Create test file/folder
-
         // one empty file to root
         val fileName: String = "Testing.txt"
         val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
         if (!fileObject.exists()) {
             fileObject.createNewFile()
         }
+        insertFileEntityToDB(fileObject.absolutePath, "File", fileConfigurationComponent.serverRoot)
 
         // Create one empty Folder to root
         val folderName : String = "TestFolder"
@@ -170,6 +170,7 @@ class FileApiControllerTest {
         if (!folderObject.exists()) {
             folderObject.mkdir()
         }
+        insertFileEntityToDB(folderObject.absolutePath, "Folder", fileConfigurationComponent.serverRoot)
 
         // Creat 3 Child Files in Folder [folderName]
         val folderPath = folderObject.absolutePath
@@ -182,11 +183,9 @@ class FileApiControllerTest {
             if (!it.exists()) {
                 it.createNewFile()
             }
+            insertFileEntityToDB(it.absolutePath, "File", folderPath)
         }
 
-        // Do work
-        val listSize: Long = fileConfigurationComponent.populateInitialDB()
-        println("listSize: $listSize")
 
 
         // Api test 1 :: under Root
@@ -271,8 +270,7 @@ class FileApiControllerTest {
         }
         fileObject.writeText(fileContent);
 
-        fileConfigurationComponent.populateInitialDB()
-
+        insertFileEntityToDB(fileObject.absolutePath, "File")
         val targetToken = fileService.getSHA256(fileObject.absolutePath)
 
         // Perform
@@ -298,12 +296,14 @@ class FileApiControllerTest {
         // Create one test Folder to root
         val folderName : String = "Upload"
         val folderObject: File = File(fileConfigurationComponent.serverRoot, folderName)
-        // insert quotation mark
-        val folderObjectToken = "\"" + fileService.getSHA256(folderObject.absolutePath) + "\""
         if (!folderObject.exists()) {
             folderObject.mkdir()
         }
-        fileConfigurationComponent.populateInitialDB()
+
+        insertFileEntityToDB(folderObject.absolutePath, "Folder")
+
+        // insert quotation mark
+        val folderObjectToken = "\"" + fileService.getSHA256(folderObject.absolutePath) + "\""
 
         // Make uploadFile
         val uploadFileName = "quotationTest.txt"
@@ -336,8 +336,6 @@ class FileApiControllerTest {
 
     @Test
     fun invalidFileDownload() {
-        fileConfigurationComponent.populateInitialDB()
-
         val fileName: String = "invalidDownloadTest-api.txt"
         val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
 
@@ -378,6 +376,19 @@ class FileApiControllerTest {
             mimeType = "File",
             token = fileService.getSHA256(filename),
             prevToken = "",
+            lastModifiedTime = 1L,
+            fileCreatedDate = "date",
+            fileSize = "size"
+        ))
+    }
+
+    fun insertFileEntityToDB(filename: String, fileType: String, prevPath: String){
+        fileRepository.save(FileEntity(
+            fileName = filename,
+            fileType = fileType,
+            mimeType = "File",
+            token = fileService.getSHA256(filename),
+            prevToken = fileService.getSHA256(prevPath),
             lastModifiedTime = 1L,
             fileCreatedDate = "date",
             fileSize = "size"
