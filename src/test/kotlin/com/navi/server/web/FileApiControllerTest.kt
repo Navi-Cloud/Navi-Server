@@ -1,11 +1,11 @@
 package com.navi.server.web
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.navi.server.component.FileConfigurationComponent
 import com.navi.server.domain.FileEntity
 import com.navi.server.domain.FileRepository
 import com.navi.server.dto.FileResponseDTO
 import com.navi.server.dto.FileSaveRequestDTO
+
 import com.navi.server.service.FileService
 import org.junit.After
 import org.junit.Test
@@ -18,17 +18,26 @@ import org.springframework.http.ResponseEntity
 import org.springframework.test.context.junit4.SpringRunner
 import org.assertj.core.api.Assertions.assertThat;
 import org.junit.Before
+import org.springframework.boot.test.web.client.getForObject
+import org.springframework.core.io.Resource
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
-import java.lang.reflect.Type
-
-import org.springframework.boot.test.web.client.getForEntity
+import org.springframework.http.ResponseEntity.status
+import org.springframework.mock.web.MockMultipartFile
+import org.springframework.mock.web.MockPart
+import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers
+import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import java.io.File
-import java.util.ArrayList
+import org.springframework.web.context.WebApplicationContext
+import java.nio.charset.Charset
+import javax.servlet.http.Part
+
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class FileApiControllerTest {
-
     @LocalServerPort
     var port: Int = 0
 
@@ -44,13 +53,19 @@ class FileApiControllerTest {
     @Autowired
     private lateinit var fileService: FileService
 
+    @Autowired
+    private lateinit var webApplicationContext: WebApplicationContext
+
     private lateinit var trashRootObject: File
+
+    private lateinit var mockMvc : MockMvc
 
     @Before
     fun initEnvironment() {
         // Create trash directory
         trashRootObject = File(fileConfigurationComponent.serverRoot)
         trashRootObject.mkdir()
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build()
     }
 
     @After
@@ -129,24 +144,13 @@ class FileApiControllerTest {
 
     @Test
     fun testFindRootToken() {
-        // At least create one empty file to root
-        val fileName: String = "KDRTesting.txt"
-        val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
-        if (!fileObject.exists()) {
-            fileObject.createNewFile()
-        }
-        // Do work
-        val listSize: Long = fileConfigurationComponent.populateInitialDB()
-
         // Get Api
         val url = "http://localhost:$port/api/navi/rootToken"
         var responseEntity : ResponseEntity<String> = restTemplate.getForEntity(url, String::class.java)
 
-
         // Assert
         assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
         assertThat(responseEntity.body).isEqualTo(fileService.getSHA256(fileConfigurationComponent.serverRoot))
-
     }
 
     @Test
@@ -162,13 +166,13 @@ class FileApiControllerTest {
     @Test
     fun testFindInsideFiles() {
         // before findInsideFiles Test, Create test file/folder
-
         // one empty file to root
         val fileName: String = "Testing.txt"
         val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
         if (!fileObject.exists()) {
             fileObject.createNewFile()
         }
+        insertFileEntityToDB(fileObject.absolutePath, "File", fileConfigurationComponent.serverRoot)
 
         // Create one empty Folder to root
         val folderName : String = "TestFolder"
@@ -176,6 +180,7 @@ class FileApiControllerTest {
         if (!folderObject.exists()) {
             folderObject.mkdir()
         }
+        insertFileEntityToDB(folderObject.absolutePath, "Folder", fileConfigurationComponent.serverRoot)
 
         // Creat 3 Child Files in Folder [folderName]
         val folderPath = folderObject.absolutePath
@@ -188,11 +193,9 @@ class FileApiControllerTest {
             if (!it.exists()) {
                 it.createNewFile()
             }
+            insertFileEntityToDB(it.absolutePath, "File", folderPath)
         }
 
-        // Do work
-        val listSize: Long = fileConfigurationComponent.populateInitialDB()
-        println("listSize: $listSize")
 
 
         // Api test 1 :: under Root
@@ -223,5 +226,182 @@ class FileApiControllerTest {
         result2.forEach {
             assertThat(it.prevToken).isEqualTo(folderToken)
         }
+    }
+
+    @Test
+    fun testFileUpload(){
+        // Create one test Folder to root
+        val folderName : String = "Upload"
+        val folderObject: File = File(fileConfigurationComponent.serverRoot, folderName)
+        if (!folderObject.exists()) {
+            folderObject.mkdir()
+        }
+
+        insertFileEntityToDB(folderObject.absolutePath, "Folder")
+        val folderObjectToken = fileService.getSHA256(folderObject.absolutePath)
+
+        // Make uploadFile
+        val uploadFileName = "uploadTest-api.txt"
+        val uploadFileContent = "test upload API!"
+        val multipartFile = MockMultipartFile("uploadFile", uploadFileName, "text/plain", uploadFileContent.toByteArray())
+        val uploadFolderPath = MockMultipartFile("uploadPath", "uploadPath", "text/plain", folderObjectToken.toByteArray())
+
+        // Perform
+        mockMvc.perform(
+            MockMvcRequestBuilders.multipart("/api/navi/fileUpload")
+                .file(multipartFile)
+                .file(uploadFolderPath)
+        ).andExpect { status(HttpStatus.OK) }
+            .andDo(MockMvcResultHandlers.print())
+
+        // Assert
+        val targetFile = File(folderObject.absolutePath, uploadFileName)
+
+        val resultFromDB = fileRepository.findAll().find { it.fileName == targetFile.absolutePath }
+        resultFromDB?.let {
+            assertThat(resultFromDB.fileName).isEqualTo(targetFile.absolutePath)
+        } ?: throw Exception("ERROR:: no $uploadFileName")
+
+        val resultFromServer = folderObject.listFiles().find { it.isFile && it.absolutePath == targetFile.absolutePath }
+        resultFromServer?.let {
+            assertThat(resultFromServer.absolutePath).isEqualTo(targetFile.absolutePath)
+        } ?: throw Exception("ERROR:: no ${targetFile.absolutePath}")
+
+    }
+
+    @Test
+    fun testFileDownload(){
+        // Make one test file to root
+        val fileName: String = "downloadTest-api.txt"
+        val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
+        val fileContent = "test download API!"
+        if (!fileObject.exists()) {
+            fileObject.createNewFile()
+        }
+        fileObject.writeText(fileContent);
+
+        insertFileEntityToDB(fileObject.absolutePath, "File")
+        val targetToken = fileService.getSHA256(fileObject.absolutePath)
+
+        // Perform
+        val url = "http://localhost:$port/api/navi/fileDownload/${targetToken}"
+        val responseEntity = restTemplate.getForEntity(url, Resource::class.java)
+        val resource : Resource? = responseEntity.body
+
+        // Assert
+        val contentDisposition : String? = responseEntity.headers.get(HttpHeaders.CONTENT_DISPOSITION)!!.get(0)
+        contentDisposition?.let {
+            val resultFileName = it.split("=")[1]
+            assertThat(resultFileName.substring(1, resultFileName.length-1)).isEqualTo(fileName)
+        } ?: throw Exception("No File Name in ContentDisposition")
+
+        resource?.let {
+            val resultContent = resource.inputStream.readBytes().toString(Charsets.UTF_8)
+            assertThat(resultContent).isEqualTo(fileContent)
+        } ?: throw Exception("No File : ${fileObject.absolutePath}")
+    }
+
+    @Test
+    fun quotationMarkedFileNameUpload(){
+        // Create one test Folder to root
+        val folderName : String = "Upload"
+        val folderObject: File = File(fileConfigurationComponent.serverRoot, folderName)
+        if (!folderObject.exists()) {
+            folderObject.mkdir()
+        }
+
+        insertFileEntityToDB(folderObject.absolutePath, "Folder")
+
+        // insert quotation mark
+        val folderObjectToken = "\"" + fileService.getSHA256(folderObject.absolutePath) + "\""
+
+        // Make uploadFile
+        val uploadFileName = "quotationTest.txt"
+        val uploadFileContent = "test upload API!"
+        val multipartFile = MockMultipartFile("uploadFile", uploadFileName, "text/plain", uploadFileContent.toByteArray())
+        val uploadFolderPath = MockMultipartFile("uploadPath", "uploadPath", "text/plain", folderObjectToken.toByteArray())
+
+        // Perform
+        mockMvc.perform(
+            MockMvcRequestBuilders.multipart("/api/navi/fileUpload")
+                .file(multipartFile)
+                .file(uploadFolderPath)
+        ).andExpect { status(HttpStatus.OK) }
+            .andDo(MockMvcResultHandlers.print())
+
+        // Assert
+        val targetFile = File(folderObject.absolutePath, uploadFileName)
+
+        val resultFromDB = fileRepository.findAll().find { it.fileName == targetFile.absolutePath }
+        resultFromDB?.let {
+            assertThat(resultFromDB.fileName).isEqualTo(targetFile.absolutePath)
+        } ?: throw Exception("ERROR:: no $uploadFileName")
+
+        val resultFromServer = folderObject.listFiles().find { it.isFile && it.absolutePath == targetFile.absolutePath }
+        resultFromServer?.let {
+            assertThat(resultFromServer.absolutePath).isEqualTo(targetFile.absolutePath)
+        } ?: throw Exception("ERROR:: no ${targetFile.absolutePath}")
+
+    }
+
+    @Test
+    fun invalidFileDownload() {
+        val fileName: String = "invalidDownloadTest-api.txt"
+        val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
+
+        // file Download
+        var targetToken = fileService.getSHA256(fileObject.absolutePath) // invalid path (no such file in server DB)
+        var result = fileService.fileDownload(targetToken)
+
+        // Perform
+        val url = "http://localhost:$port/api/navi/fileDownload/${targetToken}"
+        val responseEntity = restTemplate.getForEntity(url, Resource::class.java)
+
+        // Assert
+        val resource : Resource? = responseEntity.body
+        assertThat(resource).isEqualTo(null)
+    }
+
+    @Test
+    fun return_serverRootDoesNotExists_when_root_token_is_null() {
+        val url: String = "http://localhost:$port/api/navi/rootToken"
+        // There might be no change to be NULL, but we let them[probably hacker?]
+        val backupToken: String? = fileService.rootToken
+        fileService.rootToken = null
+
+        val response: String = restTemplate.getForObject(
+            url, String::class
+        ) ?: ""
+
+        assertThat(response).isEqualTo("serverRoot does not exist!")
+
+        // restore token
+        fileService.rootToken = backupToken
+    }
+
+    fun insertFileEntityToDB(filename: String, fileType: String){
+        fileRepository.save(FileEntity(
+            fileName = filename,
+            fileType = fileType,
+            mimeType = "File",
+            token = fileService.getSHA256(filename),
+            prevToken = "",
+            lastModifiedTime = 1L,
+            fileCreatedDate = "date",
+            fileSize = "size"
+        ))
+    }
+
+    fun insertFileEntityToDB(filename: String, fileType: String, prevPath: String){
+        fileRepository.save(FileEntity(
+            fileName = filename,
+            fileType = fileType,
+            mimeType = "File",
+            token = fileService.getSHA256(filename),
+            prevToken = fileService.getSHA256(prevPath),
+            lastModifiedTime = 1L,
+            fileCreatedDate = "date",
+            fileSize = "size"
+        ))
     }
 }

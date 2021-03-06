@@ -21,6 +21,8 @@ class FileConfigurationComponent(val fileService: FileService) {
     fun initPostConstruct() {
         if (System.getProperty("navi.isTesting") == "test") {
             serverRoot = File(System.getProperty("java.io.tmpdir"), "naviServerTesting").absolutePath
+            fileService.rootPath = serverRoot
+            fileService.rootToken = fileService.getSHA256(serverRoot)
             return
         }
         populateInitialDB()
@@ -35,6 +37,7 @@ class FileConfigurationComponent(val fileService: FileService) {
         val tika: Tika = Tika()
 
         //save root token
+        fileService.rootPath = serverRoot
         fileService.rootToken = fileService.getSHA256(serverRoot)
 
         fileObject.walk().forEach {
