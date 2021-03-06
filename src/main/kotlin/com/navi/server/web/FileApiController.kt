@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
+import java.nio.charset.Charset
 
 @RestController
 class FileApiController (val fileService: FileService){
@@ -59,7 +59,7 @@ class FileApiController (val fileService: FileService){
             }
         }
 
-        val again: String = String.format("attachment; filename=\"%s\"", URLEncoder.encode(fileResponseDTO.fileName, StandardCharsets.UTF_8))
+        val again: String = String.format("attachment; filename=\"%s\"", URLEncoder.encode(fileResponseDTO.fileName, "UTF-8"))
         val resource: Resource = pair.second
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType("application/octet-stream"))
