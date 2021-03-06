@@ -15,27 +15,27 @@ import java.nio.charset.Charset
 @RestController
 class FileApiController (val fileService: FileService){
 
-    @PostMapping("/api/navi/files")
-    fun save(@RequestBody fileSaveRequestDTO: FileSaveRequestDTO) : Long {
-        return fileService.save(fileSaveRequestDTO)
-    }
-
-    @GetMapping("/api/navi/fileList")
-    fun findAllDesc() : List<FileResponseDTO>{
-        return fileService.findAllDesc()
-    }
-
-    @GetMapping("/api/navi/rootToken")
+    @GetMapping("/api/navi/root-token")
     fun findRootToken() : String{
         return fileService.rootToken ?: "serverRoot does not exist!"
     }
 
-    @GetMapping("/api/navi/findInsideFiles/{token}")
+    @GetMapping("/api/navi/files/list")
+    fun findAllDesc() : List<FileResponseDTO>{
+        return fileService.findAllDesc()
+    }
+
+    @GetMapping("/api/navi/files/list/{token}")
     fun findInsideFiles(@PathVariable token: String) : List<FileResponseDTO> {
         return fileService.findInsideFiles(token)
     }
 
-    @PostMapping("/api/navi/fileUpload")
+    @PostMapping("/api/navi/files/dto")
+    fun save(@RequestBody fileSaveRequestDTO: FileSaveRequestDTO) : Long {
+        return fileService.save(fileSaveRequestDTO)
+    }
+
+    @PostMapping("/api/navi/files")
     fun fileUpload(@RequestPart("uploadFile") file: MultipartFile, @RequestPart("uploadPath") token: String)
     : Long {
         // when client requests, quotation marks(") are automatically inserted.
@@ -44,7 +44,7 @@ class FileApiController (val fileService: FileService){
         return fileService.fileUpload(token, file)
     }
 
-    @GetMapping("api/navi/fileDownload/{token}")
+    @GetMapping("api/navi/files/{token}")
     fun fileDownload(@PathVariable token: String) : ResponseEntity<Resource> {
         val pair : Pair<FileResponseDTO, Resource> = fileService.fileDownload(token) ?: run {
             return ResponseEntity.badRequest().body(null)

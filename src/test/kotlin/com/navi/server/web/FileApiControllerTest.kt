@@ -103,7 +103,7 @@ class FileApiControllerTest {
             fileCreatedDate = fileCreatedDate,
             fileSize = fileSize
         )
-        val url = "http://localhost:$port/api/navi/files"
+        val url = "http://localhost:$port/api/navi/files/dto"
 
         //send api request
         val responseEntity : ResponseEntity<Long> = restTemplate.postForEntity(url, requestDto, Long::class.java)
@@ -130,7 +130,7 @@ class FileApiControllerTest {
             val id = fileRepository.save(FileEntity(fileName = it, fileType = "fileType", mimeType = "text/plain", token = "token", prevToken = "token", lastModifiedTime = 5000, fileCreatedDate = "testCreatedTime", fileSize = "5000"))
         }
         //send api request
-        val url = "http://localhost:$port/api/navi/fileList"
+        val url = "http://localhost:$port/api/navi/files/list"
         var responseEntity : ResponseEntity<Array<FileResponseDTO>> = restTemplate.getForEntity(url, Array<FileResponseDTO>::class.java)
 
         //Assert
@@ -145,7 +145,7 @@ class FileApiControllerTest {
     @Test
     fun testFindRootToken() {
         // Get Api
-        val url = "http://localhost:$port/api/navi/rootToken"
+        val url = "http://localhost:$port/api/navi/root-token"
         var responseEntity : ResponseEntity<String> = restTemplate.getForEntity(url, String::class.java)
 
         // Assert
@@ -190,7 +190,7 @@ class FileApiControllerTest {
 
         // Api test 1 :: under Root
         val rootToken = fileService.getSHA256(fileConfigurationComponent.serverRoot)
-        val url = "http://localhost:$port/api/navi/findInsideFiles/${rootToken}"
+        val url = "http://localhost:$port/api/navi/files/list/${rootToken}"
         var responseEntity : ResponseEntity<Array<FileResponseDTO>> = restTemplate.getForEntity(url, Array<FileResponseDTO>::class.java)
 
 
@@ -205,7 +205,7 @@ class FileApiControllerTest {
 
         //Api test 2 :: under folderName
         val folderToken = fileService.getSHA256(folderPath)
-        val url2 = "http://localhost:$port/api/navi/findInsideFiles/${folderToken}"
+        val url2 = "http://localhost:$port/api/navi/files/list/${folderToken}"
         var responseEntity2 : ResponseEntity<Array<FileResponseDTO>> = restTemplate.getForEntity(url2, Array<FileResponseDTO>::class.java)
 
         // Assert
@@ -238,7 +238,7 @@ class FileApiControllerTest {
 
         // Perform
         mockMvc.perform(
-            MockMvcRequestBuilders.multipart("/api/navi/fileUpload")
+            MockMvcRequestBuilders.multipart("/api/navi/files")
                 .file(multipartFile)
                 .file(uploadFolderPath)
         ).andExpect { status(HttpStatus.OK) }
@@ -274,7 +274,7 @@ class FileApiControllerTest {
         val targetToken = fileService.getSHA256(fileObject.absolutePath)
 
         // Perform
-        val url = "http://localhost:$port/api/navi/fileDownload/${targetToken}"
+        val url = "http://localhost:$port/api/navi/files/${targetToken}"
         val responseEntity = restTemplate.getForEntity(url, Resource::class.java)
         val resource : Resource? = responseEntity.body
 
@@ -313,7 +313,7 @@ class FileApiControllerTest {
 
         // Perform
         mockMvc.perform(
-            MockMvcRequestBuilders.multipart("/api/navi/fileUpload")
+            MockMvcRequestBuilders.multipart("/api/navi/files")
                 .file(multipartFile)
                 .file(uploadFolderPath)
         ).andExpect { status(HttpStatus.OK) }
@@ -344,7 +344,7 @@ class FileApiControllerTest {
         var result = fileService.fileDownload(targetToken)
 
         // Perform
-        val url = "http://localhost:$port/api/navi/fileDownload/${targetToken}"
+        val url = "http://localhost:$port/api/navi/files/${targetToken}"
         val responseEntity = restTemplate.getForEntity(url, Resource::class.java)
 
         // Assert
@@ -354,7 +354,7 @@ class FileApiControllerTest {
 
     @Test
     fun return_serverRootDoesNotExists_when_root_token_is_null() {
-        val url: String = "http://localhost:$port/api/navi/rootToken"
+        val url: String = "http://localhost:$port/api/navi/root-token"
         // There might be no change to be NULL, but we let them[probably hacker?]
         val backupToken: String? = fileService.rootToken
         fileService.rootToken = null
