@@ -12,6 +12,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.File
@@ -60,7 +62,7 @@ class FileServiceTest {
     @Test
     fun isSavingWorks() {
         // save it to DB with fileService
-        val retId: Long = fileService.save(
+        val responseEntity: ResponseEntity<Long> = fileService.save(
             FileSaveRequestDTO(
                 id = 0,
                 fileName = fileNameTest,
@@ -75,9 +77,12 @@ class FileServiceTest {
         )
 
         // Get results from repository
+        val retId = responseEntity.body
         val results: FileEntity = fileRepository.findById(retId).get()
 
         // Assert
+        assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
+
         with(results) {
             assertThat(fileName).isEqualTo(fileNameTest)
             assertThat(fileType).isEqualTo(fileTypeTest)
@@ -100,7 +105,7 @@ class FileServiceTest {
     @Test
     fun isFindAllDescWorks() {
         // save it to DB with fileService
-        val retId: Long = fileService.save(
+        val responseEntity: ResponseEntity<Long> = fileService.save(
             FileSaveRequestDTO(
                 id = 0,
                 fileName = fileNameTest,
@@ -118,6 +123,8 @@ class FileServiceTest {
         val listFile: List<FileResponseDTO> = fileService.findAllDesc()
 
         // Assert
+        assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
+
         assertThat(listFile.size).isEqualTo(1)
         with(listFile[0]) {
             assertThat(fileName).isEqualTo(fileNameTest)

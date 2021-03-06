@@ -31,13 +31,13 @@ class FileApiController (val fileService: FileService){
     }
 
     @PostMapping("/api/navi/files/dto")
-    fun save(@RequestBody fileSaveRequestDTO: FileSaveRequestDTO) : Long {
+    fun save(@RequestBody fileSaveRequestDTO: FileSaveRequestDTO) : ResponseEntity<Long> {
         return fileService.save(fileSaveRequestDTO)
     }
 
     @PostMapping("/api/navi/files")
     fun fileUpload(@RequestPart("uploadFile") file: MultipartFile, @RequestPart("uploadPath") token: String)
-    : Long {
+    : ResponseEntity<Long> {
         // when client requests, quotation marks(") are automatically inserted.
         if(token.contains("\""))
             return fileService.fileUpload(token.substring(1, token.length - 1), file)

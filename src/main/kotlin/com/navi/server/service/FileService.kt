@@ -4,9 +4,14 @@ import com.navi.server.domain.FileEntity
 import com.navi.server.domain.FileRepository
 import com.navi.server.dto.FileResponseDTO
 import com.navi.server.dto.FileSaveRequestDTO
+import com.navi.server.error.exception.InvalidTokenAccessException
+import com.navi.server.error.exception.UnknownErrorException
 import org.apache.tika.Tika
 import org.springframework.core.io.InputStreamResource
 import org.springframework.core.io.Resource
+import org.springframework.dao.EmptyResultDataAccessException
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
@@ -32,8 +37,10 @@ class FileService(val fileRepository: FileRepository) {
             .collect(Collectors.toList())
     }
 
-    fun save(fileSaveRequestDTO: FileSaveRequestDTO): Long {
-        return fileRepository.save(fileSaveRequestDTO.toEntity()).id
+    fun save(fileSaveRequestDTO: FileSaveRequestDTO): ResponseEntity<Long> {
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(fileRepository.save(fileSaveRequestDTO.toEntity()).id)
     }
 
     fun saveAll(inputList: List<FileSaveRequestDTO>, digestValue: Int = 10000) {
@@ -70,10 +77,23 @@ class FileService(val fileRepository: FileRepository) {
     var rootToken: String? = null
     val tika = Tika()
 
-    fun fileUpload(token: String, files: MultipartFile) : Long {
+    fun fileUpload(token: String, files: MultipartFile) : ResponseEntity<Long> {
         try {
             // find absolutePath from token
-            val uploadFolderPath = fileRepository.findByToken(token).fileName
+            //lateinit var uploadFolder : FileEntity
+            /*
+            runCatching {
+                uploadFolder = fileRepository.findByToken(token)
+            }.onFailure {
+                if (it.cause is EmptyResultDataAccessException)
+                    throw InvalidTokenAccessException("Cannot find file by this token : $token")
+                else throw UnknownErrorException("Unknown Exception ...!")
+            }
+
+             */
+            //val uploadFolder = fileRepository.findByToken(token)
+              //  ?: throw InvalidTokenAccessException("Cannot find file by this token : $token")
+            val uploadFolderPath =  fileRepository.findByToken(token).fileName
 
             // upload
             // If the destination file already exists, it will be deleted first.
@@ -105,10 +125,12 @@ class FileService(val fileRepository: FileRepository) {
                 fileSize = convertSize(basicFileAttribute.size())
                 )
             return this.save(fileSaveRequestDTO)
+        } catch (e: EmptyResultDataAccessException) {
+            throw InvalidTokenAccessException("Cannot find file by this token : $token")
         } catch (e: Exception){
             e.printStackTrace()
+            throw UnknownErrorException("Unknown Exception ..!")
         }
-        return -1
     }
 
     fun fileDownload(token: String) : Pair<FileResponseDTO, Resource>? {

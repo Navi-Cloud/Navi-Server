@@ -260,6 +260,26 @@ class FileApiControllerTest {
     }
 
     @Test
+    fun invalidTokenTest(){
+        // make MultipartFile for test
+        val uploadFileName = "uploadTest-service.txt"
+        var uploadFileContent = "file upload test file!".toByteArray()
+        val multipartFile = MockMultipartFile(
+            "uploadFile", uploadFileName, "text/plain", uploadFileContent
+        )
+
+        val invalidToken = "token"
+        val uploadFolderPath = MockMultipartFile("uploadPath", "uploadPath", "text/plain", invalidToken.toByteArray())
+        // Perform
+        mockMvc.perform(
+            MockMvcRequestBuilders.multipart("/api/navi/files")
+                .file(multipartFile)
+                .file(uploadFolderPath)
+        ).andExpect { status(HttpStatus.BAD_REQUEST) }
+            .andDo(MockMvcResultHandlers.print())
+    }
+
+    @Test
     fun testFileDownload(){
         // Make one test file to root
         val fileName: String = "downloadTest-api.txt"
