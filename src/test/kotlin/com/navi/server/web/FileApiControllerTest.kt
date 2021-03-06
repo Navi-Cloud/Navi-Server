@@ -379,11 +379,11 @@ class FileApiControllerTest {
         val backupToken: String? = fileService.rootToken
         fileService.rootToken = null
 
-        val response: String = restTemplate.getForObject(
-            url, String::class
-        ) ?: ""
+        val responseEntity: ResponseEntity<String> = restTemplate.getForEntity(url, String::class.java)
 
-        assertThat(response).isEqualTo("serverRoot does not exist!")
+        // Assert
+        assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
+        //assertThat(responseEntity.body).isEqualTo("serverRoot does not exist!")
 
         // restore token
         fileService.rootToken = backupToken

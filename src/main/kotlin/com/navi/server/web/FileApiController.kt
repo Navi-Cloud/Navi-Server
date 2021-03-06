@@ -2,9 +2,11 @@ package com.navi.server.web
 
 import com.navi.server.dto.FileResponseDTO
 import com.navi.server.dto.FileSaveRequestDTO
+import com.navi.server.error.exception.UnknownErrorException
 import com.navi.server.service.FileService
 import org.springframework.core.io.Resource
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -16,8 +18,12 @@ import java.nio.charset.Charset
 class FileApiController (val fileService: FileService){
 
     @GetMapping("/api/navi/root-token")
-    fun findRootToken() : String{
-        return fileService.rootToken ?: "serverRoot does not exist!"
+    fun findRootToken() : ResponseEntity<String> {
+        return fileService.rootToken?.let {
+            ResponseEntity
+                .status(HttpStatus.OK)
+                .body(fileService.rootToken)
+        } ?: throw UnknownErrorException("serverRoot does not exist!")
     }
 
     @GetMapping("/api/navi/files/list")
