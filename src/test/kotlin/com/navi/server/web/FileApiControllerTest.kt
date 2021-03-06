@@ -154,16 +154,6 @@ class FileApiControllerTest {
     }
 
     @Test
-    fun testEmptyRoot(){
-        val str = "serverRoot does not exist!"
-        val url = "http://localhost:$port/api/navi/rootToken"
-        var responseEntity : ResponseEntity<String> = restTemplate.getForEntity(url, String::class.java)
-
-        assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
-        assertThat(responseEntity.body).isEqualTo(str)
-    }
-
-    @Test
     fun testFindInsideFiles() {
         // before findInsideFiles Test, Create test file/folder
         // one empty file to root
