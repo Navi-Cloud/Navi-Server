@@ -6,6 +6,7 @@ import com.navi.server.domain.FileRepository
 import com.navi.server.dto.FileResponseDTO
 import com.navi.server.dto.FileSaveRequestDTO
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.fail
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -362,10 +363,14 @@ class FileServiceTest {
         val multipartFile = MockMultipartFile(
             "uploadFileName", "uploadFileName", "text/plain", "uploadFileContent".toByteArray()
         )
-        val result = fileService.fileUpload(uploadFolderToken, multipartFile)
-
-        // Assert
-        assertThat(result).isEqualTo(-1)
+        lateinit var result: ResponseEntity<Long>
+        runCatching {
+            result = fileService.fileUpload(uploadFolderToken, multipartFile)
+        }.onSuccess {
+            fail("This SHould be failed,....")
+        }.onFailure {
+            assertThat(it.message).isEqualTo("Cannot find file by this token : $uploadFolderToken")
+        }
 
     }
 

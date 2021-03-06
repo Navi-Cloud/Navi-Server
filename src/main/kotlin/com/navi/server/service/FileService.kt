@@ -80,19 +80,6 @@ class FileService(val fileRepository: FileRepository) {
     fun fileUpload(token: String, files: MultipartFile) : ResponseEntity<Long> {
         try {
             // find absolutePath from token
-            //lateinit var uploadFolder : FileEntity
-            /*
-            runCatching {
-                uploadFolder = fileRepository.findByToken(token)
-            }.onFailure {
-                if (it.cause is EmptyResultDataAccessException)
-                    throw InvalidTokenAccessException("Cannot find file by this token : $token")
-                else throw UnknownErrorException("Unknown Exception ...!")
-            }
-
-             */
-            //val uploadFolder = fileRepository.findByToken(token)
-              //  ?: throw InvalidTokenAccessException("Cannot find file by this token : $token")
             val uploadFolderPath =  fileRepository.findByToken(token).fileName
 
             // upload
