@@ -1,8 +1,6 @@
 package com.navi.server.web
 
 import com.navi.server.dto.FileResponseDTO
-import com.navi.server.dto.FileSaveRequestDTO
-import com.navi.server.error.exception.InvalidTokenAccessException
 import com.navi.server.error.exception.NotFoundException
 import com.navi.server.error.exception.UnknownErrorException
 import com.navi.server.service.FileService
@@ -14,7 +12,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import java.net.URLEncoder
-import java.nio.charset.Charset
 
 @RestController
 class FileApiController (val fileService: FileService){

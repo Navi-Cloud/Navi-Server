@@ -5,7 +5,6 @@ import com.navi.server.domain.FileRepository
 import com.navi.server.dto.FileResponseDTO
 import com.navi.server.dto.FileSaveRequestDTO
 import com.navi.server.error.exception.FileIOException
-import com.navi.server.error.exception.InvalidTokenAccessException
 import com.navi.server.error.exception.NotFoundException
 import com.navi.server.error.exception.UnknownErrorException
 import org.apache.tika.Tika
@@ -77,7 +76,7 @@ class FileService(val fileRepository: FileRepository) {
                     .map { FileResponseDTO(it) }
                     .collect(Collectors.toList()))
         } catch (e: EmptyResultDataAccessException){
-            throw InvalidTokenAccessException("Cannot find file by this token : $token")
+            throw NotFoundException("Cannot find file by this token : $token")
         } catch (e: Exception) {
             e.printStackTrace()
             throw UnknownErrorException("Unknown Exception : Server Error")
@@ -131,7 +130,7 @@ class FileService(val fileRepository: FileRepository) {
                 )
             return this.save(fileSaveRequestDTO)
         } catch (e: EmptyResultDataAccessException) {
-            throw InvalidTokenAccessException("Cannot find file by this token : $token")
+            throw NotFoundException("Cannot find file by this token : $token")
         } catch(e: FileNotFoundException) {
             throw NotFoundException("File Not Found : ${files.originalFilename}")
         } catch(e: IOException){
