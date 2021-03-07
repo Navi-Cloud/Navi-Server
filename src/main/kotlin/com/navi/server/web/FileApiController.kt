@@ -36,11 +36,6 @@ class FileApiController (val fileService: FileService){
         return fileService.findInsideFiles(token)
     }
 
-    @PostMapping("/api/navi/files/dto")
-    fun save(@RequestBody fileSaveRequestDTO: FileSaveRequestDTO) : ResponseEntity<Long> {
-        return fileService.save(fileSaveRequestDTO)
-    }
-
     @PostMapping("/api/navi/files")
     fun fileUpload(@RequestPart("uploadFile") file: MultipartFile, @RequestPart("uploadPath") token: String)
     : ResponseEntity<Long> {
