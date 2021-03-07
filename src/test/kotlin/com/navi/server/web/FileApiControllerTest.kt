@@ -76,51 +76,6 @@ class FileApiControllerTest {
         fileRepository.deleteAll()
     }
 
-    /*
-    @After
-    fun cleanUp() = fileRepository.deleteAll()
-
-     */
-
-    @Test
-    fun testSaveFile() {
-        val fileName = "fileName"
-        val fileType = "fileType"
-        val mimeType = "text/plain"
-        val nextToken = "token"
-        val testingToken = "TestingPrevToken"
-        val lastModifiedTime: Long = 5000
-        val fileCreatedDate = "testCreatedTime"
-        val fileSize: String = "5000mb"
-
-        val requestDto = FileSaveRequestDTO(
-            fileName = fileName,
-            fileType = fileType,
-            mimeType = mimeType,
-            token = nextToken,
-            prevToken = testingToken,
-            lastModifiedTime = lastModifiedTime,
-            fileCreatedDate = fileCreatedDate,
-            fileSize = fileSize
-        )
-        val url = "http://localhost:$port/api/navi/files/dto"
-
-        //send api request
-        val responseEntity : ResponseEntity<Long> = restTemplate.postForEntity(url, requestDto, Long::class.java)
-
-        //assert
-        assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
-        assertThat(responseEntity.body).isGreaterThan(0L)
-
-        val result : FileEntity = fileRepository.findAll().get(0)
-        assertThat(result.fileName).isEqualTo(fileName)
-        assertThat(result.fileType).isEqualTo(fileType)
-        assertThat(result.mimeType).isEqualTo(mimeType)
-        assertThat(result.token).isEqualTo(nextToken)
-        assertThat(result.lastModifiedTime).isEqualTo(lastModifiedTime)
-        assertThat(result.fileCreatedDate).isEqualTo(fileCreatedDate)
-        assertThat(result.fileSize).isEqualTo(fileSize)
-    }
 
     @Test
     fun testFindAllDesc() {
