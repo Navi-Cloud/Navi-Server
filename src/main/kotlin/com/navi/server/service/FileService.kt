@@ -38,7 +38,7 @@ class FileService(val fileRepository: FileRepository) {
         try {
             val fileList : List<FileEntity> = fileRepository.findAllDesc()
             return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .status(HttpStatus.OK)
                 .body(fileRepository.findAllDesc().stream()
                     .map { FileResponseDTO(it) }
                     .collect(Collectors.toList()))
@@ -149,6 +149,9 @@ class FileService(val fileRepository: FileRepository) {
             file = fileRepository.findByToken(token)
             resource = InputStreamResource(Files.newInputStream(Paths.get(file.fileName)))
         } catch (e: NoSuchFileException) {
+            e.printStackTrace()
+            return null
+        } catch (e: EmptyResultDataAccessException) {
             e.printStackTrace()
             return null
         } catch (e: Exception) {

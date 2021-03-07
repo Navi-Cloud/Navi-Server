@@ -323,8 +323,7 @@ class FileApiControllerTest {
         val responseEntity = restTemplate.getForEntity(url, Resource::class.java)
 
         // Assert
-        val resource : Resource? = responseEntity.body
-        assertThat(resource).isEqualTo(null)
+        assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
     }
 
     @Test
