@@ -1,5 +1,6 @@
 package com.navi.server.error
 
+import com.navi.server.error.exception.FileIOException
 import com.navi.server.error.exception.InvalidTokenAccessException
 import com.navi.server.error.exception.NotFoundException
 import com.navi.server.error.exception.UnknownErrorException
@@ -47,4 +48,16 @@ class ApiExceptionController {
             )
     }
 
+    @ExceptionHandler(FileIOException::class)
+    fun handleIOException(fileIOException: FileIOException) : ResponseEntity<ApiError> {
+        // HttpStatus.INTERNAL_SERVER_ERROR is ok for FileIOException ?
+        return ResponseEntity
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(
+                ApiError(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    fileIOException.message!!
+                )
+            )
+    }
 }

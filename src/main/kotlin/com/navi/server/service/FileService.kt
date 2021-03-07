@@ -4,7 +4,9 @@ import com.navi.server.domain.FileEntity
 import com.navi.server.domain.FileRepository
 import com.navi.server.dto.FileResponseDTO
 import com.navi.server.dto.FileSaveRequestDTO
+import com.navi.server.error.exception.FileIOException
 import com.navi.server.error.exception.InvalidTokenAccessException
+import com.navi.server.error.exception.NotFoundException
 import com.navi.server.error.exception.UnknownErrorException
 import org.apache.tika.Tika
 import org.springframework.core.io.InputStreamResource
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
 import java.io.FileNotFoundException
+import java.io.IOException
 import java.lang.Exception
 import java.nio.file.Files
 import java.nio.file.NoSuchFileException
@@ -96,12 +99,11 @@ class FileService(val fileRepository: FileRepository) {
     fun fileUpload(token: String, files: MultipartFile) : ResponseEntity<Long> {
         try {
             // find absolutePath from token
-            val uploadFolderPath =  fileRepository.findByToken(token).fileName
+            val uploadFolderPath = fileRepository.findByToken(token).fileName
 
             // upload
             // If the destination file already exists, it will be deleted first.
             val uploadFile = File(uploadFolderPath, files.originalFilename)
-            println("uploadFilePath -> ${uploadFile.absolutePath}")
             files.transferTo(uploadFile)
 
             // upload to DB
@@ -130,9 +132,13 @@ class FileService(val fileRepository: FileRepository) {
             return this.save(fileSaveRequestDTO)
         } catch (e: EmptyResultDataAccessException) {
             throw InvalidTokenAccessException("Cannot find file by this token : $token")
+        } catch(e: FileNotFoundException) {
+            throw NotFoundException("File Not Found : ${files.originalFilename}")
+        } catch(e: IOException){
+            throw FileIOException("File IO Exception")
         } catch (e: Exception){
             e.printStackTrace()
-            throw UnknownErrorException("Unknown Exception ..!")
+            throw UnknownErrorException("Unknown Exception")
         }
     }
 
