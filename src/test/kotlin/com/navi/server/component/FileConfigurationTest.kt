@@ -92,7 +92,7 @@ class FileConfigurationTest {
         val listSize: Long = fileConfigurationComponent.populateInitialDB()
 
         // Assert
-        val result = fileService.findInsideFiles(fileService.getSHA256(rootPath))
+        val result = fileService.findInsideFiles(fileService.getSHA256(rootPath)).body
 
         val findDto = result.find { it.fileName == childFiles[0].absolutePath }
         findDto?.let { assertThat(findDto.mimeType).isEqualTo("text/plain") } ?: throw Exception("ERROR::NOFILE")

@@ -261,7 +261,10 @@ class FileServiceTest {
         )
 
         // do work
-        val response: List<FileResponseDTO> = fileService.findInsideFiles(prevTokenTest)
+        val responseEntity : ResponseEntity<List<FileResponseDTO>> = fileService.findInsideFiles(prevTokenTest)
+        val statusCode = responseEntity.statusCode
+        assertThat(statusCode).isEqualTo(HttpStatus.OK)
+        val response: List<FileResponseDTO> = responseEntity.body
         assertThat(response.size).isEqualTo(1L)
         assertThat(response[0].fileName).isEqualTo(fileNameTest)
         assertThat(response[0].fileType).isEqualTo(fileTypeTest)

@@ -32,7 +32,7 @@ class FileApiController (val fileService: FileService){
     }
 
     @GetMapping("/api/navi/files/list/{token}")
-    fun findInsideFiles(@PathVariable token: String) : List<FileResponseDTO> {
+    fun findInsideFiles(@PathVariable token: String) : ResponseEntity<List<FileResponseDTO>> {
         return fileService.findInsideFiles(token)
     }
 

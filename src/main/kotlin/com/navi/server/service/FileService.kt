@@ -66,10 +66,19 @@ class FileService(val fileRepository: FileRepository) {
         }
     }
 
-    fun findInsideFiles(token: String): List<FileResponseDTO> {
-        return fileRepository.findInsideFiles(token).stream()
-            .map { FileResponseDTO(it) }
-            .collect(Collectors.toList())
+    fun findInsideFiles(token: String): ResponseEntity<List<FileResponseDTO>> {
+        try{
+            return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(fileRepository.findInsideFiles(token).stream()
+                    .map { FileResponseDTO(it) }
+                    .collect(Collectors.toList()))
+        } catch (e: EmptyResultDataAccessException){
+            throw InvalidTokenAccessException("Cannot find file by this token : $token")
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw UnknownErrorException("Unknown Exception : Server Error")
+        }
     }
 
     fun deleteByToken(token: String): Long {
