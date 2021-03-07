@@ -27,7 +27,7 @@ class FileApiController (val fileService: FileService){
     }
 
     @GetMapping("/api/navi/files/list")
-    fun findAllDesc() : List<FileResponseDTO>{
+    fun findAllDesc() : ResponseEntity<List<FileResponseDTO>>{
         return fileService.findAllDesc()
     }
 

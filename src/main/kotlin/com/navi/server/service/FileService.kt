@@ -31,10 +31,17 @@ import kotlin.math.pow
 
 @Service
 class FileService(val fileRepository: FileRepository) {
-    fun findAllDesc(): List<FileResponseDTO> {
-        return fileRepository.findAllDesc().stream()
-            .map { FileResponseDTO(it) }
-            .collect(Collectors.toList())
+    fun findAllDesc(): ResponseEntity<List<FileResponseDTO>> {
+        try {
+            val fileList : List<FileEntity> = fileRepository.findAllDesc()
+            return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(fileRepository.findAllDesc().stream()
+                    .map { FileResponseDTO(it) }
+                    .collect(Collectors.toList()))
+        } catch (e: Exception) {
+            throw UnknownErrorException("Unknown Exception : cannot find files")
+        }
     }
 
     fun save(fileSaveRequestDTO: FileSaveRequestDTO): ResponseEntity<Long> {

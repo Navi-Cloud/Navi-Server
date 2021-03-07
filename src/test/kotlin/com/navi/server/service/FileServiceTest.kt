@@ -98,7 +98,7 @@ class FileServiceTest {
 
     @Test
     fun isEmptyDescWorks() {
-        val listFile: List<FileResponseDTO> = fileService.findAllDesc()
+        val listFile: List<FileResponseDTO> = fileService.findAllDesc().body
 
         assertThat(listFile.size).isEqualTo(0)
     }
@@ -121,7 +121,7 @@ class FileServiceTest {
         )
 
         // Get Results from fileService
-        val listFile: List<FileResponseDTO> = fileService.findAllDesc()
+        val listFile: List<FileResponseDTO> = fileService.findAllDesc().body
 
         // Assert
         assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)

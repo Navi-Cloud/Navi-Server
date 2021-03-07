@@ -52,7 +52,7 @@ class FileConfigurationTest {
         val listSize: Long = fileConfigurationComponent.populateInitialDB()
 
         // Get Results
-        val listFile: List<FileResponseDTO> = fileService.findAllDesc()
+        val listFile: List<FileResponseDTO> = fileService.findAllDesc().body
 
         // Assert
         assertThat(listFile.size).isEqualTo(listSize)
@@ -67,7 +67,7 @@ class FileConfigurationTest {
         val listSize: Long = fileConfigurationComponent.populateInitialDB()
 
         // Get Results
-        val listFile: List<FileResponseDTO> = fileService.findAllDesc()
+        val listFile: List<FileResponseDTO> = fileService.findAllDesc().body
 
         // Assert
         assertThat(listFile.size).isEqualTo(listSize)
