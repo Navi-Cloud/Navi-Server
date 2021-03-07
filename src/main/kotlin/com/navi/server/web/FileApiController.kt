@@ -2,6 +2,8 @@ package com.navi.server.web
 
 import com.navi.server.dto.FileResponseDTO
 import com.navi.server.dto.FileSaveRequestDTO
+import com.navi.server.error.exception.InvalidTokenAccessException
+import com.navi.server.error.exception.NotFoundException
 import com.navi.server.error.exception.UnknownErrorException
 import com.navi.server.service.FileService
 import org.springframework.core.io.Resource
@@ -48,7 +50,7 @@ class FileApiController (val fileService: FileService){
     @GetMapping("api/navi/files/{token}")
     fun fileDownload(@PathVariable token: String) : ResponseEntity<Resource> {
         val pair : Pair<FileResponseDTO, Resource> = fileService.fileDownload(token) ?: run {
-            return ResponseEntity.badRequest().body(null)
+            throw NotFoundException("File Not Found")
         }
         val fileResponseDTO: FileResponseDTO = pair.first.apply {
             val osType: String = System.getProperty("os.name").toLowerCase()
