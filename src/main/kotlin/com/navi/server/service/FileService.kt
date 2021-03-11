@@ -34,16 +34,16 @@ import kotlin.math.pow
 @Service
 class FileService(val fileRepository: FileRepository) {
     fun findAllDesc(): ResponseEntity<List<FileResponseDTO>> {
-        try {
+        runCatching {
             val fileList : List<FileEntity> = fileRepository.findAllDesc()
-            return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(fileRepository.findAllDesc().stream()
-                    .map { FileResponseDTO(it) }
-                    .collect(Collectors.toList()))
-        } catch (e: Exception) {
+        }.onFailure {
             throw UnknownErrorException("Unknown Exception : cannot find files")
         }
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(fileRepository.findAllDesc().stream()
+                .map { FileResponseDTO(it) }
+                .collect(Collectors.toList()))
     }
 
     fun save(fileSaveRequestDTO: FileSaveRequestDTO): ResponseEntity<Long> {
@@ -69,18 +69,22 @@ class FileService(val fileRepository: FileRepository) {
     }
 
     fun findInsideFiles(token: String): ResponseEntity<List<FileResponseDTO>> {
-        try{
-            return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(fileRepository.findInsideFiles(token).stream()
-                    .map { FileResponseDTO(it) }
-                    .collect(Collectors.toList()))
-        } catch (e: EmptyResultDataAccessException){
-            throw NotFoundException("Cannot find file by this token : $token")
-        } catch (e: Exception) {
-            e.printStackTrace()
-            throw UnknownErrorException("Unknown Exception : Server Error")
+        lateinit var result : List<FileEntity>
+        runCatching {
+            result = fileRepository.findInsideFiles(token)
+        }.onFailure {
+            if (it is EmptyResultDataAccessException) {
+                throw NotFoundException("Cannot find file by this token : $token")
+            } else {
+                it.printStackTrace()
+                throw UnknownErrorException("Unknown Exception : Server Error")
+            }
         }
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(result.stream()
+                .map { FileResponseDTO(it) }
+                .collect(Collectors.toList()))
     }
 
     fun deleteByToken(token: String): Long {
@@ -96,49 +100,51 @@ class FileService(val fileRepository: FileRepository) {
     val tika = Tika()
 
     fun fileUpload(token: String, files: MultipartFile) : ResponseEntity<Long> {
-        try {
-            // find absolutePath from token
-            val uploadFolderPath = fileRepository.findByToken(token).fileName
-
-            // upload
-            // If the destination file already exists, it will be deleted first.
-            val uploadFile = File(uploadFolderPath, files.originalFilename)
-            files.transferTo(uploadFile)
-
-            // upload to DB
-            val basicFileAttribute: BasicFileAttributes = Files.readAttributes(uploadFile.toPath(), BasicFileAttributes::class.java)
-            val simpleDateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd-HH:mm:ss")
-
-
-            var fileSaveRequestDTO = FileSaveRequestDTO (
-                fileName = uploadFile.absolutePath,
-                // Since we are not handling folder[recursive] upload/download, its type must be somewhat non-folder
-                fileType = "File",
-                mimeType =
-                    try {
-                        tika.detect(uploadFile)
-                    } catch (e: Exception) {
-                        println("Failed to detect mimeType for: ${e.message}")
-                        "File"
-                    }
-                ,
-                token = getSHA256(uploadFile.absolutePath),
-                prevToken = getSHA256(uploadFolderPath),
-                lastModifiedTime = uploadFile.lastModified(),
-                fileCreatedDate = simpleDateFormat.format(basicFileAttribute.creationTime().toMillis()),
-                fileSize = convertSize(basicFileAttribute.size())
-                )
-            return this.save(fileSaveRequestDTO)
-        } catch (e: EmptyResultDataAccessException) {
+        // find absolutePath from token
+        lateinit var uploadFolderPath : String
+        runCatching {
+            uploadFolderPath = fileRepository.findByToken(token).fileName
+        }.onFailure {
             throw NotFoundException("Cannot find file by this token : $token")
-        } catch(e: FileNotFoundException) {
-            throw NotFoundException("File Not Found : ${files.originalFilename}")
-        } catch(e: IOException){
-            throw FileIOException("File IO Exception")
-        } catch (e: Exception){
-            e.printStackTrace()
-            throw UnknownErrorException("Unknown Exception")
         }
+
+        // upload
+        // If the destination file already exists, it will be deleted first.
+        lateinit var uploadFile : File
+        runCatching {
+            uploadFile = File(uploadFolderPath, files.originalFilename)
+            files.transferTo(uploadFile)
+        }.onFailure {
+            when(it){
+                is FileNotFoundException -> throw NotFoundException("File Not Found : ${files.originalFilename}")
+                is IOException -> throw FileIOException("File IO Exception")
+                else -> throw UnknownErrorException("Unknown Exception")
+            }
+        }
+
+        // upload to DB
+        val basicFileAttribute: BasicFileAttributes = Files.readAttributes(uploadFile.toPath(), BasicFileAttributes::class.java)
+        val simpleDateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd-HH:mm:ss")
+
+       var fileSaveRequestDTO = FileSaveRequestDTO (
+            fileName = uploadFile.absolutePath,
+            // Since we are not handling folder[recursive] upload/download, its type must be somewhat non-folder
+            fileType = "File",
+            mimeType =
+                try {
+                    tika.detect(uploadFile)
+                } catch (e: Exception) {
+                    println("Failed to detect mimeType for: ${e.message}")
+                    "File"
+                }
+            ,
+            token = getSHA256(uploadFile.absolutePath),
+            prevToken = getSHA256(uploadFolderPath),
+            lastModifiedTime = uploadFile.lastModified(),
+            fileCreatedDate = simpleDateFormat.format(basicFileAttribute.creationTime().toMillis()),
+            fileSize = convertSize(basicFileAttribute.size())
+        )
+        return this.save(fileSaveRequestDTO)
     }
 
     fun fileDownload(token: String) : Pair<FileResponseDTO, Resource>? {
