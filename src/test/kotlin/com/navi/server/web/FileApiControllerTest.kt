@@ -4,8 +4,6 @@ import com.navi.server.component.FileConfigurationComponent
 import com.navi.server.domain.FileEntity
 import com.navi.server.domain.FileRepository
 import com.navi.server.dto.FileResponseDTO
-import com.navi.server.dto.FileSaveRequestDTO
-
 import com.navi.server.service.FileService
 import org.junit.After
 import org.junit.Test
@@ -18,22 +16,17 @@ import org.springframework.http.ResponseEntity
 import org.springframework.test.context.junit4.SpringRunner
 import org.assertj.core.api.Assertions.assertThat;
 import org.junit.Before
-import org.springframework.boot.test.web.client.getForObject
 import org.springframework.core.io.Resource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity.status
 import org.springframework.mock.web.MockMultipartFile
-import org.springframework.mock.web.MockPart
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import java.io.File
 import org.springframework.web.context.WebApplicationContext
-import java.nio.charset.Charset
-import javax.servlet.http.Part
-
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -117,7 +110,7 @@ class FileApiControllerTest {
         if (!fileObject.exists()) {
             fileObject.createNewFile()
         }
-        insertFileEntityToDB(fileObject.absolutePath, "File", fileConfigurationComponent.serverRoot)
+        saveFileEntityToDB(fileObject.absolutePath, "File", fileConfigurationComponent.serverRoot)
 
         // Create one empty Folder to root
         val folderName : String = "TestFolder"
@@ -125,7 +118,7 @@ class FileApiControllerTest {
         if (!folderObject.exists()) {
             folderObject.mkdir()
         }
-        insertFileEntityToDB(folderObject.absolutePath, "Folder", fileConfigurationComponent.serverRoot)
+        saveFileEntityToDB(folderObject.absolutePath, "Folder", fileConfigurationComponent.serverRoot)
 
         // Creat 3 Child Files in Folder [folderName]
         val folderPath = folderObject.absolutePath
@@ -138,27 +131,10 @@ class FileApiControllerTest {
             if (!it.exists()) {
                 it.createNewFile()
             }
-            insertFileEntityToDB(it.absolutePath, "File", folderPath)
+            saveFileEntityToDB(it.absolutePath, "File", folderPath)
         }
 
-
-
-        // Api test 1 :: under Root
-        val rootToken = fileService.getSHA256(fileConfigurationComponent.serverRoot)
-        val url = "http://localhost:$port/api/navi/files/list/${rootToken}"
-        var responseEntity : ResponseEntity<Array<FileResponseDTO>> = restTemplate.getForEntity(url, Array<FileResponseDTO>::class.java)
-
-
-        // Assert
-        assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
-        assertThat(responseEntity.body.size).isEqualTo(2) //one File and one Folder
-        var result = responseEntity.body
-        result.forEach {
-            assertThat(it.prevToken).isEqualTo(rootToken)
-        }
-
-
-        //Api test 2 :: under folderName
+        // in "folderName" folder
         val folderToken = fileService.getSHA256(folderPath)
         val url2 = "http://localhost:$port/api/navi/files/list/${folderToken}"
         var responseEntity2 : ResponseEntity<Array<FileResponseDTO>> = restTemplate.getForEntity(url2, Array<FileResponseDTO>::class.java)
@@ -167,10 +143,19 @@ class FileApiControllerTest {
         assertThat(responseEntity2.statusCode).isEqualTo(HttpStatus.OK)
         assertThat(responseEntity2.body.size).isEqualTo(3) //3 files
 
-        var result2 = responseEntity2.body
-        result2.forEach {
+        var result = responseEntity2.body
+        result.forEach {
             assertThat(it.prevToken).isEqualTo(folderToken)
         }
+    }
+
+    @Test
+    fun invalid_findInsideFiles(){
+        // invalid find Inside files : invalid token
+        val invalidToken = "token"
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/navi/files/list/${invalidToken}"))
+            .andExpect { status(HttpStatus.BAD_REQUEST) }
+            .andDo(MockMvcResultHandlers.print())
     }
 
     @Test
@@ -182,7 +167,7 @@ class FileApiControllerTest {
             folderObject.mkdir()
         }
 
-        insertFileEntityToDB(folderObject.absolutePath, "Folder")
+        saveFileEntityToDB(folderObject.absolutePath, "Folder")
         val folderObjectToken = fileService.getSHA256(folderObject.absolutePath)
 
         // Make uploadFile
@@ -215,7 +200,7 @@ class FileApiControllerTest {
     }
 
     @Test
-    fun invalidTokenTest(){
+    fun invalid_fileUpload(){
         // make MultipartFile for test
         val uploadFileName = "uploadTest-service.txt"
         var uploadFileContent = "file upload test file!".toByteArray()
@@ -223,6 +208,7 @@ class FileApiControllerTest {
             "uploadFile", uploadFileName, "text/plain", uploadFileContent
         )
 
+        // invalid upload test 1 : invalid token
         val invalidToken = "token"
         val uploadFolderPath = MockMultipartFile("uploadPath", "uploadPath", "text/plain", invalidToken.toByteArray())
         // Perform
@@ -231,6 +217,35 @@ class FileApiControllerTest {
                 .file(multipartFile)
                 .file(uploadFolderPath)
         ).andExpect { status(HttpStatus.BAD_REQUEST) }
+            .andDo(MockMvcResultHandlers.print())
+
+        // Why do i need this?
+        saveFileEntityToDB(fileService.rootPath!!, "Folder")
+
+        // invalid upload test 2 : invalid multipartFile (IOException)
+        val multipartFile2 = MockMultipartFile(
+            "uploadFile", "".toByteArray()
+        )
+        val uploadFolderPath2 = MockMultipartFile("uploadPath", "uploadPath", "text/plain", fileService.rootToken!!.toByteArray())
+        // Perform
+        mockMvc.perform(
+            MockMvcRequestBuilders.multipart("/api/navi/files")
+                .file(multipartFile2)
+                .file(uploadFolderPath2)
+        ).andExpect { status(HttpStatus.INTERNAL_SERVER_ERROR) }
+            .andDo(MockMvcResultHandlers.print())
+
+
+        // invalid upload test 3 : invalid multipartFile
+        val multipartFile3 = MockMultipartFile(
+            "uploadFile", "\"", "test", "".toByteArray()
+        )
+        // Perform
+        mockMvc.perform(
+            MockMvcRequestBuilders.multipart("/api/navi/files")
+                .file(multipartFile3)
+                .file(uploadFolderPath2)
+        ).andExpect { status(HttpStatus.INTERNAL_SERVER_ERROR) }
             .andDo(MockMvcResultHandlers.print())
     }
 
@@ -245,7 +260,7 @@ class FileApiControllerTest {
         }
         fileObject.writeText(fileContent);
 
-        insertFileEntityToDB(fileObject.absolutePath, "File")
+        saveFileEntityToDB(fileObject.absolutePath, "File")
         val targetToken = fileService.getSHA256(fileObject.absolutePath)
 
         // Perform
@@ -275,7 +290,7 @@ class FileApiControllerTest {
             folderObject.mkdir()
         }
 
-        insertFileEntityToDB(folderObject.absolutePath, "Folder")
+        saveFileEntityToDB(folderObject.absolutePath, "Folder")
 
         // insert quotation mark
         val folderObjectToken = "\"" + fileService.getSHA256(folderObject.absolutePath) + "\""
@@ -310,19 +325,33 @@ class FileApiControllerTest {
     }
 
     @Test
-    fun invalidFileDownload() {
+    fun invalid_FileDownload() {
         val fileName: String = "invalidDownloadTest-api.txt"
         val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
 
-        // file Download
+        // invalid file Download 1 : invalid token
         var targetToken = fileService.getSHA256(fileObject.absolutePath) // invalid path (no such file in server DB)
-        var result = fileService.fileDownload(targetToken)
-
-        // Perform
         val url = "http://localhost:$port/api/navi/files/${targetToken}"
         val responseEntity = restTemplate.getForEntity(url, Resource::class.java)
 
-        // Assert
+        assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+
+
+        // invalid file Download 2 : FileNotFoundException (no such file at server)
+        // save to (only) DB
+        fileRepository.save(
+            FileEntity(
+                fileName = fileObject.absolutePath,
+                fileType = "type",
+                mimeType = "text/plain",
+                token = targetToken,
+                prevToken = "prevToken",
+                lastModifiedTime = 1L,
+                fileCreatedDate = "now",
+                fileSize = "size"
+            )
+        )
+        val responseEntity2 = restTemplate.getForEntity(url, Resource::class.java)
         assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
     }
 
@@ -343,7 +372,7 @@ class FileApiControllerTest {
         fileService.rootToken = backupToken
     }
 
-    fun insertFileEntityToDB(filename: String, fileType: String){
+    fun saveFileEntityToDB(filename: String, fileType: String){
         fileRepository.save(FileEntity(
             fileName = filename,
             fileType = fileType,
@@ -356,13 +385,13 @@ class FileApiControllerTest {
         ))
     }
 
-    fun insertFileEntityToDB(filename: String, fileType: String, prevPath: String){
+    fun saveFileEntityToDB(filename: String, fileType: String, prevToken: String){
         fileRepository.save(FileEntity(
             fileName = filename,
             fileType = fileType,
             mimeType = "File",
             token = fileService.getSHA256(filename),
-            prevToken = fileService.getSHA256(prevPath),
+            prevToken = fileService.getSHA256(prevToken),
             lastModifiedTime = 1L,
             fileCreatedDate = "date",
             fileSize = "size"

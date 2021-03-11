@@ -37,14 +37,15 @@ import kotlin.math.pow
 @Service
 class FileService(val fileRepository: FileRepository) {
     fun findAllDesc(): ResponseEntity<List<FileResponseDTO>> {
+        lateinit var fileList : List<FileEntity>
         runCatching {
-            val fileList : List<FileEntity> = fileRepository.findAllDesc()
+            fileList = fileRepository.findAllDesc()
         }.onFailure {
             throw UnknownErrorException("Unknown Exception : cannot find files")
         }
         return ResponseEntity
             .status(HttpStatus.OK)
-            .body(fileRepository.findAllDesc().stream()
+            .body(fileList.stream()
                 .map { FileResponseDTO(it) }
                 .collect(Collectors.toList()))
     }
@@ -72,17 +73,13 @@ class FileService(val fileRepository: FileRepository) {
     }
 
     fun findInsideFiles(token: String): ResponseEntity<List<FileResponseDTO>> {
-        lateinit var result : List<FileEntity>
         runCatching {
-            result = fileRepository.findInsideFiles(token)
+            //check if this token is invalid
+            findByToken(token)
         }.onFailure {
-            if (it is EmptyResultDataAccessException) {
-                throw NotFoundException("Cannot find file by this token : $token")
-            } else {
-                it.printStackTrace()
-                throw UnknownErrorException("Unknown Exception : ${it.message}")
-            }
+            throw NotFoundException("Cannot find file by this token : $token")
         }
+        var result : List<FileEntity> = fileRepository.findInsideFiles(token)
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(result.stream()
@@ -119,7 +116,6 @@ class FileService(val fileRepository: FileRepository) {
             files.transferTo(uploadFile)
         }.onFailure {
             when(it){
-                is FileNotFoundException -> throw NotFoundException("File Not Found : ${files.originalFilename}")
                 is IOException -> throw FileIOException("File IO Exception")
                 else -> throw UnknownErrorException("Unknown Exception : ${it.message}")
             }
