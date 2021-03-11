@@ -258,7 +258,7 @@ class FileApiControllerTest {
         contentDisposition?.let {
             val resultFileName = it.split("=")[1]
             assertThat(resultFileName.substring(1, resultFileName.length-1)).isEqualTo(fileName)
-        } ?: throw Exception("No File Name in ContentDisposition")
+        } ?: throw Exception("File Name mismatch OR No File Name in ContentDisposition")
 
         resource?.let {
             val resultContent = resource.inputStream.readBytes().toString(Charsets.UTF_8)

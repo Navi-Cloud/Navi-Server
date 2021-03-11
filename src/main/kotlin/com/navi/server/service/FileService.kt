@@ -11,7 +11,9 @@ import org.apache.tika.Tika
 import org.springframework.core.io.InputStreamResource
 import org.springframework.core.io.Resource
 import org.springframework.dao.EmptyResultDataAccessException
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
@@ -19,6 +21,7 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.lang.Exception
+import java.net.URLEncoder
 import java.nio.file.Files
 import java.nio.file.NoSuchFileException
 import java.nio.file.Paths
@@ -77,7 +80,7 @@ class FileService(val fileRepository: FileRepository) {
                 throw NotFoundException("Cannot find file by this token : $token")
             } else {
                 it.printStackTrace()
-                throw UnknownErrorException("Unknown Exception : Server Error")
+                throw UnknownErrorException("Unknown Exception : ${it.message}")
             }
         }
         return ResponseEntity
@@ -118,7 +121,7 @@ class FileService(val fileRepository: FileRepository) {
             when(it){
                 is FileNotFoundException -> throw NotFoundException("File Not Found : ${files.originalFilename}")
                 is IOException -> throw FileIOException("File IO Exception")
-                else -> throw UnknownErrorException("Unknown Exception")
+                else -> throw UnknownErrorException("Unknown Exception : ${it.message}")
             }
         }
 
@@ -147,23 +150,32 @@ class FileService(val fileRepository: FileRepository) {
         return this.save(fileSaveRequestDTO)
     }
 
-    fun fileDownload(token: String) : Pair<FileResponseDTO, Resource>? {
-        var file : FileEntity;
-        var resource: Resource;
-        try {
+    fun fileDownload(token: String) : ResponseEntity<Resource> {
+        lateinit var file : FileEntity
+        lateinit var resource: Resource
+        runCatching {
             file = fileRepository.findByToken(token)
             resource = InputStreamResource(Files.newInputStream(Paths.get(file.fileName)))
-        } catch (e: NoSuchFileException) {
-            e.printStackTrace()
-            return null
-        } catch (e: EmptyResultDataAccessException) {
-            e.printStackTrace()
-            return null
-        } catch (e: Exception) {
-            e.printStackTrace();
-            return null
+        }.onFailure {
+            when(it){
+                is EmptyResultDataAccessException -> throw NotFoundException("Cannot find file by this token : $token")
+                is NoSuchFileException -> throw NotFoundException("File Not Found !")
+                else -> throw UnknownErrorException("Unknown Exception : ${it.message}")
+            }
         }
-        return Pair(FileResponseDTO(file), resource)
+        val fileResponseDTO = FileResponseDTO(file).apply {
+            val osType: String = System.getProperty("os.name").toLowerCase()
+            if (osType.indexOf("win") >= 0) {
+                this.fileName = this.fileName.split("\\").last()
+            } else {
+                this.fileName = this.fileName.split("/").last()
+            }
+        }
+        val again: String = String.format("attachment; filename=\"%s\"", URLEncoder.encode(fileResponseDTO.fileName, "UTF-8"))
+        return ResponseEntity.ok()
+            .contentType(MediaType.parseMediaType("application/octet-stream"))
+            .header(HttpHeaders.CONTENT_DISPOSITION, again)
+            .body(resource)
     }
 
     fun getSHA256(input: String): String {
