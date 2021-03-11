@@ -402,18 +402,6 @@ class FileServiceTest {
         }.onFailure {
             assertThat(it.message).isEqualTo("File IO Exception")
         }
-
-        // invalid upload test 3 : invalid multipartFile
-        val multipartFile3 = MockMultipartFile(
-            "\"", "\"", "test", "".toByteArray()
-        )
-        runCatching {
-            fileService.fileUpload(fileService.rootToken!!, multipartFile3)
-        }.onSuccess {
-            fail("This Should be failed,....")
-        }
-
-
     }
 
     @Test
