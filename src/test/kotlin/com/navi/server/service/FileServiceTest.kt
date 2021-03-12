@@ -6,12 +6,17 @@ import com.navi.server.domain.FileRepository
 import com.navi.server.dto.FileResponseDTO
 import com.navi.server.dto.FileSaveRequestDTO
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.fail
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.core.io.Resource
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.File
@@ -60,7 +65,7 @@ class FileServiceTest {
     @Test
     fun isSavingWorks() {
         // save it to DB with fileService
-        val retId: Long = fileService.save(
+        val responseEntity: ResponseEntity<Long> = fileService.save(
             FileSaveRequestDTO(
                 id = 0,
                 fileName = fileNameTest,
@@ -75,9 +80,12 @@ class FileServiceTest {
         )
 
         // Get results from repository
+        val retId = responseEntity.body
         val results: FileEntity = fileRepository.findById(retId).get()
 
         // Assert
+        assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
+
         with(results) {
             assertThat(fileName).isEqualTo(fileNameTest)
             assertThat(fileType).isEqualTo(fileTypeTest)
@@ -92,7 +100,7 @@ class FileServiceTest {
 
     @Test
     fun isEmptyDescWorks() {
-        val listFile: List<FileResponseDTO> = fileService.findAllDesc()
+        val listFile: List<FileResponseDTO> = fileService.findAllDesc().body
 
         assertThat(listFile.size).isEqualTo(0)
     }
@@ -100,7 +108,7 @@ class FileServiceTest {
     @Test
     fun isFindAllDescWorks() {
         // save it to DB with fileService
-        val retId: Long = fileService.save(
+        val responseEntity: ResponseEntity<Long> = fileService.save(
             FileSaveRequestDTO(
                 id = 0,
                 fileName = fileNameTest,
@@ -115,9 +123,11 @@ class FileServiceTest {
         )
 
         // Get Results from fileService
-        val listFile: List<FileResponseDTO> = fileService.findAllDesc()
+        val listFile: List<FileResponseDTO> = fileService.findAllDesc().body
 
         // Assert
+        assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
+
         assertThat(listFile.size).isEqualTo(1)
         with(listFile[0]) {
             assertThat(fileName).isEqualTo(fileNameTest)
@@ -238,6 +248,8 @@ class FileServiceTest {
 
     @Test
     fun isFindInsideFilesWorksWell() {
+        saveFileEntityToDB(prevTokenTest, "Folder")
+
         fileRepository.save(
             FileEntity(
                 id = 0,
@@ -253,7 +265,10 @@ class FileServiceTest {
         )
 
         // do work
-        val response: List<FileResponseDTO> = fileService.findInsideFiles(prevTokenTest)
+        val responseEntity : ResponseEntity<List<FileResponseDTO>> = fileService.findInsideFiles(prevTokenTest)
+        val statusCode = responseEntity.statusCode
+        assertThat(statusCode).isEqualTo(HttpStatus.OK)
+        val response: List<FileResponseDTO> = responseEntity.body
         assertThat(response.size).isEqualTo(1L)
         assertThat(response[0].fileName).isEqualTo(fileNameTest)
         assertThat(response[0].fileType).isEqualTo(fileTypeTest)
@@ -263,6 +278,19 @@ class FileServiceTest {
         assertThat(response[0].lastModifiedTime).isEqualTo(lastModifiedTimeTest)
         assertThat(response[0].fileCreatedDate).isEqualTo(fileCreatedDateTest)
         assertThat(response[0].fileSize).isEqualTo(fileSizeTest)
+    }
+
+    @Test
+    fun invalid_findInsideFiles(){
+        // invalid find Inside files : invalid token
+        val invalidToken = "token"
+        runCatching {
+            fileService.findInsideFiles("token")
+        }.onSuccess{
+            fail("This Should be failed,....")
+        }.onFailure {
+            assertThat(it.message).isEqualTo("Cannot find file by this token : $invalidToken")
+        }
     }
 
     // Do we even need this?
@@ -309,7 +337,6 @@ class FileServiceTest {
 
     @Test
     fun fileDownloadTest() {
-
         // Make one test file to root
         val fileName: String = "downloadTest-service.txt"
         val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
@@ -323,26 +350,26 @@ class FileServiceTest {
 
         // file Download
         val targetToken = fileService.getSHA256(fileObject.absolutePath)
-        val result = fileService.fileDownload(targetToken)
+        val responseEntity : ResponseEntity<Resource> = fileService.fileDownload(targetToken)
 
         // Assert
-        val fileResponseDTO = result?.first
-        val resource = result?.second
+        val contentDisposition : String? = responseEntity.headers.get(HttpHeaders.CONTENT_DISPOSITION)!!.get(0)
+        contentDisposition?.let {
+            val resultFileName = it.split("=")[1]
+            assertThat(resultFileName.substring(1, resultFileName.length-1)).isEqualTo(fileName)
+        } ?: throw Exception("File Name mismatch OR No File Name in ContentDisposition")
 
-        fileResponseDTO?.let {
-            assertThat(fileResponseDTO.fileName).isEqualTo(fileObject.absolutePath)
-        } ?: throw Exception("No File: ${fileObject.absolutePath}")
-
+        val resource : Resource? = responseEntity.body
         resource?.let {
             val resultContent = resource.inputStream.readBytes().toString(Charsets.UTF_8)
             assertThat(resultContent).isEqualTo(fileContent)
         } ?: throw Exception("No FILE")
     }
 
-    @Test
-    fun invalidFileUpload() {
-        fileConfigurationComponent.populateInitialDB()
 
+    @Test
+    fun invalid_FileUpload() {
+        fileConfigurationComponent.populateInitialDB()
         // Create one test Folder to root
         val folderName: String = "Upload"
         val folderObject: File = File(fileConfigurationComponent.serverRoot, folderName)
@@ -350,34 +377,50 @@ class FileServiceTest {
             folderObject.mkdir()
         }
 
-        // file upload
+        // invalid upload test 1 : invalid token
         val uploadFolderToken = fileService.getSHA256(folderObject.absolutePath) // invalid path (no such folder in DB)
         val multipartFile = MockMultipartFile(
             "uploadFileName", "uploadFileName", "text/plain", "uploadFileContent".toByteArray()
         )
-        val result = fileService.fileUpload(uploadFolderToken, multipartFile)
+        runCatching {
+            fileService.fileUpload(uploadFolderToken, multipartFile)
+        }.onSuccess {
+            fail("This Should be failed,....")
+        }.onFailure {
+            assertThat(it.message).isEqualTo("Cannot find file by this token : $uploadFolderToken")
+        }
 
-        // Assert
-        assertThat(result).isEqualTo(-1)
 
+        // invalid upload test 2 : invalid multipartFile (IOException)
+        val multipartFile2 = MockMultipartFile(
+            "uploadFileName", "".toByteArray()
+        )
+        runCatching {
+            fileService.fileUpload(fileService.rootToken!!, multipartFile2)
+        }.onSuccess {
+            fail("This Should be failed,....")
+        }.onFailure {
+            assertThat(it.message).isEqualTo("File IO Exception")
+        }
     }
 
     @Test
-    fun invalidFileDownload() {
-        fileConfigurationComponent.populateInitialDB()
-
+    fun invalid_FileDownload() {
         val fileName: String = "invalidDownloadTest.txt"
         val fileObject: File = File(fileConfigurationComponent.serverRoot, fileName)
 
-        // file Download 1
+        // invalid file Download 1 : invalid token
         var targetToken = fileService.getSHA256(fileObject.absolutePath) // invalid path (no such file in server DB)
-        var result = fileService.fileDownload(targetToken)
+        runCatching {
+            fileService.fileDownload(targetToken)
+        }.onSuccess {
+            fail("This Should be failed,....")
+        }.onFailure {
+            assertThat(it.message).isEqualTo("Cannot find file by this token : $targetToken")
+        }
 
-        // Assert
-        assertThat(result).isEqualTo(null)
 
-
-        // upload to DB
+        // save to DB
         fileRepository.save(
             FileEntity(
                 fileName = fileName,
@@ -391,13 +434,31 @@ class FileServiceTest {
             )
         )
 
-        // file Download 2
+
+        // invalid file Download 2 : FileNotFoundException
         targetToken = fileService.getSHA256(fileObject.absolutePath) // invalid file (no such file at server)
+
         //expecting FileNotFoundException
-        result = fileService.fileDownload(targetToken)
+        runCatching {
+            fileService.fileDownload(targetToken)
+        }.onSuccess {
+            fail("This Should be failed,....")
+        }.onFailure {
+            assertThat(it.message).isEqualTo("File Not Found !")
+        }
 
-        // Assert
-        assertThat(result).isEqualTo(null)
+    }
 
+    fun saveFileEntityToDB(filename: String, fileType: String){
+        fileRepository.save(FileEntity(
+            fileName = filename,
+            fileType = fileType,
+            mimeType = "File",
+            token = filename,
+            prevToken = "",
+            lastModifiedTime = 1L,
+            fileCreatedDate = "date",
+            fileSize = "size"
+        ))
     }
 }
