@@ -36,7 +36,6 @@ class FileRepositoryTest {
         val filesList : List<FileEntity> = fileRepository.findAll()
 
         val file : FileEntity = filesList.get(0)
-        println(file.id)
         assertThat(file.fileName).isEqualTo(name)
         assertThat(file.fileType).isEqualTo(type)
         assertThat(file.mimeType).isEqualTo(mimeType)
@@ -46,7 +45,7 @@ class FileRepositoryTest {
         assertThat(file.fileCreatedDate).isEqualTo(createdDate)
         assertThat(file.fileSize).isEqualTo(fileSize)
 
-        println(filesList.get(1).id)
+        assertThat(filesList.size).isEqualTo(2)
     }
 
 

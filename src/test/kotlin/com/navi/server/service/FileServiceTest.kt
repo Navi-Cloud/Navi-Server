@@ -65,9 +65,9 @@ class FileServiceTest {
     @Test
     fun isSavingWorks() {
         // save it to DB with fileService
-        val responseEntity: ResponseEntity<Long> = fileService.save(
+        val responseEntity: ResponseEntity<FileEntity> = fileService.save(
             FileSaveRequestDTO(
-                id = 0,
+                //id = 0,
                 fileName = fileNameTest,
                 fileType = fileTypeTest,
                 mimeType = mimeTypeTest,
@@ -80,8 +80,8 @@ class FileServiceTest {
         )
 
         // Get results from repository
-        val retId = responseEntity.body
-        val results: FileEntity = fileRepository.findById(retId).get()
+        val retToken = responseEntity.body.token
+        val results: FileEntity = fileRepository.findByToken(retToken)
 
         // Assert
         assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
@@ -108,9 +108,9 @@ class FileServiceTest {
     @Test
     fun isFindAllDescWorks() {
         // save it to DB with fileService
-        val responseEntity: ResponseEntity<Long> = fileService.save(
+        val responseEntity: ResponseEntity<FileEntity> = fileService.save(
             FileSaveRequestDTO(
-                id = 0,
+                //id = 0,
                 fileName = fileNameTest,
                 fileType = fileTypeTest,
                 mimeType = mimeTypeTest,
@@ -151,7 +151,7 @@ class FileServiceTest {
         for (i in 0 until targetIncreaseValue) {
             fileSaveRequestDtoList.add(
                 FileSaveRequestDTO(
-                    id = 0,
+                    //id = 0,
                     fileName = fileNameTest,
                     fileType = fileTypeTest,
                     mimeType = mimeTypeTest,
@@ -201,7 +201,7 @@ class FileServiceTest {
     fun isDeleteByTokenWorksWell() {
         fileRepository.save(
             FileEntity(
-                id = 0,
+                //id = 0,
                 fileName = fileNameTest,
                 fileType = fileTypeTest,
                 mimeType = mimeTypeTest,
@@ -222,7 +222,7 @@ class FileServiceTest {
     fun isFindByTokenWorksWell() {
         fileRepository.save(
             FileEntity(
-                id = 0,
+                //id = 0,
                 fileName = fileNameTest,
                 fileType = fileTypeTest,
                 mimeType = mimeTypeTest,
@@ -252,7 +252,7 @@ class FileServiceTest {
 
         fileRepository.save(
             FileEntity(
-                id = 0,
+                //id = 0,
                 fileName = fileNameTest,
                 fileType = fileTypeTest,
                 mimeType = mimeTypeTest,

@@ -39,7 +39,7 @@ class FileService(val fileRepository: FileRepository) {
     fun findAllDesc(): ResponseEntity<List<FileResponseDTO>> {
         lateinit var fileList : List<FileEntity>
         runCatching {
-            fileList = fileRepository.findAllDesc()
+            fileList = fileRepository.findAllByOrderByIdDesc()
         }.onFailure {
             throw UnknownErrorException("Unknown Exception : cannot find files")
         }
@@ -50,10 +50,10 @@ class FileService(val fileRepository: FileRepository) {
                 .collect(Collectors.toList()))
     }
 
-    fun save(fileSaveRequestDTO: FileSaveRequestDTO): ResponseEntity<Long> {
+    fun save(fileSaveRequestDTO: FileSaveRequestDTO): ResponseEntity<FileEntity> {
         return ResponseEntity
             .status(HttpStatus.OK)
-            .body(fileRepository.save(fileSaveRequestDTO.toEntity()).id)
+            .body(fileRepository.save(fileSaveRequestDTO.toEntity()))
     }
 
     fun saveAll(inputList: List<FileSaveRequestDTO>, digestValue: Int = 10000) {
@@ -79,7 +79,7 @@ class FileService(val fileRepository: FileRepository) {
         }.onFailure {
             throw NotFoundException("Cannot find file by this token : $token")
         }
-        var result : List<FileEntity> = fileRepository.findInsideFiles(token)
+        var result : List<FileEntity> = fileRepository.findAllByPrevToken(token)
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(result.stream()
@@ -99,7 +99,7 @@ class FileService(val fileRepository: FileRepository) {
     var rootToken: String? = null
     val tika = Tika()
 
-    fun fileUpload(token: String, files: MultipartFile) : ResponseEntity<Long> {
+    fun fileUpload(token: String, files: MultipartFile) : ResponseEntity<FileEntity> {
         // find absolutePath from token
         lateinit var uploadFolderPath : String
         runCatching {

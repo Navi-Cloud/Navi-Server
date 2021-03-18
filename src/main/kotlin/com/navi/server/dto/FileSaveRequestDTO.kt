@@ -15,7 +15,7 @@ class FileSaveRequestDTO(
 ) {
 
     constructor(responseDTO: FileResponseDTO): this(
-        id = responseDTO.id,
+        //id = responseDTO.id,
         fileName = responseDTO.fileName,
         fileType = responseDTO.fileType,
         mimeType = responseDTO.mimeType,
@@ -28,7 +28,7 @@ class FileSaveRequestDTO(
 
     fun toEntity(): FileEntity {
         return FileEntity(
-            id = this.id,
+            //id = this.id,
             fileName = this.fileName,
             fileType = this.fileType,
             mimeType = this.mimeType,

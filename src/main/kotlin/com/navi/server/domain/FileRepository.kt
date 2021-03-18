@@ -1,22 +1,15 @@
 package com.navi.server.domain
 
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Query
-import org.springframework.transaction.annotation.Transactional
+import org.springframework.data.mongodb.repository.MongoRepository
 
-interface FileRepository : JpaRepository<FileEntity, Long> {
-    @Query("SELECT f FROM FileEntity f ORDER BY f.id DESC")
-    fun findAllDesc(): List<FileEntity>
+interface FileRepository : MongoRepository<FileEntity, String> {
 
-    @Query("FROM FileEntity WHERE prevToken= ?1")
-    fun findInsideFiles(token: String) : List<FileEntity>
+    fun findAllByOrderByIdDesc(): List<FileEntity>
 
-    @Transactional(readOnly = true)
+    fun findAllByPrevToken(prevToken: String) : List<FileEntity>
+
     fun findByToken(token: String): FileEntity
 
-    @Transactional(readOnly = false)
+    //@Query(value="{'token' : $0}", delete = true)
     fun deleteByToken(token: String): Long
-
-    @Query("FROM FileEntity WHERE token= ?1")
-    fun findFile(token: String) : FileEntity
 }
