@@ -3,7 +3,6 @@ package com.navi.server.dto
 import com.navi.server.domain.FileEntity
 
 class FileSaveRequestDTO(
-    var id: Long = 0,
     var fileName: String,
     var fileType: String,
     var mimeType: String,
@@ -15,7 +14,6 @@ class FileSaveRequestDTO(
 ) {
 
     constructor(responseDTO: FileResponseDTO): this(
-        //id = responseDTO.id,
         fileName = responseDTO.fileName,
         fileType = responseDTO.fileType,
         mimeType = responseDTO.mimeType,
@@ -28,7 +26,6 @@ class FileSaveRequestDTO(
 
     fun toEntity(): FileEntity {
         return FileEntity(
-            //id = this.id,
             fileName = this.fileName,
             fileType = this.fileType,
             mimeType = this.mimeType,

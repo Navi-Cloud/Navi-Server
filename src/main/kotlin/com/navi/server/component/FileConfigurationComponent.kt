@@ -50,7 +50,6 @@ class FileConfigurationComponent(val fileService: FileService) {
                 println(it.absolutePath)
                 fileSaveList.add(
                     FileSaveRequestDTO(
-                        //id = 0,
                         fileName = it.absolutePath,
                         fileType = "Folder",
                         mimeType = "Folder",
@@ -65,7 +64,6 @@ class FileConfigurationComponent(val fileService: FileService) {
                 with(it) {
                     fileSaveList.add(
                         FileSaveRequestDTO(
-                            //id = 0,
                             fileName = absolutePath,
                             fileType = if (isDirectory) "Folder" else "File",
                             mimeType = if (isDirectory) "Folder" else {

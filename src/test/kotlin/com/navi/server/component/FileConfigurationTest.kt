@@ -111,7 +111,6 @@ class FileConfigurationTest {
         val targetSHA256: String = fileService.getSHA256(tmpPath.absolutePath)
         fileService.save(
             FileSaveRequestDTO(
-                //id = 50,
                 fileName = tmpPath.name,
                 fileType = "File",
                 mimeType = "mime/application/json",
@@ -139,7 +138,6 @@ class FileConfigurationTest {
         val targetSHA256: String = fileService.getSHA256(tmpPath.absolutePath)
         fileService.save(
             FileSaveRequestDTO(
-                //id = 50,
                 fileName = tmpPath.name,
                 fileType = "File",
                 mimeType = "mime/application/json",

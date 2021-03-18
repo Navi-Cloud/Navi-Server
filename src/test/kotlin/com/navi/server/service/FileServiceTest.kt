@@ -67,7 +67,6 @@ class FileServiceTest {
         // save it to DB with fileService
         val responseEntity: ResponseEntity<FileEntity> = fileService.save(
             FileSaveRequestDTO(
-                //id = 0,
                 fileName = fileNameTest,
                 fileType = fileTypeTest,
                 mimeType = mimeTypeTest,
@@ -110,7 +109,6 @@ class FileServiceTest {
         // save it to DB with fileService
         val responseEntity: ResponseEntity<FileEntity> = fileService.save(
             FileSaveRequestDTO(
-                //id = 0,
                 fileName = fileNameTest,
                 fileType = fileTypeTest,
                 mimeType = mimeTypeTest,
@@ -151,7 +149,6 @@ class FileServiceTest {
         for (i in 0 until targetIncreaseValue) {
             fileSaveRequestDtoList.add(
                 FileSaveRequestDTO(
-                    //id = 0,
                     fileName = fileNameTest,
                     fileType = fileTypeTest,
                     mimeType = mimeTypeTest,
@@ -201,7 +198,6 @@ class FileServiceTest {
     fun isDeleteByTokenWorksWell() {
         fileRepository.save(
             FileEntity(
-                //id = 0,
                 fileName = fileNameTest,
                 fileType = fileTypeTest,
                 mimeType = mimeTypeTest,
@@ -222,7 +218,6 @@ class FileServiceTest {
     fun isFindByTokenWorksWell() {
         fileRepository.save(
             FileEntity(
-                //id = 0,
                 fileName = fileNameTest,
                 fileType = fileTypeTest,
                 mimeType = mimeTypeTest,
@@ -252,7 +247,6 @@ class FileServiceTest {
 
         fileRepository.save(
             FileEntity(
-                //id = 0,
                 fileName = fileNameTest,
                 fileType = fileTypeTest,
                 mimeType = mimeTypeTest,

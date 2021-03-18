@@ -75,7 +75,7 @@ class FileApiControllerTest {
         //insert data
         val fileName = listOf<String>("fileName1", "fileName2", "fileName3", "fileName4")
         fileName.forEach {
-            val id = fileRepository.save(FileEntity(fileName = it, fileType = "fileType", mimeType = "text/plain", token = "token", prevToken = "token", lastModifiedTime = 5000, fileCreatedDate = "testCreatedTime", fileSize = "5000"))
+            val result = fileRepository.save(FileEntity(fileName = it, fileType = "fileType", mimeType = "text/plain", token = "token", prevToken = "token", lastModifiedTime = 5000, fileCreatedDate = "testCreatedTime", fileSize = "5000"))
         }
         //send api request
         val url = "http://localhost:$port/api/navi/files/list"

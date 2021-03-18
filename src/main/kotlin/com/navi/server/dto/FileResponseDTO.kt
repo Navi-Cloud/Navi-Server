@@ -3,7 +3,6 @@ package com.navi.server.dto
 import com.navi.server.domain.FileEntity
 
 class FileResponseDTO(
-    //var id: Long = 0,
     var fileName: String,
     var fileType: String,
     var mimeType: String,
@@ -15,7 +14,6 @@ class FileResponseDTO(
 ) {
 
     constructor(entity: FileEntity): this(
-        //id = entity.id,
         fileName = entity.fileName,
         fileType = entity.fileType,
         mimeType = entity.mimeType,
@@ -28,7 +26,6 @@ class FileResponseDTO(
 
     fun toEntity(): FileEntity {
         return FileEntity(
-            //id = this.id,
             fileName = this.fileName,
             fileType = this.fileType,
             mimeType = this.mimeType,
@@ -41,8 +38,7 @@ class FileResponseDTO(
     }
 
     override fun toString(): String {
-        return "ID: none\n" +
-                "File Name:\t $fileName\n" +
+        return "File Name:\t $fileName\n" +
                 "File Type:\t $fileType\n" +
                 "MIME Type:\t $mimeType\n" +
                 "Next Token:\t $token\n" +
