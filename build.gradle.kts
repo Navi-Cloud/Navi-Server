@@ -59,7 +59,9 @@ tasks.jacocoTestCoverageVerification {
             excludes = listOf(
                 "com.navi.server.dto.**",
                 "com.navi.server.watcher.**",
-                "com.navi.server.MainServerKt"
+                "com.navi.server.MainServerKt",
+                "com.navi.server.security.**",
+                "com.navi.server.domain.user.**"
             )
         }
     }
@@ -96,6 +98,10 @@ dependencies {
     compile("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
     implementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.security:spring-security-test")
+    implementation("io.jsonwebtoken:jjwt-impl:0.11.2")
+    implementation("io.jsonwebtoken:jjwt-jackson:0.11.2")
     testCompile("org.springframework.security:spring-security-test")
     testCompile("org.springframework.boot:spring-boot-starter-test")
     compile("com.h2database:h2")
