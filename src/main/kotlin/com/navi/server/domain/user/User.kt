@@ -1,5 +1,6 @@
 package com.navi.server.domain.user
 
+import com.navi.server.domain.FileObject
 import org.bson.types.ObjectId
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.security.core.GrantedAuthority
@@ -15,6 +16,7 @@ class User(
     var userName: String,
     var userPassword: String,
     val roles: Set<String> = setOf(),
+    val fileList: MutableList<FileObject> = mutableListOf()
 ) : UserDetails {
 
     override fun getAuthorities(): Collection<GrantedAuthority?>? {
