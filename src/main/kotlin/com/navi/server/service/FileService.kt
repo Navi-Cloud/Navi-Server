@@ -82,8 +82,8 @@ class FileService {
                 .collect(Collectors.toList()))
     }
 
-    fun deleteByToken(token: String): Long {
-        return fileRepository.deleteByToken(token)
+    fun deleteByToken(inputUserName: String, fileToken: String): Boolean {
+        return userTemplateRepository.deleteByToken(inputUserName, fileToken).wasAcknowledged()
     }
 
     fun findByToken(inputUserName: String, fileToken: String): FileResponseDTO {
