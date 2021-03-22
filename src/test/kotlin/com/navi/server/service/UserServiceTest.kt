@@ -2,6 +2,8 @@ package com.navi.server.service
 
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
+import com.navi.server.dto.LoginRequest
+import com.navi.server.dto.LoginResponse
 import com.navi.server.dto.UserRegisterRequest
 import com.navi.server.dto.UserRegisterResponse
 import org.assertj.core.api.Assertions.assertThat
@@ -79,6 +81,74 @@ class UserServiceTest {
             assertThat(it.body.registeredEmail).isEqualTo(userRegisterRequest.userEmail)
         }.onFailure {
             fail("This should returned OK!: ${it.stackTraceToString()}")
+        }
+    }
+
+    @Test
+    fun is_loginUser_returns_FORBIDDEN_no_username() {
+        runCatching{
+            userService.loginUser(
+                LoginRequest(
+                    userName = "whatever",
+                    userPassword = "testPassword"
+                )
+            )
+        }.onSuccess {
+            fail("DB Should be empty, thus this test should not be succeed.")
+        }.onFailure {
+            assertThat(it.message).isEqualTo("Username OR Password is wrong!")
+        }
+    }
+
+    @Test
+    fun is_loginUser_returns_FORBIDDEN_wrong_password() {
+        // Setup Data
+        val mockUser: User = User(
+            userName = "KangDroid",
+            userPassword = "testingPassword",
+            roles = setOf("ROLE_ADMIN")
+        )
+        userTemplateRepository.save(mockUser)
+
+        // Login
+        runCatching {
+            userService.loginUser(
+                LoginRequest(
+                    userName = "KangDroid",
+                    userPassword = "testingPassword2"
+                )
+            )
+        }.onSuccess {
+            fail("Wrong password, but somehow it succeed?")
+        }.onFailure {
+            assertThat(it.message).isEqualTo("Username OR Password is wrong!")
+        }
+    }
+
+    @Test
+    fun is_loginUser_returns_OK() {
+        // Setup Data
+        val mockUser: User = User(
+            userName = "KangDroid",
+            userPassword = "testingPassword",
+            roles = setOf("ROLE_ADMIN")
+        )
+        userTemplateRepository.save(mockUser)
+
+        // Login
+        runCatching {
+            userService.loginUser(
+                LoginRequest(
+                    userName = "KangDroid",
+                    userPassword = "testingPassword"
+                )
+            )
+        }.onSuccess {
+            assertThat(it.statusCode).isEqualTo(HttpStatus.OK)
+            assertThat(it.hasBody()).isEqualTo(true)
+            assertThat(it.body.userToken).isNotEqualTo("")
+        }.onFailure {
+            fail("Wrong password, but somehow it succeed?")
         }
     }
 }
