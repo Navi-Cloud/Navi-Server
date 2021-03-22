@@ -17,36 +17,36 @@ import java.net.URLEncoder
 @RestController
 class FileApiController (val fileService: FileService){
 
-    @GetMapping("/api/navi/root-token")
-    fun findRootToken() : ResponseEntity<String> {
-        return fileService.rootToken?.let {
-            ResponseEntity
-                .status(HttpStatus.OK)
-                .body(fileService.rootToken)
-        } ?: throw UnknownErrorException("serverRoot does not exist!")
-    }
-
-    @GetMapping("/api/navi/files/list")
-    fun findAllDesc() : ResponseEntity<List<FileResponseDTO>>{
-        return fileService.findAllDesc()
-    }
-
-    @GetMapping("/api/navi/files/list/{token}")
-    fun findInsideFiles(@PathVariable token: String) : ResponseEntity<List<FileResponseDTO>> {
-        return fileService.findInsideFiles(token)
-    }
-
-    @PostMapping("/api/navi/files")
-    fun fileUpload(@RequestPart("uploadFile") file: MultipartFile, @RequestPart("uploadPath") token: String)
-    : ResponseEntity<FileEntity> {
-        // when client requests, quotation marks(") are automatically inserted.
-        if(token.contains("\""))
-            return fileService.fileUpload(token.substring(1, token.length - 1), file)
-        return fileService.fileUpload(token, file)
-    }
-
-    @GetMapping("api/navi/files/{token}")
-    fun fileDownload(@PathVariable token: String) : ResponseEntity<Resource> {
-        return fileService.fileDownload(token)
-    }
+//    @GetMapping("/api/navi/root-token")
+//    fun findRootToken() : ResponseEntity<String> {
+//        return fileService.rootToken?.let {
+//            ResponseEntity
+//                .status(HttpStatus.OK)
+//                .body(fileService.rootToken)
+//        } ?: throw UnknownErrorException("serverRoot does not exist!")
+//    }
+//
+//    @GetMapping("/api/navi/files/list")
+//    fun findAllDesc() : ResponseEntity<List<FileResponseDTO>>{
+//        return fileService.findAllDesc()
+//    }
+//
+//    @GetMapping("/api/navi/files/list/{token}")
+//    fun findInsideFiles(@PathVariable token: String) : ResponseEntity<List<FileResponseDTO>> {
+//        return fileService.findInsideFiles(token)
+//    }
+//
+//    @PostMapping("/api/navi/files")
+//    fun fileUpload(@RequestPart("uploadFile") file: MultipartFile, @RequestPart("uploadPath") token: String)
+//    : ResponseEntity<FileEntity> {
+//        // when client requests, quotation marks(") are automatically inserted.
+//        if(token.contains("\""))
+//            return fileService.fileUpload(token.substring(1, token.length - 1), file)
+//        return fileService.fileUpload(token, file)
+//    }
+//
+//    @GetMapping("api/navi/files/{token}")
+//    fun fileDownload(@PathVariable token: String) : ResponseEntity<Resource> {
+//        return fileService.fileDownload(token)
+//    }
 }
