@@ -61,7 +61,16 @@ tasks.jacocoTestCoverageVerification {
                 "com.navi.server.watcher.**",
                 "com.navi.server.MainServerKt",
                 "com.navi.server.security.**",
-                "com.navi.server.domain.user.**"
+                "com.navi.server.domain.user.**",
+                // Temp-Disabled
+                "com.navi.server.error.exception.FileIOException",
+                "com.navi.server.error.exception.NotFoundException",
+                "com.navi.server.error.exception.UnknownErrorException",
+                "com.navi.server.error.ApiError",
+                "com.navi.server.error.ApiExceptionController",
+                "com.navi.server.service.FileService**",
+                "com.navi.server.domain.FileObject",
+                "com.navi.server.domain.FileEntity"
             )
         }
     }
