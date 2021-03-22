@@ -23,22 +23,28 @@ class UserTemplateRepository {
     private val fileListTokenField: String = "token"
     private val fileListPrevTokenField: String = "prevToken"
 
+    /**
+     * clearAll() : Remove Every entity/collection in DB, including file information
+     */
     fun clearAll() {
         mongoTemplate.remove(Query(), User::class.java)
     }
 
+    /**
+     * save(user: User): User
+     * Save/Update user and return saved/updated user.
+     */
     fun save(user: User): User {
         return mongoTemplate.save(user)
     }
 
-    // Set user's FileList[Whole]
-    fun updateUserWholeFileList(user: User): UpdateResult {
-        val findQuery: Query = Query.query(Criteria.where(userNameField).`is`(user.userName))
-        val update: Update = Update().set("fileList", user.fileList)
-        return mongoTemplate.updateFirst(findQuery, update, User::class.java)
-    }
-
-    // Returns ONLY USER, NOT FILES
+    /**
+     * findAllUserOnly(): List<User>
+     * Find All user, but excluding fileList
+     *
+     * The reason we exclude fileList is to reduce memory usage if fileList is really large.
+     * Therefore, the list it return will have just empty list of fileObject.
+     */
     fun findAllUserOnly(): List<User> {
         val findQuery: Query =  Query()
         findQuery.fields().exclude(fileListField)
@@ -46,21 +52,24 @@ class UserTemplateRepository {
         return mongoTemplate.find(findQuery, User::class.java)
     }
 
-    // Real find All
+    /**
+     * findAll(): List<User>
+     * unlike findAllUserOnly, it returns pure-collection to object. Including fileList.
+     *
+     * Warning:
+     * If each user's fileList is LARGE, avoid using this.
+     * To find inside file list, use findAllByPrevToken / findAllByToken instead.
+     */
     fun findAll(): List<User> {
         val findQuery: Query =  Query()
         return mongoTemplate.find(findQuery, User::class.java)
     }
 
-    fun findAllFileList(inputUserName: String): List<FileObject> {
-        val user: User = findByUserName(inputUserName) ?: run {
-            throw NotFoundException("Cannot find username with: $inputUserName")
-        }
-
-        return user.fileList.toList()
-    }
-
-    fun innerFileListSearch(
+    /**
+     * Inner function to search inside each user's fileList document.
+     * function results vary, depdends on inputSerachKey && inputSearchValue.
+     */
+    private fun innerFileListSearch(
         inputUserName: String,
         inputSearchKey: String,
         inputSearchValue: String
@@ -94,6 +103,14 @@ class UserTemplateRepository {
         )
     }
 
+    /**
+     * findAllByPrevToken(inputUserName: String, inputPrevToken: String): List<FileObject>?
+     * Search inputUserName's fileList where fileList.prevToken = inputPrevToken
+     * Also, it only returns object corresponding search query.
+     *
+     * Warning:
+     * Do not attempt to re-save this functions result to db. Re-Saving will blow up user's other fileList.
+     */
     fun findAllByPrevToken(inputUserName: String, inputPrevToken: String): List<FileObject>? {
         val results: AggregationResults<User> = innerFileListSearch(inputUserName, "$fileListField.$fileListPrevTokenField", inputPrevToken)
 
@@ -104,6 +121,13 @@ class UserTemplateRepository {
         return results.mappedResults[0].fileList
     }
 
+    /**
+     * findByToken(inputUserName: String, inputToken: String): FileObject?
+     * Mostly same as findAllByPrevToken, but the query is token = inputToken.
+     *
+     * Warning:
+     * As Same as findAllByPrevToken, do not attempt to re-save this function result to db.
+     */
     fun findByToken(inputUserName: String, inputToken: String): FileObject? {
         val results: AggregationResults<User> = innerFileListSearch(inputUserName, "$fileListField.$fileListTokenField", inputToken)
         if (results.mappedResults.size > 1) {
@@ -117,6 +141,10 @@ class UserTemplateRepository {
         return results.mappedResults[0].fileList[0]
     }
 
+    /**
+     * findByUserName(inputUserName: String): User?
+     * Returns user document[full document] where user name = inputUserName.
+     */
     fun findByUserName(inputUserName: String): User? {
         val findNameQuery: Query = Query()
         findNameQuery.addCriteria(
@@ -125,6 +153,10 @@ class UserTemplateRepository {
         return mongoTemplate.findOne(findNameQuery, User::class.java)
     }
 
+    /**
+     * deleteByToken(inputUserName: String, inputToken: String): UpdateResult
+     * Delete inputUserName's specific fileList, where fileList.token = inputToken.
+     */
     fun deleteByToken(inputUserName: String, inputToken: String): UpdateResult {
         val updateQuery: Query = Query().apply {
             addCriteria(
