@@ -16,6 +16,7 @@ class UserService {
     @Autowired
     private lateinit var userTemplateRepository: UserTemplateRepository
 
+    // TODO: Email Check
     fun registerUser(userRegisterRequest: UserRegisterRequest): ResponseEntity<UserRegisterResponse> {
         val user: User? = userTemplateRepository.findByUserName(userRegisterRequest.userName)
 
