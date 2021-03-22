@@ -1,5 +1,6 @@
 package com.navi.server.error
 
+import com.navi.server.error.exception.ConflictException
 import com.navi.server.error.exception.FileIOException
 import com.navi.server.error.exception.NotFoundException
 import com.navi.server.error.exception.UnknownErrorException
@@ -44,6 +45,18 @@ class ApiExceptionController {
                 ApiError(
                     HttpStatus.INTERNAL_SERVER_ERROR,
                     fileIOException.message!!
+                )
+            )
+    }
+
+    @ExceptionHandler(ConflictException::class)
+    fun handleConflictException(conflictException: ConflictException): ResponseEntity<ApiError> {
+        return ResponseEntity
+            .status(HttpStatus.CONFLICT)
+            .body(
+                ApiError(
+                    HttpStatus.CONFLICT,
+                    conflictException.message!!
                 )
             )
     }
