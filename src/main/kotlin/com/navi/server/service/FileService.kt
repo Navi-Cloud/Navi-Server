@@ -1,13 +1,16 @@
 package com.navi.server.service
 
 import com.navi.server.domain.FileEntity
+import com.navi.server.domain.FileObject
 import com.navi.server.domain.FileRepository
+import com.navi.server.domain.user.UserTemplateRepository
 import com.navi.server.dto.FileResponseDTO
 import com.navi.server.dto.FileSaveRequestDTO
 import com.navi.server.error.exception.FileIOException
 import com.navi.server.error.exception.NotFoundException
 import com.navi.server.error.exception.UnknownErrorException
 import org.apache.tika.Tika
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.InputStreamResource
 import org.springframework.core.io.Resource
 import org.springframework.dao.EmptyResultDataAccessException
@@ -35,11 +38,14 @@ import kotlin.math.log
 import kotlin.math.pow
 
 @Service
-class FileService(val fileRepository: FileRepository) {
-    fun findAllDesc(): ResponseEntity<List<FileResponseDTO>> {
-        lateinit var fileList : List<FileEntity>
+class FileService {
+    @Autowired
+    private lateinit var userTemplateRepository: UserTemplateRepository
+
+    fun findAllDesc(inputUserName: String): ResponseEntity<List<FileResponseDTO>> {
+        lateinit var fileList : List<FileObject>
         runCatching {
-            fileList = fileRepository.findAllByOrderByIdDesc()
+            fileList = userTemplateRepository.findAllFileList(inputUserName)
         }.onFailure {
             throw UnknownErrorException("Unknown Exception : cannot find files")
         }

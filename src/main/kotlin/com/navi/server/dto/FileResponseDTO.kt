@@ -1,6 +1,7 @@
 package com.navi.server.dto
 
 import com.navi.server.domain.FileEntity
+import com.navi.server.domain.FileObject
 
 class FileResponseDTO(
     var fileName: String,
@@ -14,6 +15,17 @@ class FileResponseDTO(
 ) {
 
     constructor(entity: FileEntity): this(
+        fileName = entity.fileName,
+        fileType = entity.fileType,
+        mimeType = entity.mimeType,
+        token = entity.token,
+        prevToken = entity.prevToken,
+        lastModifiedTime = entity.lastModifiedTime,
+        fileCreatedDate = entity.fileCreatedDate,
+        fileSize = entity.fileSize
+    )
+
+    constructor(entity: FileObject): this(
         fileName = entity.fileName,
         fileType = entity.fileType,
         mimeType = entity.mimeType,
