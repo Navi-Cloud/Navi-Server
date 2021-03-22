@@ -2,7 +2,6 @@ package com.navi.server.service
 
 import com.navi.server.domain.FileEntity
 import com.navi.server.domain.FileObject
-import com.navi.server.domain.FileRepository
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
 import com.navi.server.dto.FileResponseDTO
@@ -15,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.InputStreamResource
 import org.springframework.core.io.Resource
 import org.springframework.dao.EmptyResultDataAccessException
+import org.springframework.data.mongodb.core.aggregation.AggregationResults
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -22,7 +22,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
-import java.io.FileNotFoundException
 import java.io.IOException
 import java.lang.Exception
 import java.net.URLEncoder
@@ -32,7 +31,6 @@ import java.nio.file.Paths
 import java.nio.file.attribute.BasicFileAttributes
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
-import java.util.ArrayList
 import java.util.stream.Collectors
 import javax.xml.bind.DatatypeConverter
 import kotlin.math.log
@@ -65,30 +63,18 @@ class FileService {
             .body(userTemplateRepository.save(user))
     }
 
-    fun saveAll(inputList: List<FileSaveRequestDTO>, digestValue: Int = 10000) {
-
-        val tmpList: ArrayList<FileEntity> = ArrayList()
-        inputList.forEach { listB ->
-            tmpList.add(listB.toEntity())
-            if (tmpList.size == digestValue) {
-                fileRepository.saveAll(tmpList)
-                tmpList.clear()
-            }
-        }
-
-        if (tmpList.size > 0) {
-            fileRepository.saveAll(tmpList)
-        }
-    }
-
-    fun findInsideFiles(token: String): ResponseEntity<List<FileResponseDTO>> {
+    fun findInsideFiles(inputUserName: String, prevToken: String): ResponseEntity<List<FileResponseDTO>> {
         runCatching {
             //check if this token is invalid
-            findByToken(token)
+            findByToken(inputUserName, prevToken)
         }.onFailure {
-            throw NotFoundException("Cannot find file by this token : $token")
+            throw NotFoundException("Cannot find file by this token : $prevToken")
         }
-        var result : List<FileEntity> = fileRepository.findAllByPrevToken(token)
+
+        // Since User Name and prevToken is verified by above statement, any error from here will be
+        // Internal Server error.
+        val result : List<FileObject> = userTemplateRepository.findAllByPrevToken(inputUserName, prevToken)
+            ?: throw UnknownErrorException("Internal Server[DB] Error Occurred. Contact developer.")
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(result.stream()
@@ -100,8 +86,10 @@ class FileService {
         return fileRepository.deleteByToken(token)
     }
 
-    fun findByToken(token: String): FileResponseDTO {
-        return FileResponseDTO(fileRepository.findByToken(token))
+    fun findByToken(inputUserName: String, fileToken: String): FileResponseDTO {
+        val result: FileObject = userTemplateRepository.findByToken(inputUserName, fileToken)
+            ?: throw NotFoundException("Cannot find file information with user: $inputUserName, and token: $fileToken")
+        return FileResponseDTO(result)
     }
 
     var rootPath: String? = null

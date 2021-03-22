@@ -72,12 +72,27 @@ class UserTemplateRepository {
         )
     }
 
-    fun findByPrevToken(inputUserName: String, inputPrevToken: String): AggregationResults<User>? {
-        return innerFileListSearch(inputUserName, "$fileListField.$fileListPrevTokenField", inputPrevToken)
+    fun findAllByPrevToken(inputUserName: String, inputPrevToken: String): List<FileObject>? {
+        val results: AggregationResults<User> = innerFileListSearch(inputUserName, "$fileListField.$fileListPrevTokenField", inputPrevToken)
+
+        if (results.mappedResults.size > 1) {
+            return null // Error
+        }
+
+        return results.mappedResults[0].fileList
     }
 
-    fun findByToken(inputUserName: String, inputToken: String): AggregationResults<User>? {
-        return innerFileListSearch(inputUserName, "$fileListField.$fileListTokenField", inputToken)
+    fun findByToken(inputUserName: String, inputToken: String): FileObject? {
+        val results: AggregationResults<User> = innerFileListSearch(inputUserName, "$fileListField.$fileListTokenField", inputToken)
+        if (results.mappedResults.size > 1) {
+            return null
+        }
+
+        if (results.mappedResults[0].fileList.size > 1) {
+            return null
+        }
+
+        return results.mappedResults[0].fileList[0]
     }
 
     fun findByUserName(inputUserName: String): User? {

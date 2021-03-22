@@ -2,6 +2,8 @@ package com.navi.server.dto
 
 import com.navi.server.domain.FileEntity
 import com.navi.server.domain.FileObject
+import com.navi.server.domain.user.User
+import org.springframework.data.mongodb.core.aggregation.AggregationResults
 
 class FileResponseDTO(
     var fileName: String,
