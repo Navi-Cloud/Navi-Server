@@ -31,11 +31,24 @@ class UserTemplateRepository {
         return mongoTemplate.save(user)
     }
 
+    // Set user's FileList[Whole]
+    fun updateUserWholeFileList(user: User): UpdateResult {
+        val findQuery: Query = Query.query(Criteria.where(userNameField).`is`(user.userName))
+        val update: Update = Update().set("fileList", user.fileList)
+        return mongoTemplate.updateFirst(findQuery, update, User::class.java)
+    }
+
     // Returns ONLY USER, NOT FILES
     fun findAllUserOnly(): List<User> {
         val findQuery: Query =  Query()
         findQuery.fields().exclude(fileListField)
 
+        return mongoTemplate.find(findQuery, User::class.java)
+    }
+
+    // Real find All
+    fun findAll(): List<User> {
+        val findQuery: Query =  Query()
         return mongoTemplate.find(findQuery, User::class.java)
     }
 

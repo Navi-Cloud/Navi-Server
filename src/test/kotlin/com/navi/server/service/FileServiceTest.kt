@@ -1,35 +1,21 @@
 package com.navi.server.service
 
-//import com.navi.server.component.FileConfigurationComponent
-//import com.navi.server.domain.FileEntity
-//import com.navi.server.domain.FileRepository
-//import com.navi.server.dto.FileResponseDTO
-//import com.navi.server.dto.FileSaveRequestDTO
-//import org.assertj.core.api.Assertions.assertThat
-//import org.assertj.core.api.Assertions.fail
-//import org.junit.After
-//import org.junit.Before
-//import org.junit.Test
-//import org.junit.runner.RunWith
-//import org.springframework.beans.factory.annotation.Autowired
-//import org.springframework.boot.test.context.SpringBootTest
-//import org.springframework.core.io.Resource
-//import org.springframework.http.HttpHeaders
-//import org.springframework.http.HttpStatus
-//import org.springframework.http.ResponseEntity
-//import org.springframework.mock.web.MockMultipartFile
-//import org.springframework.test.context.junit4.SpringRunner
-//import java.io.File
-//
-//@RunWith(SpringRunner::class)
-//@SpringBootTest
-//class FileServiceTest {
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.junit4.SpringRunner
+
+@RunWith(SpringRunner::class)
+@SpringBootTest
+class FileServiceTest {
 //
 //    @Autowired
 //    private lateinit var fileRepository: FileRepository
-//
-//    @Autowired
-//    private lateinit var fileService: FileService
+
+    @Autowired
+    private lateinit var fileService: FileService
 //
 //    @Autowired
 //    private lateinit var fileConfigurationComponent: FileConfigurationComponent
@@ -170,28 +156,28 @@ package com.navi.server.service
 //        fileService.saveAll(fileSaveRequestDtoList)
 //        assertThat(fileRepository.count()).isEqualTo(targetIncreaseValue.toLong())
 //    }
-//
-//    @Test
-//    fun isConvertingCorrect() {
-//        val testFileSizeMib: Long = 1024 * 1024 * 2 // 2 Mib
-//        val testFileSizeKib: Long = 1024 * 4 // 4.0Kib
-//        val testFileSizeB: Long = 800 //800B
-//        val testFileSizeZero: Long = 0
-//        assertThat(fileService.convertSize(testFileSizeMib)).isEqualTo("2.0MiB")
-//        assertThat(fileService.convertSize(testFileSizeKib)).isEqualTo("4.0KiB")
-//        assertThat(fileService.convertSize(testFileSizeB)).isEqualTo("800B")
-//        assertThat(fileService.convertSize(testFileSizeZero)).isEqualTo("0B")
-//    }
-//
-//    @Test
-//    fun isGettingSHA256WorksWell() {
-//        val targetPlainText: String = "TestingKDR"
-//        val hashedString: String = fileService.getSHA256(targetPlainText)
-//
-//        assertThat(hashedString).isNotEqualTo(null)
-//        assertThat(hashedString).isNotEqualTo("")
-//        assertThat(targetPlainText).isNotEqualTo(hashedString)
-//    }
+
+    @Test
+    fun isConvertingCorrect() {
+        val testFileSizeMib: Long = 1024 * 1024 * 2 // 2 Mib
+        val testFileSizeKib: Long = 1024 * 4 // 4.0Kib
+        val testFileSizeB: Long = 800 //800B
+        val testFileSizeZero: Long = 0
+        assertThat(fileService.convertSize(testFileSizeMib)).isEqualTo("2.0MiB")
+        assertThat(fileService.convertSize(testFileSizeKib)).isEqualTo("4.0KiB")
+        assertThat(fileService.convertSize(testFileSizeB)).isEqualTo("800B")
+        assertThat(fileService.convertSize(testFileSizeZero)).isEqualTo("0B")
+    }
+
+    @Test
+    fun isGettingSHA256WorksWell() {
+        val targetPlainText: String = "TestingKDR"
+        val hashedString: String = fileService.getSHA256(targetPlainText)
+
+        assertThat(hashedString).isNotEqualTo(null)
+        assertThat(hashedString).isNotEqualTo("")
+        assertThat(targetPlainText).isNotEqualTo(hashedString)
+    }
 //
 //
 //    @Test
@@ -455,4 +441,4 @@ package com.navi.server.service
 //            fileSize = "size"
 //        ))
 //    }
-//}
+}
