@@ -1,6 +1,8 @@
 package com.navi.server.domain.user
 
 import com.mongodb.client.result.UpdateResult
+import com.navi.server.domain.FileObject
+import javassist.NotFoundException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.aggregation.*
@@ -26,6 +28,14 @@ class UserTemplateRepository {
 
     fun save(user: User): User {
         return mongoTemplate.save(user)
+    }
+
+    fun findAllFileList(inputUserName: String): List<FileObject> {
+        val user: User = findByUserName(inputUserName) ?: run {
+            throw NotFoundException("Cannot find username with: $inputUserName")
+        }
+
+        return user.fileList.toList()
     }
 
     fun innerFileListSearch(
