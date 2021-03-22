@@ -1,6 +1,5 @@
 package com.navi.server.service
 
-import com.navi.server.domain.FileEntity
 import com.navi.server.domain.FileObject
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
@@ -14,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.InputStreamResource
 import org.springframework.core.io.Resource
 import org.springframework.dao.EmptyResultDataAccessException
-import org.springframework.data.mongodb.core.aggregation.AggregationResults
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -23,7 +21,6 @@ import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
 import java.io.IOException
-import java.lang.Exception
 import java.net.URLEncoder
 import java.nio.file.Files
 import java.nio.file.NoSuchFileException
@@ -42,7 +39,7 @@ class FileService {
     private lateinit var userTemplateRepository: UserTemplateRepository
 
     fun findAllDesc(inputUserName: String): ResponseEntity<List<FileResponseDTO>> {
-        lateinit var fileList : List<FileObject>
+        lateinit var fileList: List<FileObject>
         runCatching {
             fileList = userTemplateRepository.findAllFileList(inputUserName)
         }.onFailure {
@@ -56,7 +53,8 @@ class FileService {
     }
 
     fun save(inputUserName: String, fileSaveRequestDTO: FileSaveRequestDTO): ResponseEntity<User> {
-        val user: User = userTemplateRepository.findByUserName(inputUserName) ?: throw NotFoundException("Cannot find user: $inputUserName")
+        val user: User = userTemplateRepository.findByUserName(inputUserName)
+            ?: throw NotFoundException("Cannot find user: $inputUserName")
         user.fileList.add(fileSaveRequestDTO.toEntityObject())
         return ResponseEntity
             .status(HttpStatus.OK)
@@ -73,7 +71,7 @@ class FileService {
 
         // Since User Name and prevToken is verified by above statement, any error from here will be
         // Internal Server error.
-        val result : List<FileObject> = userTemplateRepository.findAllByPrevToken(inputUserName, prevToken)
+        val result: List<FileObject> = userTemplateRepository.findAllByPrevToken(inputUserName, prevToken)
             ?: throw UnknownErrorException("Internal Server[DB] Error Occurred. Contact developer.")
         return ResponseEntity
             .status(HttpStatus.OK)
@@ -96,63 +94,62 @@ class FileService {
     var rootToken: String? = null
     val tika = Tika()
 
-    fun fileUpload(token: String, files: MultipartFile) : ResponseEntity<FileEntity> {
+    fun fileUpload(userName: String, fileToken: String, files: MultipartFile): ResponseEntity<User> {
         // find absolutePath from token
-        lateinit var uploadFolderPath : String
-        runCatching {
-            uploadFolderPath = fileRepository.findByToken(token).fileName
-        }.onFailure {
-            throw NotFoundException("Cannot find file by this token : $token")
-        }
+        val fileObject: FileObject = userTemplateRepository.findByToken(userName, fileToken)
+            ?: throw NotFoundException("Cannot find file by this token : $fileToken")
+        val uploadFolderPath: String = fileObject.fileName
 
         // upload
         // If the destination file already exists, it will be deleted first.
-        lateinit var uploadFile : File
+        lateinit var uploadFile: File
         runCatching {
             uploadFile = File(uploadFolderPath, files.originalFilename)
             files.transferTo(uploadFile)
         }.onFailure {
-            when(it){
+            when (it) {
                 is IOException -> throw FileIOException("File IO Exception")
                 else -> throw UnknownErrorException("Unknown Exception : ${it.message}")
             }
         }
 
         // upload to DB
-        val basicFileAttribute: BasicFileAttributes = Files.readAttributes(uploadFile.toPath(), BasicFileAttributes::class.java)
+        val basicFileAttribute: BasicFileAttributes =
+            Files.readAttributes(uploadFile.toPath(), BasicFileAttributes::class.java)
         val simpleDateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd-HH:mm:ss")
 
-       var fileSaveRequestDTO = FileSaveRequestDTO (
+        val fileSaveRequestDTO = FileSaveRequestDTO(
             fileName = uploadFile.absolutePath,
             // Since we are not handling folder[recursive] upload/download, its type must be somewhat non-folder
             fileType = "File",
             mimeType =
-                try {
-                    tika.detect(uploadFile)
-                } catch (e: Exception) {
-                    println("Failed to detect mimeType for: ${e.message}")
-                    "File"
-                }
-            ,
+            try {
+                tika.detect(uploadFile)
+            } catch (e: Exception) {
+                println("Failed to detect mimeType for: ${e.message}")
+                "File"
+            },
             token = getSHA256(uploadFile.absolutePath),
             prevToken = getSHA256(uploadFolderPath),
             lastModifiedTime = uploadFile.lastModified(),
             fileCreatedDate = simpleDateFormat.format(basicFileAttribute.creationTime().toMillis()),
             fileSize = convertSize(basicFileAttribute.size())
         )
-        return this.save(fileSaveRequestDTO)
+        return save(userName, fileSaveRequestDTO)
     }
 
-    fun fileDownload(token: String) : ResponseEntity<Resource> {
-        lateinit var file : FileEntity
+    fun fileDownload(inputUserName: String, fileToken: String): ResponseEntity<Resource> {
+        lateinit var file: FileObject
         lateinit var resource: Resource
         runCatching {
-            file = fileRepository.findByToken(token)
+            file = userTemplateRepository.findByToken(inputUserName, fileToken)
+                ?: throw NotFoundException("")
             resource = InputStreamResource(Files.newInputStream(Paths.get(file.fileName)))
         }.onFailure {
-            when(it){
-                is EmptyResultDataAccessException -> throw NotFoundException("Cannot find file by this token : $token")
+            when (it) {
+                is EmptyResultDataAccessException -> throw NotFoundException("Cannot find file by this token : $fileToken")
                 is NoSuchFileException -> throw NotFoundException("File Not Found !")
+                is NotFoundException -> throw NotFoundException("Cannot find file by this token : $fileToken")
                 else -> throw UnknownErrorException("Unknown Exception : ${it.message}")
             }
         }
@@ -164,7 +161,8 @@ class FileService {
                 this.fileName = this.fileName.split("/").last()
             }
         }
-        val again: String = String.format("attachment; filename=\"%s\"", URLEncoder.encode(fileResponseDTO.fileName, "UTF-8"))
+        val again: String =
+            String.format("attachment; filename=\"%s\"", URLEncoder.encode(fileResponseDTO.fileName, "UTF-8"))
         return ResponseEntity.ok()
             .contentType(MediaType.parseMediaType("application/octet-stream"))
             .header(HttpHeaders.CONTENT_DISPOSITION, again)
