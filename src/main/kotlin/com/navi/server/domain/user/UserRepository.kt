@@ -6,6 +6,7 @@ import javassist.NotFoundException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.aggregation.*
+import org.springframework.data.mongodb.core.find
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.Update
@@ -28,6 +29,14 @@ class UserTemplateRepository {
 
     fun save(user: User): User {
         return mongoTemplate.save(user)
+    }
+
+    // Returns ONLY USER, NOT FILES
+    fun findAllUserOnly(): List<User> {
+        val findQuery: Query =  Query()
+        findQuery.fields().exclude(fileListField)
+
+        return mongoTemplate.find(findQuery, User::class.java)
     }
 
     fun findAllFileList(inputUserName: String): List<FileObject> {
