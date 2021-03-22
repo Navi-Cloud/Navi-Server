@@ -3,6 +3,7 @@ package com.navi.server.service
 import com.navi.server.domain.FileEntity
 import com.navi.server.domain.FileObject
 import com.navi.server.domain.FileRepository
+import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
 import com.navi.server.dto.FileResponseDTO
 import com.navi.server.dto.FileSaveRequestDTO
@@ -56,10 +57,12 @@ class FileService {
                 .collect(Collectors.toList()))
     }
 
-    fun save(fileSaveRequestDTO: FileSaveRequestDTO): ResponseEntity<FileEntity> {
+    fun save(inputUserName: String, fileSaveRequestDTO: FileSaveRequestDTO): ResponseEntity<User> {
+        val user: User = userTemplateRepository.findByUserName(inputUserName) ?: throw NotFoundException("Cannot find user: $inputUserName")
+        user.fileList.add(fileSaveRequestDTO.toEntityObject())
         return ResponseEntity
             .status(HttpStatus.OK)
-            .body(fileRepository.save(fileSaveRequestDTO.toEntity()))
+            .body(userTemplateRepository.save(user))
     }
 
     fun saveAll(inputList: List<FileSaveRequestDTO>, digestValue: Int = 10000) {
