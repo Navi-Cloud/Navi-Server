@@ -79,7 +79,7 @@ class FileConfigurationComponent {
             }
 
             // Save Back User
-            userTemplateRepository.updateUserWholeFileList(user)
+            userTemplateRepository.save(user)
         }
     }
 }
