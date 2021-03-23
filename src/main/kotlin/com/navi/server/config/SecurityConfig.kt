@@ -27,6 +27,7 @@ class SecurityConfig(private val jwtTokenProvider: JWTTokenProvider) : WebSecuri
             .authorizeRequests()
             .antMatchers(
                 "/api/navi/root-token",
+                "/api/navi/files/list"
             ).hasRole("USER")
             .antMatchers("/**").permitAll()
             .and()

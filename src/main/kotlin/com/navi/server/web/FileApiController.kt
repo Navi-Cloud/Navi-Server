@@ -23,11 +23,14 @@ class FileApiController (val fileService: FileService){
         val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
         return fileService.findRootToken(tokenList[0])
     }
-//
-//    @GetMapping("/api/navi/files/list")
-//    fun findAllDesc() : ResponseEntity<List<FileResponseDTO>>{
-//        return fileService.findAllDesc()
-//    }
+
+    @GetMapping("/api/navi/files/list")
+    fun findAllDesc(@RequestHeader httpHeaders: HttpHeaders) : ResponseEntity<List<FileResponseDTO>>{
+        // Invalid or Non-Token will be filtered through Spring Security.
+        val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
+
+        return fileService.findAllDesc(tokenList[0])
+    }
 //
 //    @GetMapping("/api/navi/files/list/{token}")
 //    fun findInsideFiles(@PathVariable token: String) : ResponseEntity<List<FileResponseDTO>> {

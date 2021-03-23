@@ -3,6 +3,7 @@ package com.navi.server.service
 import com.navi.server.domain.FileObject
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
+import com.navi.server.dto.FileResponseDTO
 import com.navi.server.error.exception.NotFoundException
 import com.navi.server.error.exception.UnknownErrorException
 import com.navi.server.security.JWTTokenProvider
@@ -11,6 +12,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import java.security.MessageDigest
+import java.util.stream.Collectors
 import javax.xml.bind.DatatypeConverter
 import kotlin.math.log
 import kotlin.math.pow
@@ -23,16 +25,21 @@ class FileService {
     @Autowired
     private lateinit var jwtTokenProvider: JWTTokenProvider
 
-    fun findRootToken(userToken: String): ResponseEntity<String> {
+    private fun convertTokenToUserName(inputToken: String): String {
         var userName: String = ""
         runCatching {
-            jwtTokenProvider.getUserPk(userToken)
+            jwtTokenProvider.getUserPk(inputToken)
         }.onSuccess {
             userName = it
         }.onFailure {
             throw NotFoundException("Username is NOT Found!")
         }
 
+        return userName
+    }
+
+    fun findRootToken(userToken: String): ResponseEntity<String> {
+        val userName: String = convertTokenToUserName(userToken)
         val userFileObject: FileObject = userTemplateRepository.findByToken(userName, getSHA256("/"))
             ?: throw UnknownErrorException("Username exists but no root token?")
 
@@ -40,20 +47,17 @@ class FileService {
             .status(HttpStatus.OK)
             .body(userFileObject.token)
     }
-//
-//    fun findAllDesc(inputUserName: String): ResponseEntity<List<FileResponseDTO>> {
-//        lateinit var fileList: List<FileObject>
-//        runCatching {
-//            fileList = userTemplateRepository.findAllFileList(inputUserName)
-//        }.onFailure {
-//            throw UnknownErrorException("Unknown Exception : cannot find files")
-//        }
-//        return ResponseEntity
-//            .status(HttpStatus.OK)
-//            .body(fileList.stream()
-//                .map { FileResponseDTO(it) }
-//                .collect(Collectors.toList()))
-//    }
+
+    fun findAllDesc(userToken: String): ResponseEntity<List<FileResponseDTO>> {
+        val userName: String = convertTokenToUserName(userToken)
+
+        val fileList: List<FileObject> = userTemplateRepository.findAllFileList(userName)
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(fileList.stream()
+                .map { FileResponseDTO(it) }
+                .collect(Collectors.toList()))
+    }
 //
 //    fun save(inputUserName: String, fileSaveRequestDTO: FileSaveRequestDTO): ResponseEntity<User> {
 //        val user: User = userTemplateRepository.findByUserName(inputUserName)

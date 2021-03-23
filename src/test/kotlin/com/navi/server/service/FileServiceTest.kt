@@ -112,6 +112,36 @@ class FileServiceTest {
         }
     }
 
+    // findAllDesc Test
+    @Test
+    fun is_findAllDesc_404_unknown_token() {
+        runCatching {
+            fileService.findAllDesc("test")
+        }.onSuccess {
+            fail("Wrong token passed but this test passed somehow")
+        }.onFailure {
+            assertThat(it is NotFoundException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("Username is NOT Found!")
+        }
+    }
+
+    @Test
+    fun is_findAllDesc_OK() {
+        val loginToken: String = registerAndLogin()
+        fileConfigurationComponent.initStructure()
+
+        runCatching {
+            fileService.findAllDesc(loginToken)
+        }.onSuccess {
+            assertThat(it.statusCode).isEqualTo(HttpStatus.OK)
+            assertThat(it.hasBody()).isEqualTo(true)
+            assertThat(it.body.size).isEqualTo(1L)
+        }.onFailure {
+            println(it.stackTraceToString())
+            fail("This test should return OK because we saved and init-ed its structure, but somehow it failed!")
+        }
+    }
+
 //
 //    // Test variable
 //    private val fileNameTest: String = "TESTING_FILENAME"

@@ -53,6 +53,18 @@ class UserTemplateRepository {
     }
 
     /**
+     * findAllFileList(inputUserName: String): List<FileObject>
+     * Find all file list based on inputUserName
+     */
+    fun findAllFileList(inputUserName: String): List<FileObject> {
+        val user: User = findByUserName(inputUserName) ?: run {
+            throw NotFoundException("Cannot find username with: $inputUserName")
+        }
+
+        return user.fileList.toList()
+    }
+
+    /**
      * findAll(): List<User>
      * unlike findAllUserOnly, it returns pure-collection to object. Including fileList.
      *
