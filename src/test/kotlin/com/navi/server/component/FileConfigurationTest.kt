@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.File
+import java.nio.file.Path
+import java.nio.file.Paths
 
 @RunWith(SpringRunner::class)
 @SpringBootTest
@@ -106,7 +108,8 @@ class FileConfigurationTest {
                 userPassword = "testingPassword"
             )
         )
-        val userRootFile: File = File(fileConfigurationComponent.serverRoot, "KangDroid/testing")
+        val path: Path = Paths.get(fileConfigurationComponent.serverRoot, "KangDroid", "testing")
+        val userRootFile: File = path.toFile()
         userRootFile.mkdirs()
         val testFile: File = File(userRootFile.absolutePath, "test.txt")
         testFile.writeText("TESTING!")
