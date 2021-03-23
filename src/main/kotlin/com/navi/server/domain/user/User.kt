@@ -13,8 +13,8 @@ import javax.persistence.Id
 class User(
     @Id
     var id: ObjectId = ObjectId(),
-    var userName: String,
-    var userPassword: String,
+    var userName: String = "",
+    var userPassword: String = "",
     val roles: Set<String> = setOf(),
     val fileList: MutableList<FileObject> = mutableListOf()
 ) : UserDetails {

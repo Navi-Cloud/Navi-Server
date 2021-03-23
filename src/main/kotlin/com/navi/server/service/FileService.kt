@@ -1,5 +1,14 @@
 package com.navi.server.service
 
+import com.navi.server.domain.FileObject
+import com.navi.server.domain.user.User
+import com.navi.server.domain.user.UserTemplateRepository
+import com.navi.server.error.exception.NotFoundException
+import com.navi.server.error.exception.UnknownErrorException
+import com.navi.server.security.JWTTokenProvider
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import java.security.MessageDigest
 import javax.xml.bind.DatatypeConverter
@@ -8,8 +17,29 @@ import kotlin.math.pow
 
 @Service
 class FileService {
-//    @Autowired
-//    private lateinit var userTemplateRepository: UserTemplateRepository
+    @Autowired
+    private lateinit var userTemplateRepository: UserTemplateRepository
+
+    @Autowired
+    private lateinit var jwtTokenProvider: JWTTokenProvider
+
+    fun findRootToken(userToken: String): ResponseEntity<String> {
+        var userName: String = ""
+        runCatching {
+            jwtTokenProvider.getUserPk(userToken)
+        }.onSuccess {
+            userName = it
+        }.onFailure {
+            throw NotFoundException("Username is NOT Found!")
+        }
+
+        val userFileObject: FileObject = userTemplateRepository.findByToken(userName, getSHA256("/"))
+            ?: throw UnknownErrorException("Username exists but no root token?")
+
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(userFileObject.token)
+    }
 //
 //    fun findAllDesc(inputUserName: String): ResponseEntity<List<FileResponseDTO>> {
 //        lateinit var fileList: List<FileObject>

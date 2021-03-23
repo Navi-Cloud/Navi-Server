@@ -17,14 +17,12 @@ import java.net.URLEncoder
 @RestController
 class FileApiController (val fileService: FileService){
 
-//    @GetMapping("/api/navi/root-token")
-//    fun findRootToken() : ResponseEntity<String> {
-//        return fileService.rootToken?.let {
-//            ResponseEntity
-//                .status(HttpStatus.OK)
-//                .body(fileService.rootToken)
-//        } ?: throw UnknownErrorException("serverRoot does not exist!")
-//    }
+    @GetMapping("/api/navi/root-token")
+    fun findRootToken(@RequestHeader httpHeaders: HttpHeaders) : ResponseEntity<String> {
+        // Invalid or Non-Token will be filtered through Spring Security.
+        val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
+        return fileService.findRootToken(tokenList[0])
+    }
 //
 //    @GetMapping("/api/navi/files/list")
 //    fun findAllDesc() : ResponseEntity<List<FileResponseDTO>>{

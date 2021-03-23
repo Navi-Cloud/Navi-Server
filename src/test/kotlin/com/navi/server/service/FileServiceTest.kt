@@ -1,11 +1,21 @@
 package com.navi.server.service
 
+import com.navi.server.component.FileConfigurationComponent
+import com.navi.server.domain.user.User
+import com.navi.server.domain.user.UserTemplateRepository
+import com.navi.server.error.exception.NotFoundException
+import com.navi.server.security.JWTTokenProvider
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.fail
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit4.SpringRunner
+import java.io.File
 
 @RunWith(SpringRunner::class)
 @SpringBootTest
@@ -16,26 +26,92 @@ class FileServiceTest {
 
     @Autowired
     private lateinit var fileService: FileService
-//
-//    @Autowired
-//    private lateinit var fileConfigurationComponent: FileConfigurationComponent
-//
-//    private lateinit var trashRootObject: File
-//
-//    @Before
-//    fun initEnvironment() {
-//        // Create trash directory
-//        trashRootObject = File(fileConfigurationComponent.serverRoot)
-//        trashRootObject.mkdir()
-//    }
-//
-//    @After
-//    fun destroyEnvironment() {
-//        if (trashRootObject.exists()) {
-//            trashRootObject.deleteRecursively()
-//        }
-//        fileRepository.deleteAll()
-//    }
+
+    @Autowired
+    private lateinit var userTemplateRepository: UserTemplateRepository
+
+    @Autowired
+    private lateinit var fileConfigurationComponent: FileConfigurationComponent
+
+    @Autowired
+    private lateinit var jwtTokenProvider: JWTTokenProvider
+
+    private lateinit var trashRootObject: File
+
+    private fun registerAndLogin(): String {
+        val mockUser: User = User(
+            userName = "KangDroid",
+            userPassword = ""
+        )
+        // Register
+        userTemplateRepository.save(
+            User(
+                userName = "KangDroid",
+                userPassword = ""
+            )
+        )
+
+        // Token
+        return jwtTokenProvider.createToken(mockUser.userName, mockUser.roles.toList())
+    }
+
+    @Before
+    fun initEnvironment() {
+        // Create trash directory
+        trashRootObject = File(fileConfigurationComponent.serverRoot)
+        trashRootObject.mkdir()
+    }
+
+    @After
+    fun destroyEnvironment() {
+        if (trashRootObject.exists()) {
+            trashRootObject.deleteRecursively()
+        }
+        userTemplateRepository.clearAll()
+    }
+
+    @Test
+    fun is_findRootToken_throws_50x_root_token() {
+        val loginToken: String = registerAndLogin()
+
+        runCatching {
+            fileService.findRootToken(loginToken)
+        }.onFailure {
+            assertThat(it.message).isEqualTo("Username exists but no root token?")
+        }.onSuccess {
+            fail("INIT did not proceeded, but somehow it succeed?")
+        }
+    }
+
+    @Test
+    fun is_findRootToken_throws_404_unknown_token() {
+        runCatching {
+            fileService.findRootToken("what_token")
+        }.onSuccess {
+            fail("Wrong token passed but this test passed somehow.")
+        }.onFailure {
+            assertThat(it is NotFoundException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("Username is NOT Found!")
+        }
+    }
+
+    @Test
+    fun is_findRootToken_OK() {
+        val loginToken: String = registerAndLogin()
+        fileConfigurationComponent.initStructure()
+
+        runCatching {
+            fileService.findRootToken(loginToken)
+        }.onSuccess {
+            assertThat(it.statusCode).isEqualTo(HttpStatus.OK)
+            assertThat(it.hasBody()).isEqualTo(true)
+            assertThat(it.body).isNotEqualTo("")
+        }.onFailure {
+            println(it.stackTraceToString())
+            fail("This test should return OK because we saved and init-ed its structure, but somehow it failed!")
+        }
+    }
+
 //
 //    // Test variable
 //    private val fileNameTest: String = "TESTING_FILENAME"
