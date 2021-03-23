@@ -123,13 +123,8 @@ class UserTemplateRepository {
      * Warning:
      * Do not attempt to re-save this functions result to db. Re-Saving will blow up user's other fileList.
      */
-    fun findAllByPrevToken(inputUserName: String, inputPrevToken: String): List<FileObject>? {
+    fun findAllByPrevToken(inputUserName: String, inputPrevToken: String): List<FileObject> {
         val results: AggregationResults<User> = innerFileListSearch(inputUserName, "$fileListField.$fileListPrevTokenField", inputPrevToken)
-
-        if (results.mappedResults.size > 1) {
-            return null // Error
-        }
-
         return results.mappedResults[0].fileList
     }
 
@@ -142,7 +137,7 @@ class UserTemplateRepository {
      */
     fun findByToken(inputUserName: String, inputToken: String): FileObject? {
         val results: AggregationResults<User> = innerFileListSearch(inputUserName, "$fileListField.$fileListTokenField", inputToken)
-        if (results.mappedResults.size > 1) {
+        if (results.mappedResults.size != 1) {
             return null
         }
 

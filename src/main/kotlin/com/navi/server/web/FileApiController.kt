@@ -31,11 +31,14 @@ class FileApiController (val fileService: FileService){
 
         return fileService.findAllDesc(tokenList[0])
     }
-//
-//    @GetMapping("/api/navi/files/list/{token}")
-//    fun findInsideFiles(@PathVariable token: String) : ResponseEntity<List<FileResponseDTO>> {
-//        return fileService.findInsideFiles(token)
-//    }
+
+    @GetMapping("/api/navi/files/list/{token}")
+    fun findInsideFiles(@RequestHeader httpHeaders: HttpHeaders, @PathVariable token: String) : ResponseEntity<List<FileResponseDTO>> {
+        // Invalid or Non-Token will be filtered through Spring Security.
+        val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
+
+        return fileService.findInsideFiles(tokenList[0], token)
+    }
 //
 //    @PostMapping("/api/navi/files")
 //    fun fileUpload(@RequestPart("uploadFile") file: MultipartFile, @RequestPart("uploadPath") token: String)

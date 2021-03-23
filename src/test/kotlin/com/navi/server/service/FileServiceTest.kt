@@ -3,6 +3,7 @@ package com.navi.server.service
 import com.navi.server.component.FileConfigurationComponent
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
+import com.navi.server.dto.FileResponseDTO
 import com.navi.server.error.exception.NotFoundException
 import com.navi.server.security.JWTTokenProvider
 import org.assertj.core.api.Assertions.assertThat
@@ -16,6 +17,8 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.File
+import java.nio.file.Path
+import java.nio.file.Paths
 
 @RunWith(SpringRunner::class)
 @SpringBootTest
@@ -139,6 +142,41 @@ class FileServiceTest {
         }.onFailure {
             println(it.stackTraceToString())
             fail("This test should return OK because we saved and init-ed its structure, but somehow it failed!")
+        }
+    }
+
+    // findInsideFiles test
+    @Test
+    fun is_findInsideFiles_404_no_file() {
+        val loginToken: String = registerAndLogin()
+
+        runCatching {
+            fileService.findInsideFiles(loginToken, "somewhat_wrong_token")
+        }.onSuccess {
+            fail("PrevToken is fake, but somehow it succeed!")
+        }.onFailure {
+            assertThat(it is NotFoundException).isEqualTo(true)
+        }
+    }
+
+    @Test
+    fun is_findInsideFiles_ok() {
+        val loginToken: String = registerAndLogin()
+        File(fileConfigurationComponent.serverRoot, "KangDroid").mkdir()
+        val path: Path = Paths.get(fileConfigurationComponent.serverRoot, "KangDroid", "test.txt")
+        val fileObject: File = path.toFile()
+        fileObject.writeText("test")
+        fileConfigurationComponent.initStructure()
+
+        runCatching {
+            fileService.findInsideFiles(loginToken, fileService.getSHA256("/"))
+        }.onFailure {
+            fail("This test should be succeed!")
+        }.onSuccess {
+            assertThat(it.statusCode).isEqualTo(HttpStatus.OK)
+            assertThat(it.hasBody()).isEqualTo(true)
+            assertThat(it.body.size).isEqualTo(1L)
+            assertThat(it.body[0].fileName).isEqualTo("/test.txt")
         }
     }
 

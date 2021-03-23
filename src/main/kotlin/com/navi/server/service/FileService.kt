@@ -58,6 +58,25 @@ class FileService {
                 .map { FileResponseDTO(it) }
                 .collect(Collectors.toList()))
     }
+
+    fun findInsideFiles(userToken: String, prevToken: String): ResponseEntity<List<FileResponseDTO>> {
+        val userName: String = convertTokenToUserName(userToken)
+
+        // Check if token is actually exists!
+        if (userTemplateRepository.findByToken(userName, prevToken) == null) {
+            throw NotFoundException("Cannot find file by this token : $prevToken")
+        }
+
+        // Since User Name and prevToken is verified by above statement, any error from here will be
+        // Internal Server error.
+        val result: List<FileObject> = userTemplateRepository.findAllByPrevToken(userName, prevToken)
+
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(result.stream()
+                .map { FileResponseDTO(it) }
+                .collect(Collectors.toList()))
+    }
 //
 //    fun save(inputUserName: String, fileSaveRequestDTO: FileSaveRequestDTO): ResponseEntity<User> {
 //        val user: User = userTemplateRepository.findByUserName(inputUserName)
@@ -68,24 +87,6 @@ class FileService {
 //            .body(userTemplateRepository.save(user))
 //    }
 //
-//    fun findInsideFiles(inputUserName: String, prevToken: String): ResponseEntity<List<FileResponseDTO>> {
-//        runCatching {
-//            //check if this token is invalid
-//            findByToken(inputUserName, prevToken)
-//        }.onFailure {
-//            throw NotFoundException("Cannot find file by this token : $prevToken")
-//        }
-//
-//        // Since User Name and prevToken is verified by above statement, any error from here will be
-//        // Internal Server error.
-//        val result: List<FileObject> = userTemplateRepository.findAllByPrevToken(inputUserName, prevToken)
-//            ?: throw UnknownErrorException("Internal Server[DB] Error Occurred. Contact developer.")
-//        return ResponseEntity
-//            .status(HttpStatus.OK)
-//            .body(result.stream()
-//                .map { FileResponseDTO(it) }
-//                .collect(Collectors.toList()))
-//    }
 //
 //    fun deleteByToken(inputUserName: String, fileToken: String): Boolean {
 //        return userTemplateRepository.deleteByToken(inputUserName, fileToken).wasAcknowledged()
