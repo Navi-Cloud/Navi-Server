@@ -164,12 +164,24 @@ class UserTemplateRepository {
      * findByUserName(inputUserName: String): User?
      * Returns user document[full document] where user name = inputUserName.
      */
-    fun findByUserName(inputUserName: String): User? {
+    fun findByUserName(inputUserName: String): User {
         val findNameQuery: Query = Query()
         findNameQuery.addCriteria(
             Criteria.where(userNameField).`is`(inputUserName)
         )
-        return mongoTemplate.findOne(findNameQuery, User::class.java)
+
+        lateinit var user: User
+        runCatching {
+            mongoTemplate.findOne(findNameQuery, User::class.java)
+        }.onSuccess {
+            if (it != null) {
+                user = it
+            } else {
+                throw NotFoundException("Cannot find user with username: $inputUserName")
+            }
+        }
+
+        return user
     }
 
     /**

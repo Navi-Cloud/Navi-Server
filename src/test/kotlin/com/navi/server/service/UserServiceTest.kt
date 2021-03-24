@@ -6,6 +6,7 @@ import com.navi.server.dto.LoginRequest
 import com.navi.server.dto.LoginResponse
 import com.navi.server.dto.UserRegisterRequest
 import com.navi.server.dto.UserRegisterResponse
+import com.navi.server.error.exception.NotFoundException
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.junit.After
@@ -96,7 +97,7 @@ class UserServiceTest {
         }.onSuccess {
             fail("DB Should be empty, thus this test should not be succeed.")
         }.onFailure {
-            assertThat(it.message).isEqualTo("Username OR Password is wrong!")
+            assertThat(it is NotFoundException).isEqualTo(true)
         }
     }
 

@@ -25,9 +25,9 @@ class UserService {
 
     // TODO: Email Check
     fun registerUser(userRegisterRequest: UserRegisterRequest): ResponseEntity<UserRegisterResponse> {
-        val user: User? = userTemplateRepository.findByUserName(userRegisterRequest.userName)
-
-        if (user != null) {
+        runCatching {
+            userTemplateRepository.findByUserName(userRegisterRequest.userName)
+        }.onSuccess {
             throw ConflictException("Username ${userRegisterRequest.userName} already exists!")
         }
 
@@ -50,8 +50,14 @@ class UserService {
     }
 
     fun loginUser(userLoginRequest: LoginRequest): ResponseEntity<LoginResponse> {
-        val user: User = userTemplateRepository.findByUserName(userLoginRequest.userName)
-            ?: throw ForbiddenException("Username OR Password is wrong!")
+        lateinit var user: User
+        runCatching {
+            userTemplateRepository.findByUserName(userLoginRequest.userName)
+        }.onSuccess {
+            user = it
+        }.onFailure {
+            throw it
+        }
 
         if (user.userPassword != userLoginRequest.userPassword) {
             throw ForbiddenException("Username OR Password is wrong!")

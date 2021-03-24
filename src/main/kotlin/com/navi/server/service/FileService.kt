@@ -146,7 +146,7 @@ class FileService {
         )
 
         // Since above findByToken works, it means there is an user name.
-        val user: User = userTemplateRepository.findByUserName(userName)!!
+        val user: User = userTemplateRepository.findByUserName(userName)
         user.fileList.add(saveFileObject)
 
         // TODO: Since loading whole user and re-saving whole user might be resource-heavy. Maybe creating another Query function to reduce them?
