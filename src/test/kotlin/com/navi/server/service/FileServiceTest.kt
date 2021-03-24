@@ -1,6 +1,7 @@
 package com.navi.server.service
 
 import com.navi.server.component.FileConfigurationComponent
+import com.navi.server.domain.FileObject
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
 import com.navi.server.dto.FileResponseDTO
@@ -15,6 +16,7 @@ import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpStatus
+import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.File
 import java.nio.file.Path
@@ -178,6 +180,51 @@ class FileServiceTest {
             assertThat(it.body.size).isEqualTo(1L)
             assertThat(it.body[0].fileName).isEqualTo("/test.txt")
         }
+    }
+
+    // convertFileNameToFullPath test
+    @Test
+    fun is_convertFileNameToFullPath_works_well() {
+        val userFilePath: String = "/kdr/test/test.txt"
+        val workedString: String = fileService.convertFileNameToFullPath("KangDroid", userFilePath)
+
+        assertThat(workedString).isEqualTo("${fileConfigurationComponent.serverRoot}/KangDroid$userFilePath")
+    }
+
+    // fileUpload Test
+    @Test
+    fun is_fileUpload_working_well() {
+        // Create Server Root Structure
+        val loginToken: String = registerAndLogin()
+        fileConfigurationComponent.initStructure()
+
+        // make uploadFile
+        val uploadFileName: String = "uploadTest-service.txt"
+        val uploadFileContent: ByteArray = "file upload test file!".toByteArray()
+        val multipartFile: MockMultipartFile = MockMultipartFile(
+            uploadFileName, uploadFileName, "text/plain", uploadFileContent
+        )
+
+        // file upload
+        val uploadFolderToken = fileService.getSHA256("/") // Upload to user's root
+        fileService.fileUpload(
+            userToken = loginToken,
+            uploadFolderToken = uploadFolderToken,
+            files = multipartFile
+        )
+
+        // Whether uploaded text file is actually exists
+        val userName: String = jwtTokenProvider.getUserPk(loginToken)
+        val uploadedFileObject: File =
+            Paths.get(fileConfigurationComponent.serverRoot, userName, uploadFileName).toFile()
+        assertThat(uploadedFileObject.exists()).isEqualTo(true)
+
+        // Now Check DB
+        val user: User = userTemplateRepository.findByUserName(userName)
+            ?: fail("User should NOT be null!")
+        val fileList: MutableList<FileObject> = user.fileList
+        assertThat(fileList.size).isEqualTo(2L)
+        assertThat(fileList[1].fileName).isEqualTo("/$uploadFileName")
     }
 
 //
@@ -424,40 +471,6 @@ class FileServiceTest {
 //        assertThat(fileService.rootToken).isEqualTo("2021")
 //    }
 //
-//    @Test
-//    fun fileUploadTest() {
-//        // Create one test Folder to root
-//        val folderName: String = "Upload"
-//        val folderObject: File = File(fileConfigurationComponent.serverRoot, folderName)
-//        if (!folderObject.exists()) {
-//            folderObject.mkdir()
-//        }
-//
-//        fileConfigurationComponent.populateInitialDB()
-//
-//        // make uploadFile
-//        val uploadFileName = "uploadTest-service.txt"
-//        var uploadFileContent = "file upload test file!".toByteArray()
-//        val multipartFile = MockMultipartFile(
-//            uploadFileName, uploadFileName, "text/plain", uploadFileContent
-//        )
-//
-//        // file upload
-//        val uploadFolderToken = fileService.getSHA256(folderObject.absolutePath)
-//        fileService.fileUpload(uploadFolderToken, multipartFile)
-//
-//        // Assert
-//        val targetFile = File(folderObject.absolutePath, uploadFileName)
-//
-//        val resultFromDB = fileRepository.findAll().find { it.fileName == targetFile.absolutePath }
-//        resultFromDB?.let { assertThat(resultFromDB.fileName).isEqualTo(targetFile.absolutePath) }
-//            ?: throw Exception("ERROR:: no $uploadFileName")
-//
-//        val resultFromServer = folderObject.listFiles().find { it.isFile && it.absolutePath == targetFile.absolutePath }
-//        resultFromServer?.let { assertThat(resultFromServer.absolutePath).isEqualTo(targetFile.absolutePath) }
-//            ?: throw Exception("ERROR:: no ${targetFile.absolutePath}")
-//
-//    }
 //
 //    @Test
 //    fun fileDownloadTest() {

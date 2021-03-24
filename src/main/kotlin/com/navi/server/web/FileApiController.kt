@@ -1,6 +1,7 @@
 package com.navi.server.web
 
 import com.navi.server.domain.FileEntity
+import com.navi.server.domain.FileObject
 import com.navi.server.dto.FileResponseDTO
 import com.navi.server.error.exception.NotFoundException
 import com.navi.server.error.exception.UnknownErrorException
@@ -39,10 +40,10 @@ class FileApiController (val fileService: FileService){
 
         return fileService.findInsideFiles(tokenList[0], token)
     }
-//
+
 //    @PostMapping("/api/navi/files")
 //    fun fileUpload(@RequestPart("uploadFile") file: MultipartFile, @RequestPart("uploadPath") token: String)
-//    : ResponseEntity<FileEntity> {
+//    : ResponseEntity<FileObject> {
 //        // when client requests, quotation marks(") are automatically inserted.
 //        if(token.contains("\""))
 //            return fileService.fileUpload(token.substring(1, token.length - 1), file)
