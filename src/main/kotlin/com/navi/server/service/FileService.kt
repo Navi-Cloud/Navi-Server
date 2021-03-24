@@ -58,7 +58,6 @@ class FileService {
     fun findRootToken(userToken: String): ResponseEntity<String> {
         val userName: String = convertTokenToUserName(userToken)
         val userFileObject: FileObject = userTemplateRepository.findByToken(userName, getSHA256("/"))
-            ?: throw UnknownErrorException("Username exists but no root token?")
 
         return ResponseEntity
             .status(HttpStatus.OK)
@@ -80,9 +79,7 @@ class FileService {
         val userName: String = convertTokenToUserName(userToken)
 
         // Check if token is actually exists!
-        if (userTemplateRepository.findByToken(userName, prevToken) == null) {
-            throw NotFoundException("Cannot find file by this token : $prevToken")
-        }
+        userTemplateRepository.findByToken(userName, prevToken) // It will throw error when token is not acutally exists
 
         // Since User Name and prevToken is verified by above statement, any error from here will be
         // Internal Server error.
@@ -106,7 +103,6 @@ class FileService {
 
         // find absolutePath from token
         val fileObject: FileObject = userTemplateRepository.findByToken(userName, uploadFolderToken)
-            ?: throw NotFoundException("Cannot find upload folder, token : $uploadFolderToken")
 
         // Need to Con-cat string to real path
         val uploadFolderPath: String = convertFileNameToFullPath(userName, fileObject.fileName)

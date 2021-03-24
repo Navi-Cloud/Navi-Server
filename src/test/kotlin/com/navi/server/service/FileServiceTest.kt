@@ -76,13 +76,13 @@ class FileServiceTest {
     }
 
     @Test
-    fun is_findRootToken_throws_50x_root_token() {
+    fun is_findRootToken_throws_40x_root_token() {
         val loginToken: String = registerAndLogin()
 
         runCatching {
             fileService.findRootToken(loginToken)
         }.onFailure {
-            assertThat(it.message).isEqualTo("Username exists but no root token?")
+            assertThat(it is NotFoundException).isEqualTo(true)
         }.onSuccess {
             fail("INIT did not proceeded, but somehow it succeed?")
         }

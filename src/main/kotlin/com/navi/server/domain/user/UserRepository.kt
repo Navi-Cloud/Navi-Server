@@ -2,7 +2,8 @@ package com.navi.server.domain.user
 
 import com.mongodb.client.result.UpdateResult
 import com.navi.server.domain.FileObject
-import javassist.NotFoundException
+import com.navi.server.error.exception.NotFoundException
+import com.navi.server.error.exception.UnknownErrorException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.aggregation.*
@@ -135,14 +136,25 @@ class UserTemplateRepository {
      * Warning:
      * As Same as findAllByPrevToken, do not attempt to re-save this function result to db.
      */
-    fun findByToken(inputUserName: String, inputToken: String): FileObject? {
+    fun findByToken(inputUserName: String, inputToken: String): FileObject {
         val results: AggregationResults<User> = innerFileListSearch(inputUserName, "$fileListField.$fileListTokenField", inputToken)
-        if (results.mappedResults.size != 1) {
-            return null
+        if (results.mappedResults.size != 1 ) {
+            throw NotFoundException("""
+                Input username was: $inputUserName, requested file token was: $inputToken.
+                Perhaps invalid user or requested with non-existence token?
+            """.trimIndent())
+        }
+
+        if (results.mappedResults[0].fileList.size != 1) {
+            throw NotFoundException("""
+                Requested file was not found!
+            """.trimIndent())
         }
 
         if (results.mappedResults[0].fileList.size > 1) {
-            return null
+            throw UnknownErrorException("""
+                Mapped fileList result should be exactly 1, but somehow its size is more than 1.
+            """.trimIndent())
         }
 
         return results.mappedResults[0].fileList[0]
