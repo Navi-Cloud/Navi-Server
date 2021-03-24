@@ -18,28 +18,28 @@ import java.net.URLEncoder
 @RestController
 class FileApiController (val fileService: FileService){
 
-    @GetMapping("/api/navi/root-token")
-    fun findRootToken(@RequestHeader httpHeaders: HttpHeaders) : ResponseEntity<String> {
-        // Invalid or Non-Token will be filtered through Spring Security.
-        val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
-        return fileService.findRootToken(tokenList[0])
-    }
-
-    @GetMapping("/api/navi/files/list")
-    fun findAllDesc(@RequestHeader httpHeaders: HttpHeaders) : ResponseEntity<List<FileResponseDTO>>{
-        // Invalid or Non-Token will be filtered through Spring Security.
-        val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
-
-        return fileService.findAllDesc(tokenList[0])
-    }
-
-    @GetMapping("/api/navi/files/list/{token}")
-    fun findInsideFiles(@RequestHeader httpHeaders: HttpHeaders, @PathVariable token: String) : ResponseEntity<List<FileResponseDTO>> {
-        // Invalid or Non-Token will be filtered through Spring Security.
-        val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
-
-        return fileService.findInsideFiles(tokenList[0], token)
-    }
+//    @GetMapping("/api/navi/root-token")
+//    fun findRootToken(@RequestHeader httpHeaders: HttpHeaders) : ResponseEntity<String> {
+//        // Invalid or Non-Token will be filtered through Spring Security.
+//        val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
+//        return fileService.findRootToken(tokenList[0])
+//    }
+//
+//    @GetMapping("/api/navi/files/list")
+//    fun findAllDesc(@RequestHeader httpHeaders: HttpHeaders) : ResponseEntity<List<FileResponseDTO>>{
+//        // Invalid or Non-Token will be filtered through Spring Security.
+//        val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
+//
+//        return fileService.findAllDesc(tokenList[0])
+//    }
+//
+//    @GetMapping("/api/navi/files/list/{token}")
+//    fun findInsideFiles(@RequestHeader httpHeaders: HttpHeaders, @PathVariable token: String) : ResponseEntity<List<FileResponseDTO>> {
+//        // Invalid or Non-Token will be filtered through Spring Security.
+//        val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
+//
+//        return fileService.findInsideFiles(tokenList[0], token)
+//    }
 
 //    @PostMapping("/api/navi/files")
 //    fun fileUpload(@RequestPart("uploadFile") file: MultipartFile, @RequestPart("uploadPath") token: String)
