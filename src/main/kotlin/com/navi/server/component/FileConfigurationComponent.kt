@@ -12,6 +12,7 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.BasicFileAttributes
 import java.text.SimpleDateFormat
+import javax.annotation.PostConstruct
 
 @Component
 @ConfigurationProperties("navi")
@@ -23,6 +24,14 @@ class FileConfigurationComponent {
 
     @Autowired
     private lateinit var fileService: FileService
+
+    @PostConstruct
+    fun initServerRootDirectory() {
+        if (System.getProperty("navi.isTesting") == "test") {
+            serverRoot = File(System.getProperty("java.io.tmpdir"), "naviServerTesting").absolutePath
+            return
+        }
+    }
 
     // Let's Just think about normal-initial use for now.
     fun initStructure() {
