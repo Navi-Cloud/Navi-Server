@@ -192,6 +192,25 @@ class FileServiceTest {
     }
 
     // fileUpload Test
+
+    @Test
+    fun is_fileUpload_throws_IOException() {
+        // Let
+        val loginToken: String = registerAndLogin()
+        fileConfigurationComponent.initStructure()
+
+        val multipartFile2 = MockMultipartFile(
+            "uploadFileName", "".toByteArray()
+        )
+        runCatching {
+            fileService.fileUpload(loginToken, fileService.getSHA256("/"), multipartFile2)
+        }.onSuccess {
+            fail("This Should be failed,....")
+        }.onFailure {
+            assertThat(it.message).isEqualTo("File IO Exception")
+        }
+    }
+
     @Test
     fun is_fileUpload_working_well() {
         // Create Server Root Structure
@@ -610,42 +629,6 @@ class FileServiceTest {
 //    }
 //
 //
-//    @Test
-//    fun invalid_FileUpload() {
-//        fileConfigurationComponent.populateInitialDB()
-//        // Create one test Folder to root
-//        val folderName: String = "Upload"
-//        val folderObject: File = File(fileConfigurationComponent.serverRoot, folderName)
-//        if (!folderObject.exists()) {
-//            folderObject.mkdir()
-//        }
-//
-//        // invalid upload test 1 : invalid token
-//        val uploadFolderToken = fileService.getSHA256(folderObject.absolutePath) // invalid path (no such folder in DB)
-//        val multipartFile = MockMultipartFile(
-//            "uploadFileName", "uploadFileName", "text/plain", "uploadFileContent".toByteArray()
-//        )
-//        runCatching {
-//            fileService.fileUpload(uploadFolderToken, multipartFile)
-//        }.onSuccess {
-//            fail("This Should be failed,....")
-//        }.onFailure {
-//            assertThat(it.message).isEqualTo("Cannot find file by this token : $uploadFolderToken")
-//        }
-//
-//
-//        // invalid upload test 2 : invalid multipartFile (IOException)
-//        val multipartFile2 = MockMultipartFile(
-//            "uploadFileName", "".toByteArray()
-//        )
-//        runCatching {
-//            fileService.fileUpload(fileService.rootToken!!, multipartFile2)
-//        }.onSuccess {
-//            fail("This Should be failed,....")
-//        }.onFailure {
-//            assertThat(it.message).isEqualTo("File IO Exception")
-//        }
-//    }
 //
 //    @Test
 //    fun invalid_FileDownload() {
