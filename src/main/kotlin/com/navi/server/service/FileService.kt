@@ -21,8 +21,10 @@ import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import java.io.File
 import java.io.IOException
+import java.io.OutputStream
 import java.net.URLEncoder
 import java.nio.file.Files
 import java.nio.file.Path
@@ -33,6 +35,7 @@ import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.stream.Collectors
 import javax.xml.bind.DatatypeConverter
+import kotlin.io.path.exists
 import kotlin.math.log
 import kotlin.math.pow
 
@@ -194,7 +197,7 @@ class FileService {
         }.getOrThrow()
     }
 
-    fun fileDownload(userToken: String, fileToken: String): ResponseEntity<Resource> {
+    fun fileDownload(userToken: String, fileToken: String): ResponseEntity<StreamingResponseBody> {
         val inputUserName: String = convertTokenToUserName(userToken)
 
         val file: FileObject = getFileObjectByUserName(inputUserName, fileToken)
@@ -203,14 +206,16 @@ class FileService {
             inputUserName,
             file.fileName
         )
-        val resource: Resource = runCatching {
-            InputStreamResource(Files.newInputStream(realFilePath))
-        }.getOrElse {
-            when (it) {
-                is EmptyResultDataAccessException -> throw NotFoundException("Cannot find file by this token : $fileToken")
-                is NoSuchFileException -> throw NotFoundException("File Not Found !")
-                else -> throw UnknownErrorException("Unknown Exception : ${it.message}")
-            }
+
+        if (!Files.exists(realFilePath)) {
+            throw NotFoundException("Cannot find file: $realFilePath")
+        }
+
+        val responseBody = StreamingResponseBody { outputStream: OutputStream? ->
+            Files.copy(
+                realFilePath,
+                outputStream
+            )
         }
 
         val fileResponseDTO = FileResponseDTO(file).apply {
@@ -226,7 +231,7 @@ class FileService {
         return ResponseEntity.ok()
             .contentType(MediaType.parseMediaType("application/octet-stream"))
             .header(HttpHeaders.CONTENT_DISPOSITION, again)
-            .body(resource)
+            .body(responseBody)
     }
 
     fun getSHA256(input: String): String {
