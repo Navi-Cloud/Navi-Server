@@ -45,6 +45,20 @@ class FileConfigurationTest {
     }
 
     @Test
+    fun is_getMimeType_returns_file_error() {
+        assertThat(fileConfigurationComponent.getMimeType(File("")))
+            .isEqualTo("File")
+    }
+
+    @Test
+    fun is_getMimeType_returns_correctly() {
+        val tmpFileObject: File = File(System.getProperty("java.io.tmpdir"), "test.txt")
+        tmpFileObject.writeText("Test!")
+        assertThat(fileConfigurationComponent.getMimeType(tmpFileObject))
+            .isEqualTo("text/plain")
+    }
+
+    @Test
     fun is_initStructure_works_well_empty_users() {
         // Do
         fileConfigurationComponent.initStructure()

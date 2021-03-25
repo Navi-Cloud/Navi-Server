@@ -25,6 +25,8 @@ class FileConfigurationComponent {
     @Autowired
     private lateinit var fileService: FileService
 
+    private val tika: Tika = Tika()
+
     @PostConstruct
     fun initServerRootDirectory() {
         if (System.getProperty("navi.isTesting") == "test") {
@@ -33,9 +35,17 @@ class FileConfigurationComponent {
         }
     }
 
+    fun getMimeType(file: File): String {
+        return runCatching {
+            tika.detect(file)
+        }.getOrElse {
+            println(it.stackTraceToString())
+            "File"
+        }
+    }
+
     // Let's Just think about normal-initial use for now.
     fun initStructure() {
-        val tika: Tika = Tika()
         val userList: List<User> =
             userTemplateRepository.findAllUserOnly()
 
@@ -73,12 +83,7 @@ class FileConfigurationComponent {
                         fileName = userFileName,
                         fileType = if (it.isDirectory) "Folder" else "File",
                         mimeType = if (it.isDirectory) "Folder" else {
-                            try {
-                                tika.detect(it)
-                            } catch (e: Exception) {
-                                println("Failed to detect mimeType for: ${e.message}")
-                                "File"
-                            }
+                             getMimeType(it)
                         },
                         token = fileService.getSHA256(userFileName),
                         prevToken = if (it.absolutePath == userRootFile.absolutePath) "" else  {
