@@ -205,33 +205,6 @@ class FileService {
             .body(resource)
     }
 
-//
-//    fun save(inputUserName: String, fileSaveRequestDTO: FileSaveRequestDTO): ResponseEntity<User> {
-//        val user: User = userTemplateRepository.findByUserName(inputUserName)
-//            ?: throw NotFoundException("Cannot find user: $inputUserName")
-//        user.fileList.add(fileSaveRequestDTO.toEntityObject())
-//        return ResponseEntity
-//            .status(HttpStatus.OK)
-//            .body(userTemplateRepository.save(user))
-//    }
-//
-//
-//    fun deleteByToken(inputUserName: String, fileToken: String): Boolean {
-//        return userTemplateRepository.deleteByToken(inputUserName, fileToken).wasAcknowledged()
-//    }
-//
-//    fun findByToken(inputUserName: String, fileToken: String): FileResponseDTO {
-//        val result: FileObject = userTemplateRepository.findByToken(inputUserName, fileToken)
-//            ?: throw NotFoundException("Cannot find file information with user: $inputUserName, and token: $fileToken")
-//        return FileResponseDTO(result)
-//    }
-//
-//    var rootPath: String? = null
-//    var rootToken: String? = null
-//    val tika = Tika()
-//
-//
-
     fun getSHA256(input: String): String {
         val messageDigest: MessageDigest = MessageDigest.getInstance("SHA-256").also {
             it.update(input.toByteArray())
@@ -248,5 +221,4 @@ class FileService {
         val calculatedValue: Double = fileSize / 1024.0.pow(logValue)
         return String.format("%.1f%ciB", calculatedValue, fileUnit[logValue - 1])
     }
-
 }

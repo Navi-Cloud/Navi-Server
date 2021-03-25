@@ -78,8 +78,8 @@ class UserServiceTest {
         }.onSuccess {
             assertThat(it.statusCode).isEqualTo(HttpStatus.OK)
             assertThat(it.hasBody()).isEqualTo(true)
-            assertThat(it.body.registeredName).isEqualTo(userRegisterRequest.userName)
-            assertThat(it.body.registeredEmail).isEqualTo(userRegisterRequest.userEmail)
+            assertThat(it.body!!.registeredName).isEqualTo(userRegisterRequest.userName)
+            assertThat(it.body!!.registeredEmail).isEqualTo(userRegisterRequest.userEmail)
         }.onFailure {
             fail("This should returned OK!: ${it.stackTraceToString()}")
         }
@@ -147,7 +147,7 @@ class UserServiceTest {
         }.onSuccess {
             assertThat(it.statusCode).isEqualTo(HttpStatus.OK)
             assertThat(it.hasBody()).isEqualTo(true)
-            assertThat(it.body.userToken).isNotEqualTo("")
+            assertThat(it.body!!.userToken).isNotEqualTo("")
         }.onFailure {
             fail("Wrong password, but somehow it succeed?")
         }
