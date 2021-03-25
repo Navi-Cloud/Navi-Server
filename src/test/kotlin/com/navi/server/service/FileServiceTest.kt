@@ -227,6 +227,112 @@ class FileServiceTest {
         assertThat(fileList[1].fileName).isEqualTo("/$uploadFileName")
     }
 
+    // getFileObjectByUserName test
+    @Test
+    fun is_getFileObjectByUserName_returns_404_wrong_user() {
+        runCatching {
+            fileService.getFileObjectByUserName("wrong_user", fileService.getSHA256("/"))
+        }.onSuccess {
+            fail("Wrong user specified but somehow function succeed?")
+        }.onFailure {
+            assertThat(it is NotFoundException).isEqualTo(true)
+        }
+    }
+
+    @Test
+    fun is_getFileObjectByUserName_returns_fileObject() {
+        // Let
+        val fileObject: FileObject = FileObject(
+            fileName = "test_file",
+            fileType = "test_type",
+            mimeType = "mime_type",
+            token = "test_token",
+            prevToken = "prev_token",
+            lastModifiedTime = System.currentTimeMillis(),
+            fileCreatedDate = "date",
+            fileSize = "5m"
+        )
+
+        val user: User = User(
+            userName = "KangDroid",
+            userPassword = "userpassword",
+            roles = setOf("ROLES_ADMIN"),
+            fileList = mutableListOf(fileObject)
+        )
+        userTemplateRepository.save(user)
+
+        val responseFileObject: FileObject = runCatching {
+            fileService.getFileObjectByUserName(user.userName, fileObject.token)
+        }.getOrElse {
+            fail("All things are set-up, so it should not fail!")
+        }
+
+        assertThat(responseFileObject.fileName).isEqualTo(fileObject.fileName)
+        assertThat(responseFileObject.fileType).isEqualTo(fileObject.fileType)
+        assertThat(responseFileObject.mimeType).isEqualTo(fileObject.mimeType)
+        assertThat(responseFileObject.token).isEqualTo(fileObject.token)
+        assertThat(responseFileObject.prevToken).isEqualTo(fileObject.prevToken)
+    }
+
+    // fileDownload test
+    @Test
+    fun is_fileDownload_returns_NotFoundException_no_file() {
+        // Let
+        val fileObject: FileObject = FileObject(
+            fileName = "test_file",
+            fileType = "test_type",
+            mimeType = "mime_type",
+            token = "test_token",
+            prevToken = "prev_token",
+            lastModifiedTime = System.currentTimeMillis(),
+            fileCreatedDate = "date",
+            fileSize = "5m"
+        )
+
+        val loginToken: String = registerAndLogin()
+        val user: User = userTemplateRepository.findByUserName("KangDroid")
+        user.fileList.add(fileObject)
+        userTemplateRepository.save(user)
+
+        runCatching {
+            fileService.fileDownload(loginToken, fileObject.token)
+        }.onSuccess {
+            fail("This should return 404 because we do not have actual file.")
+        }.onFailure {
+            assertThat(it is NotFoundException).isEqualTo(true)
+        }
+    }
+
+    @Test
+    fun is_fileDownload_returns_OK() {
+        // Let
+        val fileObject: FileObject = FileObject(
+            fileName = "test_file",
+            fileType = "test_type",
+            mimeType = "mime_type",
+            token = "test_token",
+            prevToken = "prev_token",
+            lastModifiedTime = System.currentTimeMillis(),
+            fileCreatedDate = "date",
+            fileSize = "5m"
+        )
+
+        val loginToken: String = registerAndLogin()
+        val user: User = userTemplateRepository.findByUserName("KangDroid")
+        user.fileList.add(fileObject)
+        userTemplateRepository.save(user)
+        // Write some texts
+        Paths.get(fileConfigurationComponent.serverRoot, "KangDroid").toFile().mkdirs()
+        val file: File = Paths.get(fileConfigurationComponent.serverRoot, "KangDroid", fileObject.fileName).toFile()
+        file.writeText("Test!")
+
+        runCatching {
+            fileService.fileDownload(loginToken, fileObject.token)
+        }.onFailure {
+            fail("This should not fail! : ${it.stackTraceToString()}")
+        }
+    }
+
 //
 //    // Test variable
 //    private val fileNameTest: String = "TESTING_FILENAME"

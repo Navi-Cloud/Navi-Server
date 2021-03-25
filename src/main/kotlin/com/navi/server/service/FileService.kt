@@ -12,16 +12,23 @@ import com.navi.server.error.exception.UnknownErrorException
 import com.navi.server.security.JWTTokenProvider
 import org.apache.tika.Tika
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.core.io.InputStreamResource
+import org.springframework.core.io.Resource
+import org.springframework.dao.EmptyResultDataAccessException
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
 import java.io.IOException
+import java.net.URLEncoder
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.attribute.BasicFileAttributes
+import java.nio.file.NoSuchFileException
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.stream.Collectors
@@ -157,6 +164,47 @@ class FileService {
             .body(saveFileObject)
     }
 
+    fun getFileObjectByUserName(userName: String, fileToken: String): FileObject {
+        return runCatching {
+            userTemplateRepository.findByToken(userName, fileToken)
+        }.getOrThrow()
+    }
+
+    fun fileDownload(userToken: String, fileToken: String): ResponseEntity<Resource> {
+        val inputUserName: String = convertTokenToUserName(userToken)
+
+        val file: FileObject = getFileObjectByUserName(inputUserName, fileToken)
+        val realFilePath: Path = Paths.get(
+            fileConfigurationComponent.serverRoot,
+            inputUserName,
+            file.fileName
+        )
+        val resource: Resource = runCatching {
+            InputStreamResource(Files.newInputStream(realFilePath))
+        }.getOrElse {
+            when (it) {
+                is EmptyResultDataAccessException -> throw NotFoundException("Cannot find file by this token : $fileToken")
+                is NoSuchFileException -> throw NotFoundException("File Not Found !")
+                else -> throw UnknownErrorException("Unknown Exception : ${it.message}")
+            }
+        }
+
+        val fileResponseDTO = FileResponseDTO(file).apply {
+            val osType: String = System.getProperty("os.name").toLowerCase()
+            if (osType.indexOf("win") >= 0) {
+                this.fileName = this.fileName.split("\\").last()
+            } else {
+                this.fileName = this.fileName.split("/").last()
+            }
+        }
+        val again: String =
+            String.format("attachment; filename=\"%s\"", URLEncoder.encode(fileResponseDTO.fileName, "UTF-8"))
+        return ResponseEntity.ok()
+            .contentType(MediaType.parseMediaType("application/octet-stream"))
+            .header(HttpHeaders.CONTENT_DISPOSITION, again)
+            .body(resource)
+    }
+
 //
 //    fun save(inputUserName: String, fileSaveRequestDTO: FileSaveRequestDTO): ResponseEntity<User> {
 //        val user: User = userTemplateRepository.findByUserName(inputUserName)
@@ -183,36 +231,6 @@ class FileService {
 //    val tika = Tika()
 //
 //
-//    fun fileDownload(inputUserName: String, fileToken: String): ResponseEntity<Resource> {
-//        lateinit var file: FileObject
-//        lateinit var resource: Resource
-//        runCatching {
-//            file = userTemplateRepository.findByToken(inputUserName, fileToken)
-//                ?: throw NotFoundException("")
-//            resource = InputStreamResource(Files.newInputStream(Paths.get(file.fileName)))
-//        }.onFailure {
-//            when (it) {
-//                is EmptyResultDataAccessException -> throw NotFoundException("Cannot find file by this token : $fileToken")
-//                is NoSuchFileException -> throw NotFoundException("File Not Found !")
-//                is NotFoundException -> throw NotFoundException("Cannot find file by this token : $fileToken")
-//                else -> throw UnknownErrorException("Unknown Exception : ${it.message}")
-//            }
-//        }
-//        val fileResponseDTO = FileResponseDTO(file).apply {
-//            val osType: String = System.getProperty("os.name").toLowerCase()
-//            if (osType.indexOf("win") >= 0) {
-//                this.fileName = this.fileName.split("\\").last()
-//            } else {
-//                this.fileName = this.fileName.split("/").last()
-//            }
-//        }
-//        val again: String =
-//            String.format("attachment; filename=\"%s\"", URLEncoder.encode(fileResponseDTO.fileName, "UTF-8"))
-//        return ResponseEntity.ok()
-//            .contentType(MediaType.parseMediaType("application/octet-stream"))
-//            .header(HttpHeaders.CONTENT_DISPOSITION, again)
-//            .body(resource)
-//    }
 
     fun getSHA256(input: String): String {
         val messageDigest: MessageDigest = MessageDigest.getInstance("SHA-256").also {
