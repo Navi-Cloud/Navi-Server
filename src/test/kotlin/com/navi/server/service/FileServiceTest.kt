@@ -181,10 +181,11 @@ class FileServiceTest {
     // convertFileNameToFullPath test
     @Test
     fun is_convertFileNameToFullPath_works_well() {
-        val userFilePath: String = "/kdr/test/test.txt"
-        val workedString: String = fileService.convertFileNameToFullPath("KangDroid", userFilePath)
+        val userFilePath: Path = Paths.get("kdr", "test", "test.txt")
+        val workedString: String = fileService.convertFileNameToFullPath("KangDroid", userFilePath.toString())
 
-        assertThat(workedString).isEqualTo("${fileConfigurationComponent.serverRoot}/KangDroid$userFilePath")
+        val expectedPath: Path = Paths.get(fileConfigurationComponent.serverRoot, "KangDroid", userFilePath.toString())
+        assertThat(workedString).isEqualTo(expectedPath.toString())
     }
 
     // fileUpload Test
