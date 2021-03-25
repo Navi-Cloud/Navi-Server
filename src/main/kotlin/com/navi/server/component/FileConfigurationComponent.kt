@@ -86,10 +86,19 @@ class FileConfigurationComponent {
                                 if (it.parent == userRootFile.absolutePath) {
                                     "/"
                                 } else {
-                                    it.parent.substring(
-                                        userRootFile.absolutePath.length,
-                                        it.parent.length
-                                    )
+                                    val tokenList: List<String> =
+                                        userFileName.split('/')
+                                    var prevTokenString: String = ""
+                                    for (tkString in tokenList.indices) {
+                                        if (tkString == tokenList.size-1) {
+                                            continue
+                                        }
+                                        if (tokenList[tkString].isNotEmpty()) {
+                                            prevTokenString += "/${tokenList[tkString]}"
+                                        }
+                                    }
+                                    println(prevTokenString)
+                                    prevTokenString
                                 }
                             )
                         },

@@ -149,6 +149,15 @@ class FileService {
             }
         }
 
+        val tokenList: List<String> =
+            dbTargetFilename.split('/')
+        var prevTokenString: String = ""
+        tokenList.forEach { tkString ->
+            if (tkString.isNotEmpty()) {
+                prevTokenString += "/${tkString}"
+            }
+        }
+
         val saveFileObject: FileObject = FileObject(
             fileName = dbTargetFilename,
             // Since we are not handling folder[recursive] upload/download, its type must be somewhat non-folder
@@ -160,8 +169,8 @@ class FileService {
                 println("Failed to detect mimeType for: ${e.message}")
                 "File"
             },
-            token = getSHA256(uploadFile.absolutePath),
-            prevToken = getSHA256(uploadFolderPath),
+            token = getSHA256(dbTargetFilename),
+            prevToken = getSHA256(prevTokenString),
             lastModifiedTime = uploadFile.lastModified(),
             fileCreatedDate = simpleDateFormat.format(basicFileAttribute.creationTime().toMillis()),
             fileSize = convertSize(basicFileAttribute.size())
