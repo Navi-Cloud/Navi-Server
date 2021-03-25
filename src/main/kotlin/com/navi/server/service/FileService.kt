@@ -134,8 +134,23 @@ class FileService {
 
 
         val toSubstring: String = "${fileConfigurationComponent.serverRoot}/$userName"
+
+        // Windows Implementation
+
+        var dbTargetFilename: String =
+            uploadFile.absolutePath.substring(toSubstring.length, uploadFile.absolutePath.length)
+        if (dbTargetFilename.contains('\\')) {
+            val eachToken: List<String> = dbTargetFilename.split('\\')
+            dbTargetFilename = ""
+            eachToken.forEach {
+                if (it.isNotEmpty()) {
+                    dbTargetFilename += "/$it"
+                }
+            }
+        }
+
         val saveFileObject: FileObject = FileObject(
-            fileName = uploadFile.absolutePath.substring(toSubstring.length, uploadFile.absolutePath.length),
+            fileName = dbTargetFilename,
             // Since we are not handling folder[recursive] upload/download, its type must be somewhat non-folder
             fileType = "File",
             mimeType =
