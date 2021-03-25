@@ -51,8 +51,21 @@ class FileConfigurationComponent {
 
                 val simpleDateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd-HH:mm:ss")
                 var userFileName: String = it.absolutePath.substring(userRootFile.absolutePath.length, it.absolutePath.length)
+
+                // Windows Implementation
+                if (userFileName.contains('\\')) {
+                    val eachToken: List<String> = userFileName.split('\\')
+                    userFileName = ""
+                    eachToken.forEach { tokenString ->
+                        if (tokenString.isNotEmpty()) {
+                            userFileName += "/$tokenString"
+                        }
+                    }
+                }
+
+                // Unix/Windows: If empty
                 if (userFileName.isEmpty()) {
-                    userFileName += "/"
+                    userFileName = "/"
                 }
 
                 user.fileList.add(
