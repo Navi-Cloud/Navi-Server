@@ -31,6 +31,8 @@ class FileConfigurationTest {
 
     @Before
     fun initEnvironment() {
+        fileConfigurationComponent.serverRoot = File(System.getProperty("java.io.tmpdir"), "naviServerTesting").absolutePath
+
         // Create trash directory
         trashRootObject = File(fileConfigurationComponent.serverRoot)
         trashRootObject.mkdir()

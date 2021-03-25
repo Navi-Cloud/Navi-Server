@@ -27,14 +27,6 @@ class FileConfigurationComponent {
 
     private val tika: Tika = Tika()
 
-    @PostConstruct
-    fun initServerRootDirectory() {
-        if (System.getProperty("navi.isTesting") == "test") {
-            serverRoot = File(System.getProperty("java.io.tmpdir"), "naviServerTesting").absolutePath
-            return
-        }
-    }
-
     fun getMimeType(file: File): String {
         return runCatching {
             tika.detect(file)
