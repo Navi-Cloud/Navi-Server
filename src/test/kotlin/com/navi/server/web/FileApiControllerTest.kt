@@ -5,8 +5,12 @@ import com.navi.server.domain.FileObject
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
 import com.navi.server.dto.FileResponseDTO
+import com.navi.server.dto.LoginRequest
+import com.navi.server.dto.LoginResponse
+import com.navi.server.dto.UserRegisterRequest
 import com.navi.server.security.JWTTokenProvider
 import com.navi.server.service.FileService
+import com.navi.server.service.UserService
 import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -55,6 +59,9 @@ class FileApiControllerTest {
     @Autowired
     private lateinit var webApplicationContext: WebApplicationContext
 
+    @Autowired
+    private lateinit var userService: UserService
+
     private lateinit var trashRootObject: File
 
     private lateinit var mockMvc : MockMvc
@@ -77,24 +84,24 @@ class FileApiControllerTest {
     }
 
     private fun registerAndLogin(): String {
-        val mockUser: User = User(
+        val mockUser: UserRegisterRequest = UserRegisterRequest(
             userName = "KangDroid",
-            userEmail = "",
-            userPassword = "",
-            roles = setOf("USER")
-        )
-        // Register
-        userTemplateRepository.save(
-            User(
-                userName = "KangDroid",
-                userEmail = "",
-                userPassword = "",
-                roles = setOf("USER")
-            )
+            userPassword = "password",
+            userEmail = "test@test.com"
         )
 
-        // Token
-        return jwtTokenProvider.createToken(mockUser.userName, mockUser.roles.toList())
+        userService.registerUser(
+            mockUser
+        )
+
+        val loginResponseDto: ResponseEntity<LoginResponse> = userService.loginUser(
+                LoginRequest(
+                    userName = mockUser.userName,
+                    userPassword = mockUser.userPassword
+                )
+        )
+
+        return loginResponseDto.body.userToken
     }
 
     @Test

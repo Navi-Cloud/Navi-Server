@@ -36,7 +36,7 @@ class UserService {
                 userName = userRegisterRequest.userName,
                 userEmail = userRegisterRequest.userEmail,
                 userPassword = userRegisterRequest.userPassword,
-                roles = setOf("USER")
+                roles = setOf("ROLE_USER")
             )
         )
 

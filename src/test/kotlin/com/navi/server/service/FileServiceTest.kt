@@ -277,7 +277,7 @@ class FileServiceTest {
         val user: User = User(
             userName = "KangDroid",
             userPassword = "userpassword",
-            roles = setOf("ROLES_ADMIN"),
+            roles = setOf("ROLE_ADMIN"),
             fileList = mutableListOf(fileObject)
         )
         userTemplateRepository.save(user)

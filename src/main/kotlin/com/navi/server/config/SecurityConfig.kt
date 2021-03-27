@@ -25,6 +25,7 @@ class SecurityConfig(private val jwtTokenProvider: JWTTokenProvider) : WebSecuri
             .headers().frameOptions().disable()
             .and()
             .authorizeRequests()
+            .antMatchers("/api/navi/root-token").hasRole("USER")
             .antMatchers("/**").permitAll()
             .and()
             .addFilterBefore(
