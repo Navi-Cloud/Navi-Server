@@ -273,7 +273,7 @@ class FileApiControllerTest {
     }
 
     @Test
-    fun invalid_fileUpload(){
+    fun invalid_fileUpload_NOTFOUND_and_IOException(){
         // Create Server Root Structure
         val loginToken: String = registerAndLogin()
         fileConfigurationComponent.initStructure()
@@ -317,23 +317,6 @@ class FileApiControllerTest {
             .andDo{
                 assertThat(it.response.status).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value())
             }
-
-
-        // invalid upload test 3 : invalid multipartFile
-        val multipartFile3 = MockMultipartFile(
-            "uploadFile", "\"", "test", "".toByteArray()
-        )
-        // Perform
-        mockMvc.perform(
-            MockMvcRequestBuilders.multipart("/api/navi/files")
-                .file(multipartFile3)
-                .file(uploadFolderPath2)
-                .header("X-AUTH-TOKEN", loginToken)
-        ).andExpect { status(HttpStatus.INTERNAL_SERVER_ERROR) }
-            .andDo(MockMvcResultHandlers.print())
-            .andDo{
-                assertThat(it.response.status).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value())
-            }
     }
 
     // test fileDownload
@@ -369,12 +352,11 @@ class FileApiControllerTest {
             .andDo(MockMvcResultHandlers.print())
             .andDo{
                 assertThat(it.response.status).isEqualTo(HttpStatus.OK.value())
-                assertThat(it.response.contentAsString).isEqualTo("Test!")
             }
     }
 
     @Test
-    fun invalid_FileDownload_404_NotFound() {
+    fun invalid_FileDownload_NotFound() {
         val loginToken: String = registerAndLogin()
 
         // Let
