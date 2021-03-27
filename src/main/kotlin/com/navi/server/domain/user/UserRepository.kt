@@ -20,6 +20,7 @@ class UserTemplateRepository {
 
     private val userIdField: String = "id"
     private val userNameField: String = "userName"
+    private val userEmailField: String = "userEmail"
     private val fileListField: String = "fileList"
     private val fileListTokenField: String = "token"
     private val fileListPrevTokenField: String = "prevToken"
@@ -178,6 +179,30 @@ class UserTemplateRepository {
                 user = it
             } else {
                 throw NotFoundException("Cannot find user with username: $inputUserName")
+            }
+        }
+
+        return user
+    }
+
+    /**
+     * findByUserEmail(inputUserEmail: String): User?
+     * Returns user document[full document] where user email = inputUserEmail.
+     */
+    fun findByUserEmail(inputUserEmail: String): User {
+        val findEmailQuery: Query = Query()
+        findEmailQuery.addCriteria(
+            Criteria.where(userEmailField).`is`(inputUserEmail)
+        )
+
+        lateinit var user: User
+        runCatching {
+            mongoTemplate.findOne(findEmailQuery, User::class.java)
+        }.onSuccess {
+            if (it != null) {
+                user = it
+            } else {
+                throw NotFoundException("Cannot find user with username: $inputUserEmail")
             }
         }
 

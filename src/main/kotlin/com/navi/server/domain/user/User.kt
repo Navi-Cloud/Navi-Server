@@ -14,6 +14,7 @@ class User(
     @Id
     var id: ObjectId = ObjectId(),
     var userName: String = "",
+    var userEmail: String = "",
     var userPassword: String = "",
     val roles: Set<String> = setOf(),
     val fileList: MutableList<FileObject> = mutableListOf()

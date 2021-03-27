@@ -28,7 +28,7 @@ class UserService {
         runCatching {
             userTemplateRepository.findByUserName(userRegisterRequest.userName)
         }.onSuccess {
-            throw ConflictException("Username ${userRegisterRequest.userName} already exists!")
+            throw ConflictException("User email ${userRegisterRequest.userEmail} already exists!")
         }
 
         userTemplateRepository.save(

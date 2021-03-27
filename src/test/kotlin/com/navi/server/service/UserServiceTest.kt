@@ -40,6 +40,7 @@ class UserServiceTest {
         // Setup Data
         val mockUser: User = User(
             userName = "KangDroid",
+            userEmail = "user@gmail.com",
             userPassword = "testingPassword",
             roles = setOf("ROLE_ADMIN")
         )
@@ -51,8 +52,8 @@ class UserServiceTest {
         // Do work
         val userRegisterRequest: UserRegisterRequest = UserRegisterRequest(
             userName = "KangDroid",
+            userEmail = "user@gmail.com",
             userPassword = "testingPassword",
-            userEmail = "testingEmail"
         )
 
         runCatching {
@@ -60,7 +61,7 @@ class UserServiceTest {
         }.onSuccess {
             fail("Should return duplicated exception!")
         }.onFailure {
-            assertThat(it.message).isEqualTo("Username ${userRegisterRequest.userName} already exists!")
+            assertThat(it.message).isEqualTo("User email ${userRegisterRequest.userEmail} already exists!")
         }
     }
 
