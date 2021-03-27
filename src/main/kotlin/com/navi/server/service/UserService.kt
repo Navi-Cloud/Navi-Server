@@ -8,7 +8,6 @@ import com.navi.server.dto.UserRegisterRequest
 import com.navi.server.dto.UserRegisterResponse
 import com.navi.server.error.exception.ConflictException
 import com.navi.server.error.exception.ForbiddenException
-import com.navi.server.error.exception.UnknownErrorException
 import com.navi.server.security.JWTTokenProvider
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus

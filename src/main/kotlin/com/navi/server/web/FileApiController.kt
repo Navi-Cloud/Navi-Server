@@ -16,7 +16,6 @@ class FileApiController (val fileService: FileService){
     fun findRootToken(@RequestHeader httpHeaders: HttpHeaders) : ResponseEntity<String> {
         // Invalid or Non-Token will be filtered through Spring Security.
         val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
-        println("this-> " + tokenList[0])
         return fileService.findRootToken(tokenList[0])
     }
 

@@ -20,9 +20,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.test.context.junit4.SpringRunner
 import org.assertj.core.api.Assertions.assertThat;
-import org.assertj.core.api.Assertions.fail
 import org.junit.Before
-import org.springframework.core.io.Resource
 import org.springframework.http.*
 import org.springframework.http.ResponseEntity.status
 import org.springframework.mock.web.MockMultipartFile
@@ -32,6 +30,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import java.io.File
 import org.springframework.web.context.WebApplicationContext
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -115,46 +114,36 @@ class FileApiControllerTest {
         headers.add("X-AUTH-TOKEN", loginToken)
         var responseEntity : ResponseEntity<String> = restTemplate.exchange(url, HttpMethod.GET, HttpEntity<Void>(headers), String::class.java)
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/navi/root-token")
-            .header("X-AUTH-TOKEN", loginToken))
-            .andExpect { status(HttpStatus.OK) }
+        mockMvc.perform(
+            MockMvcRequestBuilders.get("/api/navi/root-token")
+                .header("X-AUTH-TOKEN", loginToken)
+        ).andExpect { status(HttpStatus.OK) }
             .andDo(MockMvcResultHandlers.print())
-
+            .andDo{
+                assertThat(it.response.status).isEqualTo(HttpStatus.OK.value())
+                assertThat(it.response.contentAsString).isEqualTo(fileService.getSHA256("/"))
+            }
         // Assert
-        println(responseEntity)
         assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
-
-        //assertThat(responseEntity.body).isEqualTo(fileService.getSHA256(fileConfigurationComponent.serverRoot))
+        assertThat(responseEntity.body).isEqualTo(fileService.getSHA256("/"))
     }
+
     @Test
     fun testFindAllDesc_ok() {
         val loginToken: String = registerAndLogin()
         fileConfigurationComponent.initStructure()
 
-//        //insert data
-//        val fileName = listOf<String>("fileName1", "fileName2", "fileName3", "fileName4")
-//        fileName.forEach {
-//            val result = fileRepository.save(FileEntity(fileName = it, fileType = "fileType", mimeType = "text/plain", token = "token", prevToken = "token", lastModifiedTime = 5000, fileCreatedDate = "testCreatedTime", fileSize = "5000"))
-//        }
-
         //send api request
         val url = "http://localhost:$port/api/navi/files/list"
         val headers: HttpHeaders = HttpHeaders()
         headers.add("X-AUTH-TOKEN", loginToken)
-        //var responseEntity : ResponseEntity<Array<FileResponseDTO>> = restTemplate.exchange(url, HttpMethod.GET, HttpEntity<String>(headers), Array<FileResponseDTO>::class.java)
-        runCatching { restTemplate.exchange(url, HttpMethod.GET, HttpEntity<String>(headers), Array<FileResponseDTO>::class.java) }
-            .onSuccess {
-                println(it.body.size)
-            }.onFailure {
-                println(it.stackTraceToString())
-                fail("this ...is not ok..^%^")
-            }
-
-        //var responseEntity : ResponseEntity<Array<FileResponseDTO>> = restTemplate.getForEntity(url, Array<FileResponseDTO>::class.java)
+        val responseEntity : ResponseEntity<Array<FileResponseDTO>> = restTemplate.exchange(
+            url, HttpMethod.GET, HttpEntity<Void>(headers), Array<FileResponseDTO>::class.java
+        )
 
         //Assert
-        //assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
-        //assertThat(responseEntity.body.size).isEqualTo(1L)
+        assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
+        assertThat(responseEntity.body.size).isEqualTo(1L)
     }
 
     @Test
@@ -171,26 +160,28 @@ class FileApiControllerTest {
         val url2 = "http://localhost:$port/api/navi/files/list/${folderToken}"
         val headers: HttpHeaders = HttpHeaders()
         headers.add("X-AUTH-TOKEN", loginToken)
-        var responseEntity2 : ResponseEntity<Array<FileResponseDTO>> = restTemplate.exchange(url2, HttpMethod.GET, HttpEntity("",headers), Array<FileResponseDTO>::class.java)
+        var responseEntity2 : ResponseEntity<Array<FileResponseDTO>> = restTemplate.exchange(
+            url2, HttpMethod.GET, HttpEntity<Void>(headers), Array<FileResponseDTO>::class.java
+        )
 
         // Assert
         assertThat(responseEntity2.statusCode).isEqualTo(HttpStatus.OK)
-        assertThat(responseEntity2.body!!.size).isEqualTo(1L) //3 files
-
-        var result = responseEntity2.body
+        assertThat(responseEntity2.body!!.size).isEqualTo(1L)
     }
 
     @Test
     fun invalid_findInsideFiles_404_no_file(){
         val loginToken: String = registerAndLogin()
+
         // invalid find Inside files : invalid token
         val invalidToken = "token"
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/navi/files/list/${invalidToken}")
-            .header("X-AUTH-TOKEN", loginToken))
-            .andExpect { status(HttpStatus.BAD_REQUEST) }
+        mockMvc.perform(
+            MockMvcRequestBuilders.get("/api/navi/files/list/${invalidToken}")
+                .header("X-AUTH-TOKEN", loginToken)
+        ).andExpect { status(HttpStatus.NOT_FOUND) }
             .andDo(MockMvcResultHandlers.print())
-            .andDo {
-                assertThat(it.response.status).isEqualTo(HttpStatus.NOT_FOUND)
+            .andDo{
+                assertThat(it.response.status).isEqualTo(HttpStatus.NOT_FOUND.value())
             }
     }
 
@@ -205,7 +196,7 @@ class FileApiControllerTest {
         val uploadFileName: String = "uploadTest-service.txt"
         val uploadFileContent: ByteArray = "file upload test file!".toByteArray()
         val multipartFile: MockMultipartFile = MockMultipartFile(
-            uploadFileName, uploadFileName, "text/plain", uploadFileContent
+            "uploadFile", uploadFileName, "text/plain", uploadFileContent
         )
 
         // file upload
@@ -220,6 +211,9 @@ class FileApiControllerTest {
                 .header("X-AUTH-TOKEN", loginToken)
         ).andExpect { status(HttpStatus.OK) }
             .andDo(MockMvcResultHandlers.print())
+            .andDo{
+                assertThat(it.response.status).isEqualTo(HttpStatus.OK.value())
+            }
 
         // Assert
         // Whether uploaded text file is actually exists
@@ -235,7 +229,6 @@ class FileApiControllerTest {
         assertThat(fileList[1].fileName).isEqualTo("/$uploadFileName")
     }
 
-
     @Test
     fun testFileUpload_quotationMarkedFileName_ok(){
         // Create Server Root Structure
@@ -246,7 +239,7 @@ class FileApiControllerTest {
         val uploadFileName: String = "uploadTest-service.txt"
         val uploadFileContent: ByteArray = "file upload test file!".toByteArray()
         val multipartFile: MockMultipartFile = MockMultipartFile(
-            uploadFileName, uploadFileName, "text/plain", uploadFileContent
+            "uploadFile", uploadFileName, "text/plain", uploadFileContent
         )
 
         // file upload
@@ -262,6 +255,9 @@ class FileApiControllerTest {
                 .header("X-AUTH-TOKEN", loginToken)
         ).andExpect { status(HttpStatus.OK) }
             .andDo(MockMvcResultHandlers.print())
+            .andDo{
+                assertThat(it.response.status).isEqualTo(HttpStatus.OK.value())
+            }
 
         // Assert
         // Whether uploaded text file is actually exists
@@ -287,7 +283,7 @@ class FileApiControllerTest {
         val uploadFileName: String = "uploadTest-service.txt"
         val uploadFileContent: ByteArray = "file upload test file!".toByteArray()
         val multipartFile: MockMultipartFile = MockMultipartFile(
-            uploadFileName, uploadFileName, "text/plain", uploadFileContent
+            "uploadFile", uploadFileName, "text/plain", uploadFileContent
         )
 
         // invalid upload test 1 : invalid token
@@ -299,11 +295,12 @@ class FileApiControllerTest {
                 .file(multipartFile)
                 .file(uploadFolderPath)
                 .header("X-AUTH-TOKEN", loginToken)
-        ).andExpect { status(HttpStatus.BAD_REQUEST) }
+        ).andExpect { status(HttpStatus.NOT_FOUND) }
             .andDo(MockMvcResultHandlers.print())
+            .andDo{
+                assertThat(it.response.status).isEqualTo(HttpStatus.NOT_FOUND.value())
+            }
 
-        // Why do i need this?
-        //saveFileEntityToDB(fileService.rootPath!!, "Folder")
 
         // invalid upload test 2 : invalid multipartFile (IOException)
         val multipartFile2 = MockMultipartFile(
@@ -318,6 +315,9 @@ class FileApiControllerTest {
                 .header("X-AUTH-TOKEN", loginToken)
         ).andExpect { status(HttpStatus.INTERNAL_SERVER_ERROR) }
             .andDo(MockMvcResultHandlers.print())
+            .andDo{
+                assertThat(it.response.status).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value())
+            }
 
 
         // invalid upload test 3 : invalid multipartFile
@@ -332,8 +332,10 @@ class FileApiControllerTest {
                 .header("X-AUTH-TOKEN", loginToken)
         ).andExpect { status(HttpStatus.INTERNAL_SERVER_ERROR) }
             .andDo(MockMvcResultHandlers.print())
+            .andDo{
+                assertThat(it.response.status).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value())
+            }
     }
-
 
     // test fileDownload
     @Test
@@ -360,20 +362,17 @@ class FileApiControllerTest {
         file.writeText("Test!")
 
 
-        // Perform
-        val url = "http://localhost:$port/api/navi/files/${fileObject.token}"
-        // TODO: add User token (header)
-        val responseEntity = restTemplate.getForEntity(url, Resource::class.java)
-        val resource : Resource? = responseEntity.body
-
-        // Assert
-        val contentDisposition : String? = responseEntity.headers.get(HttpHeaders.CONTENT_DISPOSITION)!!.get(0)
-        contentDisposition?.let {
-            val resultFileName = it.split("=")[1]
-            assertThat(resultFileName.substring(1, resultFileName.length-1)).isEqualTo(fileObject.fileName)
-        } ?: throw Exception("File Name mismatch OR No File Name in ContentDisposition")
+        // Perform and Assert
+        mockMvc.perform(
+            MockMvcRequestBuilders.get("/api/navi/files/${fileObject.token}")
+                .header("X-AUTH-TOKEN", loginToken)
+        ).andExpect { status(HttpStatus.OK) }
+            .andDo(MockMvcResultHandlers.print())
+            .andDo{
+                assertThat(it.response.status).isEqualTo(HttpStatus.OK.value())
+                assertThat(it.response.contentAsString).isEqualTo("Test!")
+            }
     }
-
 
     @Test
     fun invalid_FileDownload_404_NotFound() {
@@ -392,10 +391,15 @@ class FileApiControllerTest {
         )
 
         // invalid file Download 1 : invalid token
-        // TODO: add user login token
         val url = "http://localhost:$port/api/navi/files/${fileObject.token}"
-        val responseEntity = restTemplate.getForEntity(url, Resource::class.java)
-        assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+        mockMvc.perform(
+            MockMvcRequestBuilders.get("/api/navi/files/${fileObject.token}")
+                .header("X-AUTH-TOKEN", loginToken)
+        ).andExpect { status(HttpStatus.NOT_FOUND) }
+            .andDo(MockMvcResultHandlers.print())
+            .andDo{
+                assertThat(it.response.status).isEqualTo(HttpStatus.NOT_FOUND.value())
+            }
 
         // invalid file Download 2 : FileNotFoundException (no such file at server)
         // save to (only) DB
@@ -403,51 +407,13 @@ class FileApiControllerTest {
         user.fileList.add(fileObject)
         userTemplateRepository.save(user)
 
-        // TODO: add user login token
-        val responseEntity2 = restTemplate.getForEntity(url, Resource::class.java)
-        assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+        mockMvc.perform(
+            MockMvcRequestBuilders.get("/api/navi/files/${fileObject.token}")
+                .header("X-AUTH-TOKEN", loginToken)
+        ).andExpect { status(HttpStatus.NOT_FOUND) }
+            .andDo(MockMvcResultHandlers.print())
+            .andDo{
+                assertThat(it.response.status).isEqualTo(HttpStatus.NOT_FOUND.value())
+            }
     }
-
-//    @Test
-//    fun return_serverRootDoesNotExists_when_root_token_is_null() {
-//        val url: String = "http://localhost:$port/api/navi/root-token"
-//        // There might be no change to be NULL, but we let them[probably hacker?]
-//        val backupToken: String? = fileService.rootToken
-//        fileService.rootToken = null
-//
-//        val responseEntity: ResponseEntity<String> = restTemplate.getForEntity(url, String::class.java)
-//
-//        // Assert
-//        assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
-//        //assertThat(responseEntity.body).isEqualTo("serverRoot does not exist!")
-//
-//        // restore token
-//        fileService.rootToken = backupToken
-//    }
-//
-//    fun saveFileEntityToDB(filename: String, fileType: String){
-//        fileRepository.save(FileEntity(
-//            fileName = filename,
-//            fileType = fileType,
-//            mimeType = "File",
-//            token = fileService.getSHA256(filename),
-//            prevToken = "",
-//            lastModifiedTime = 1L,
-//            fileCreatedDate = "date",
-//            fileSize = "size"
-//        ))
-//    }
-//
-//    fun saveFileEntityToDB(filename: String, fileType: String, prevToken: String){
-//        fileRepository.save(FileEntity(
-//            fileName = filename,
-//            fileType = fileType,
-//            mimeType = "File",
-//            token = fileService.getSHA256(filename),
-//            prevToken = fileService.getSHA256(prevToken),
-//            lastModifiedTime = 1L,
-//            fileCreatedDate = "date",
-//            fileSize = "size"
-//        ))
-//    }
 }

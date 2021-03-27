@@ -63,9 +63,8 @@ tasks.jacocoTestCoverageVerification {
                 "com.navi.server.security.**",
                 "com.navi.server.domain.user.**",
                 // Temp-Disabled
-                "com.navi.server.error.exception.UnknownErrorException"
-                //"com.navi.server.domain.FileObject",
-                //"com.navi.server.domain.FileEntity"
+                //"com.navi.server.error.exception.UnknownErrorException"
+                "com.navi.server.domain.FileEntity"
             )
         }
     }
