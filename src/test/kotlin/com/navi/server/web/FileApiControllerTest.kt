@@ -30,7 +30,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import java.io.File
 import org.springframework.web.context.WebApplicationContext
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import java.nio.file.Path
 import java.nio.file.Paths
 
