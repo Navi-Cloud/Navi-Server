@@ -317,6 +317,22 @@ class FileApiControllerTest {
             .andDo{
                 assertThat(it.response.status).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value())
             }
+
+        // invalid upload test 3 : invalid multipartFile
+        val multipartFile3 = MockMultipartFile(
+            "uploadFile", "\"?\\:", "test", "".toByteArray()
+        )
+        // Perform
+        mockMvc.perform(
+            MockMvcRequestBuilders.multipart("/api/navi/files")
+                .file(multipartFile3)
+                .file(uploadFolderPath2)
+                .header("X-AUTH-TOKEN", loginToken)
+        ).andExpect { status(HttpStatus.INTERNAL_SERVER_ERROR) }
+            .andDo(MockMvcResultHandlers.print())
+            .andDo{
+                assertThat(it.response.status).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value())
+            }
     }
 
     // test fileDownload
