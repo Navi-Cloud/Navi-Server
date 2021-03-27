@@ -7,6 +7,7 @@ import com.navi.server.domain.user.UserTemplateRepository
 import com.navi.server.dto.FileResponseDTO
 import com.navi.server.error.exception.NotFoundException
 import com.navi.server.security.JWTTokenProvider
+import org.apache.cxf.jaxrs.ext.StreamingResponse
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.junit.After
@@ -16,9 +17,13 @@ import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.junit4.SpringRunner
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
+import java.io.BufferedReader
 import java.io.File
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 

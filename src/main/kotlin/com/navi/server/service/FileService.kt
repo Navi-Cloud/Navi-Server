@@ -5,16 +5,12 @@ import com.navi.server.domain.FileObject
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
 import com.navi.server.dto.FileResponseDTO
-import com.navi.server.dto.FileSaveRequestDTO
 import com.navi.server.error.exception.FileIOException
 import com.navi.server.error.exception.NotFoundException
 import com.navi.server.error.exception.UnknownErrorException
 import com.navi.server.security.JWTTokenProvider
 import org.apache.tika.Tika
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.core.io.InputStreamResource
-import org.springframework.core.io.Resource
-import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -30,14 +26,14 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.attribute.BasicFileAttributes
-import java.nio.file.NoSuchFileException
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.stream.Collectors
+import javax.imageio.ImageIO
 import javax.xml.bind.DatatypeConverter
-import kotlin.io.path.exists
 import kotlin.math.log
 import kotlin.math.pow
+
 
 @Service
 class FileService {
@@ -211,12 +207,7 @@ class FileService {
             throw NotFoundException("Cannot find file: $realFilePath")
         }
 
-        val responseBody = StreamingResponseBody { outputStream: OutputStream? ->
-            Files.copy(
-                realFilePath,
-                outputStream
-            )
-        }
+        val responseBody = StreamingResponseBody { outputStream: OutputStream? -> Files.copy(realFilePath, outputStream) }
 
         val fileResponseDTO = FileResponseDTO(file).apply {
             val osType: String = System.getProperty("os.name").toLowerCase()
