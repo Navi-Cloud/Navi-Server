@@ -34,8 +34,9 @@ class UserService {
         userTemplateRepository.save(
             User(
                 userName = userRegisterRequest.userName,
+                userEmail = userRegisterRequest.userEmail,
                 userPassword = userRegisterRequest.userPassword,
-                roles = setOf("ROLE_ADMIN")
+                roles = setOf("USER")
             )
         )
 
