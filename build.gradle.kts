@@ -63,7 +63,8 @@ tasks.jacocoTestCoverageVerification {
                 "com.navi.server.security.**",
                 "com.navi.server.domain.user.**",
                 // Temp-Disabled
-                "com.navi.server.domain.FileEntity"
+                "com.navi.server.domain.FileEntity",
+                "com.navi.server.service.FileService.fileDownload.responseBody"
             )
         }
     }
