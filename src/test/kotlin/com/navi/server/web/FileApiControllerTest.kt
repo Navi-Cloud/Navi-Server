@@ -169,7 +169,7 @@ class FileApiControllerTest {
     }
 
     @Test
-    fun invalid_findInsideFiles_404_no_file(){
+    fun invalid_findInsideFiles_NOTFOUND_no_file(){
         val loginToken: String = registerAndLogin()
 
         // invalid find Inside files : invalid token
@@ -181,6 +181,57 @@ class FileApiControllerTest {
             .andDo(MockMvcResultHandlers.print())
             .andDo{
                 assertThat(it.response.status).isEqualTo(HttpStatus.NOT_FOUND.value())
+            }
+    }
+
+    @Test
+    fun invalid_findInsideFiles_UNKNOWN_duplicate_token(){
+        // FileService.findInsideFiles() calls findByToken()
+        // If duplicate token exist, findByToken() throw UnknownErrorException
+
+        val testUser: User = User(
+            userName = "JE",
+            userEmail = "test@gmail.com",
+            userPassword = "userPW",
+            roles = setOf("ROLE_ADMIN")
+        )
+
+        val sameToken = "same token"
+        testUser.fileList.add(
+            FileObject(
+                fileName = "test",
+                fileType = "Folder",
+                mimeType = "Folder",
+                token = sameToken,
+                prevToken = "token",
+                lastModifiedTime = 1L,
+                fileCreatedDate = "date",
+                fileSize = "size"
+            )
+        )
+        testUser.fileList.add(
+            FileObject(
+                fileName = "test",
+                fileType = "Folder",
+                mimeType = "Folder",
+                token = sameToken,
+                prevToken = "token",
+                lastModifiedTime = 1L,
+                fileCreatedDate = "date",
+                fileSize = "size"
+            )
+        )
+        userTemplateRepository.save(testUser)
+        val loginToken = jwtTokenProvider.createToken(testUser.userName, testUser.roles.toList())
+
+        // Perform
+        mockMvc.perform(
+            MockMvcRequestBuilders.get("/api/navi/files/list/${sameToken}")
+                .header("X-AUTH-TOKEN", loginToken)
+        ).andExpect { status(HttpStatus.INTERNAL_SERVER_ERROR) }
+            .andDo(MockMvcResultHandlers.print())
+            .andDo{
+                assertThat(it.response.status).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value())
             }
     }
 
@@ -310,22 +361,6 @@ class FileApiControllerTest {
         mockMvc.perform(
             MockMvcRequestBuilders.multipart("/api/navi/files")
                 .file(multipartFile2)
-                .file(uploadFolderPath2)
-                .header("X-AUTH-TOKEN", loginToken)
-        ).andExpect { status(HttpStatus.INTERNAL_SERVER_ERROR) }
-            .andDo(MockMvcResultHandlers.print())
-            .andDo{
-                assertThat(it.response.status).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value())
-            }
-
-        // invalid upload test 3 : invalid multipartFile
-        val multipartFile3 = MockMultipartFile(
-            "uploadFile", "\"?\\:", "test", "".toByteArray()
-        )
-        // Perform
-        mockMvc.perform(
-            MockMvcRequestBuilders.multipart("/api/navi/files")
-                .file(multipartFile3)
                 .file(uploadFolderPath2)
                 .header("X-AUTH-TOKEN", loginToken)
         ).andExpect { status(HttpStatus.INTERNAL_SERVER_ERROR) }

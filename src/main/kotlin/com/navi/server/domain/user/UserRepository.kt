@@ -146,7 +146,7 @@ class UserTemplateRepository {
             """.trimIndent())
         }
 
-        if (results.mappedResults[0].fileList.size != 1) {
+        if (results.mappedResults[0].fileList.size < 1) {
             throw NotFoundException("""
                 Requested file was not found!
             """.trimIndent())
