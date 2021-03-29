@@ -193,16 +193,12 @@ class FileService {
 
         val responseBody = StreamingResponseBody { outputStream: OutputStream? -> Files.copy(realFilePath, outputStream) }
 
-        val fileResponseDTO = FileResponseDTO(file).apply {
-            val osType: String = System.getProperty("os.name").toLowerCase()
-            if (osType.indexOf("win") >= 0) {
-                this.fileName = this.fileName.split("\\").last()
-            } else {
-                this.fileName = this.fileName.split("/").last()
-            }
-        }
+        val fileName: String = file.fileName
+            .replace("\\", "/")
+            .split("/")
+            .last()
         val again: String =
-            String.format("attachment; filename=\"%s\"", URLEncoder.encode(fileResponseDTO.fileName, "UTF-8"))
+            String.format("attachment; filename=\"%s\"", URLEncoder.encode(fileName, "UTF-8"))
         return ResponseEntity.ok()
             .contentType(MediaType.parseMediaType("application/octet-stream"))
             .header(HttpHeaders.CONTENT_DISPOSITION, again)
