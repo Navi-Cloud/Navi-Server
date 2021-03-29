@@ -1,6 +1,7 @@
 package com.navi.server.service
 
 import com.navi.server.component.FileConfigurationComponent
+import com.navi.server.component.FilePathResolver
 import com.navi.server.domain.FileObject
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
@@ -41,6 +42,9 @@ class FileServiceTest {
 
     @Autowired
     private lateinit var jwtTokenProvider: JWTTokenProvider
+
+    @Autowired
+    private lateinit var filePathResolver: FilePathResolver
 
     private lateinit var trashRootObject: File
 
@@ -188,7 +192,7 @@ class FileServiceTest {
     @Test
     fun is_convertFileNameToFullPath_works_well() {
         val userFilePath: Path = Paths.get("kdr", "test", "test.txt")
-        val workedString: String = fileService.convertFileNameToFullPath("KangDroid", userFilePath.toString())
+        val workedString: String = filePathResolver.convertFileNameToFullPath("KangDroid", userFilePath.toString())
 
         val expectedPath: Path = Paths.get(fileConfigurationComponent.serverRoot, "KangDroid", userFilePath.toString())
         assertThat(workedString).isEqualTo(expectedPath.toString())

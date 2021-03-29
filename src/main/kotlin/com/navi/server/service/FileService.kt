@@ -102,12 +102,6 @@ class FileService {
                 .collect(Collectors.toList()))
     }
 
-    fun convertFileNameToFullPath(userName: String, filePath: String): String {
-        val finalFilePath: Path = Paths.get(fileConfigurationComponent.serverRoot, userName, filePath)
-
-        return finalFilePath.toFile().absolutePath
-    }
-
     fun fileUpload(userToken: String, uploadFolderToken: String, files: MultipartFile): ResponseEntity<FileObject> {
         val userName:String = convertTokenToUserName(userToken)
 
@@ -115,7 +109,7 @@ class FileService {
         val fileObject: FileObject = userTemplateRepository.findByToken(userName, uploadFolderToken)
 
         // Need to Con-cat string to real path
-        val uploadFolderPath: String = convertFileNameToFullPath(userName, fileObject.fileName)
+        val uploadFolderPath: String = filePathResolver.convertFileNameToFullPath(userName, fileObject.fileName)
 
         // upload
         // If the destination file already exists, it will be deleted first.

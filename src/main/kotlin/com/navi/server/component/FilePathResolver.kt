@@ -29,4 +29,11 @@ class FilePathResolver {
             convertedPath
         }
     }
+
+    // No test for this
+    fun convertFileNameToFullPath(userName: String, filePath: String): String {
+        val finalFilePath: Path = Paths.get(fileConfigurationComponent.serverRoot, userName, filePath)
+
+        return finalFilePath.toFile().absolutePath
+    }
 }
