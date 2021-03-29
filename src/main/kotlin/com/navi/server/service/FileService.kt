@@ -1,6 +1,7 @@
 package com.navi.server.service
 
 import com.navi.server.component.FileConfigurationComponent
+import com.navi.server.component.FilePathResolver
 import com.navi.server.domain.FileObject
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
@@ -45,6 +46,9 @@ class FileService {
 
     @Autowired
     private lateinit var fileConfigurationComponent: FileConfigurationComponent
+
+    @Autowired
+    private lateinit var filePathResolver: FilePathResolver
 
     private val tika = Tika()
 
@@ -131,31 +135,11 @@ class FileService {
             Files.readAttributes(uploadFile.toPath(), BasicFileAttributes::class.java)
         val simpleDateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd-HH:mm:ss")
 
-
-        val toSubstring: String = "${fileConfigurationComponent.serverRoot}/$userName"
-
         // Windows Implementation
+        val dbTargetFilename: String = filePathResolver.convertPhysicsPathToServerPath(uploadFile.absolutePath, userName)
 
-        var dbTargetFilename: String =
-            uploadFile.absolutePath.substring(toSubstring.length, uploadFile.absolutePath.length)
-        if (dbTargetFilename.contains('\\')) {
-            val eachToken: List<String> = dbTargetFilename.split('\\')
-            dbTargetFilename = ""
-            eachToken.forEach {
-                if (it.isNotEmpty()) {
-                    dbTargetFilename += "/$it"
-                }
-            }
-        }
-
-        val tokenList: List<String> =
-            dbTargetFilename.split('/')
-        var prevTokenString: String = ""
-        tokenList.forEach { tkString ->
-            if (tkString.isNotEmpty()) {
-                prevTokenString += "/${tkString}"
-            }
-        }
+        // Get Prev Token
+        val prevTokenString: String = filePathResolver.convertPhysicsPathToPrevServerPath(uploadFile.absolutePath, userName)
 
         val saveFileObject: FileObject = FileObject(
             fileName = dbTargetFilename,
