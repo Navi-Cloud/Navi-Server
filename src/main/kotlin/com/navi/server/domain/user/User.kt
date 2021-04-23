@@ -13,6 +13,7 @@ import javax.persistence.Id
 class User(
     @Id
     var id: ObjectId = ObjectId(),
+    var userId: String = "",
     var userName: String = "",
     var userEmail: String = "",
     var userPassword: String = "",

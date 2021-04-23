@@ -83,6 +83,7 @@ class FileApiControllerTest {
 
     private fun registerAndLogin(): String {
         val mockUser: UserRegisterRequest = UserRegisterRequest(
+            userId = "kangdroid",
             userName = "KangDroid",
             userPassword = "password",
             userEmail = "test@test.com"
@@ -94,7 +95,7 @@ class FileApiControllerTest {
 
         val loginResponseDto: ResponseEntity<LoginResponse> = userService.loginUser(
                 LoginRequest(
-                    userName = mockUser.userName,
+                    userId = mockUser.userId,
                     userPassword = mockUser.userPassword
                 )
         )

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
 import com.navi.server.dto.LoginRequest
-import com.navi.server.dto.LoginResponse
 import com.navi.server.dto.UserRegisterRequest
 import com.navi.server.dto.UserRegisterResponse
 import com.navi.server.service.UserService
@@ -56,6 +55,7 @@ class UserApiControllerTest {
     fun testRegister_ok() {
         // Register User fot test
         val userRegisterRequest: UserRegisterRequest = UserRegisterRequest(
+            userId = "je",
             userName = "JE",
             userEmail = "user@gmail.com",
             userPassword = "userPW"
@@ -70,7 +70,7 @@ class UserApiControllerTest {
             .andDo{
                 assertThat(it.response.status).isEqualTo(HttpStatus.OK.value())
                 val result: UserRegisterResponse = objectMapper.readValue(it.response.contentAsString, UserRegisterResponse::class.java)
-                assertThat(result.registeredName).isEqualTo(userRegisterRequest.userName)
+                assertThat(result.registeredId).isEqualTo(userRegisterRequest.userId)
                 assertThat(result.registeredEmail).isEqualTo(userRegisterRequest.userEmail)
             }
     }
@@ -80,6 +80,7 @@ class UserApiControllerTest {
         val userEmail: String = "user@gmail.com"
         // Already registered user
         val fastUser: User = User(
+            userId = "je",
             userName = "JE",
             userEmail = userEmail,
             userPassword = "userPW",
@@ -92,6 +93,7 @@ class UserApiControllerTest {
 
         // Register User that have save email
         val userRegisterRequest: UserRegisterRequest = UserRegisterRequest(
+            userId = "je",
             userName = "JE",
             userEmail = userEmail,
             userPassword = "userPW"
@@ -113,6 +115,7 @@ class UserApiControllerTest {
     fun testLogin_ok(){
         // Register User for Test
         val testUser: User = User(
+            userId = "je",
             userName = "JE",
             userEmail = "user@gamil.com",
             userPassword = "userPW",
@@ -122,7 +125,7 @@ class UserApiControllerTest {
 
         // login
         val loginRequest: LoginRequest = LoginRequest(
-            userName = testUser.userName,
+            userId = testUser.userId,
             userPassword = testUser.userPassword
         )
         val requestString : String = objectMapper.writeValueAsString(loginRequest)
@@ -145,7 +148,7 @@ class UserApiControllerTest {
 
         // login
         val loginRequest: LoginRequest = LoginRequest(
-            userName = "none",
+            userId = "none",
             userPassword = "none"
         )
         val requestString : String = objectMapper.writeValueAsString(loginRequest)
@@ -166,6 +169,7 @@ class UserApiControllerTest {
 
         // Register User for Test
         val testUser: User = User(
+            userId = "je",
             userName = "JE",
             userEmail = "user@gamil.com",
             userPassword = "userPW",
@@ -175,7 +179,7 @@ class UserApiControllerTest {
 
         // login
         val loginRequest: LoginRequest = LoginRequest(
-            userName = testUser.userName,
+            userId = testUser.userId,
             userPassword = "WrongPW"
         )
         val requestString : String = objectMapper.writeValueAsString(loginRequest)

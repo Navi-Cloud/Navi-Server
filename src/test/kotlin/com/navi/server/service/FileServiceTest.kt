@@ -50,12 +50,14 @@ class FileServiceTest {
 
     private fun registerAndLogin(): String {
         val mockUser: User = User(
+            userId = "kangdroid",
             userName = "KangDroid",
             userPassword = ""
         )
         // Register
         userTemplateRepository.save(
             User(
+                userId = "kangdroid",
                 userName = "KangDroid",
                 userPassword = ""
             )

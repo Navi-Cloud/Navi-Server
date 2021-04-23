@@ -1,7 +1,7 @@
 package com.navi.server.dto
 
 class LoginRequest(
-    val userName: String,
+    val userId: String,
     val userPassword: String
 )
 

@@ -35,7 +35,6 @@ import javax.xml.bind.DatatypeConverter
 import kotlin.math.log
 import kotlin.math.pow
 
-
 @Service
 class FileService {
     @Autowired

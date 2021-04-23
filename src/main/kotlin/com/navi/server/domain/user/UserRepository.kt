@@ -18,7 +18,8 @@ class UserTemplateRepository {
     @Autowired
     private lateinit var mongoTemplate: MongoTemplate
 
-    private val userIdField: String = "id"
+    private val objectIdField: String = "id"
+    private val userIdField: String = "userId"
     private val userNameField: String = "userName"
     private val userEmailField: String = "userEmail"
     private val fileListField: String = "fileList"
@@ -100,7 +101,7 @@ class UserTemplateRepository {
         val fileTokenMatchOperation: MatchOperation = Aggregation.match(fileTokenMatchCriteria)
 
         // Group
-        val groupOperation: GroupOperation = Aggregation.group(userIdField)
+        val groupOperation: GroupOperation = Aggregation.group(objectIdField)
             .push(
                 fileListField
             ).`as`(fileListField)
@@ -179,6 +180,30 @@ class UserTemplateRepository {
                 user = it
             } else {
                 throw NotFoundException("Cannot find user with username: $inputUserName")
+            }
+        }
+
+        return user
+    }
+
+    /**
+     * findByUserName(inputUserName: String): User?
+     * Returns user document[full document] where user name = inputUserName.
+     */
+    fun findByUserId(inputUserId: String): User {
+        val findNameQuery: Query = Query()
+        findNameQuery.addCriteria(
+            Criteria.where(userIdField).`is`(inputUserId)
+        )
+
+        lateinit var user: User
+        runCatching {
+            mongoTemplate.findOne(findNameQuery, User::class.java)
+        }.onSuccess {
+            if (it != null) {
+                user = it
+            } else {
+                throw NotFoundException("Cannot find user with username: $inputUserId")
             }
         }
 

@@ -3,9 +3,7 @@ package com.navi.server.service
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
 import com.navi.server.dto.LoginRequest
-import com.navi.server.dto.LoginResponse
 import com.navi.server.dto.UserRegisterRequest
-import com.navi.server.dto.UserRegisterResponse
 import com.navi.server.error.exception.NotFoundException
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
@@ -16,7 +14,6 @@ import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 import org.springframework.test.context.junit4.SpringRunner
 
 @SpringBootTest
@@ -39,6 +36,7 @@ class UserServiceTest {
 
         // Setup Data
         val mockUser: User = User(
+            userId = "kangdroid",
             userName = "KangDroid",
             userEmail = "user@gmail.com",
             userPassword = "testingPassword",
@@ -51,6 +49,7 @@ class UserServiceTest {
 
         // Do work
         val userRegisterRequest: UserRegisterRequest = UserRegisterRequest(
+            userId = "kangdroid",
             userName = "KangDroid",
             userEmail = "user@gmail.com",
             userPassword = "testingPassword",
@@ -69,6 +68,7 @@ class UserServiceTest {
     fun is_registerUser_returns_OK() {
         // Do work
         val userRegisterRequest: UserRegisterRequest = UserRegisterRequest(
+            userId = "kangdroid",
             userName = "KangDroid",
             userPassword = "testingPassword",
             userEmail = "testingEmail"
@@ -79,7 +79,7 @@ class UserServiceTest {
         }.onSuccess {
             assertThat(it.statusCode).isEqualTo(HttpStatus.OK)
             assertThat(it.hasBody()).isEqualTo(true)
-            assertThat(it.body!!.registeredName).isEqualTo(userRegisterRequest.userName)
+            assertThat(it.body!!.registeredId).isEqualTo(userRegisterRequest.userId)
             assertThat(it.body!!.registeredEmail).isEqualTo(userRegisterRequest.userEmail)
         }.onFailure {
             fail("This should returned OK!: ${it.stackTraceToString()}")
@@ -91,7 +91,7 @@ class UserServiceTest {
         runCatching{
             userService.loginUser(
                 LoginRequest(
-                    userName = "whatever",
+                    userId = "whatever",
                     userPassword = "testPassword"
                 )
             )
@@ -106,6 +106,7 @@ class UserServiceTest {
     fun is_loginUser_returns_FORBIDDEN_wrong_password() {
         // Setup Data
         val mockUser: User = User(
+            userId = "kangdroid",
             userName = "KangDroid",
             userPassword = "testingPassword",
             roles = setOf("ROLE_ADMIN")
@@ -116,7 +117,7 @@ class UserServiceTest {
         runCatching {
             userService.loginUser(
                 LoginRequest(
-                    userName = "KangDroid",
+                    userId = "kangdroid",
                     userPassword = "testingPassword2"
                 )
             )
@@ -131,6 +132,7 @@ class UserServiceTest {
     fun is_loginUser_returns_OK() {
         // Setup Data
         val mockUser: User = User(
+            userId = "kangdroid",
             userName = "KangDroid",
             userPassword = "testingPassword",
             roles = setOf("ROLE_ADMIN")
@@ -141,7 +143,7 @@ class UserServiceTest {
         runCatching {
             userService.loginUser(
                 LoginRequest(
-                    userName = "KangDroid",
+                    userId = "kangdroid",
                     userPassword = "testingPassword"
                 )
             )

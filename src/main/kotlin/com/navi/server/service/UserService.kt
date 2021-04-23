@@ -25,13 +25,14 @@ class UserService {
     // TODO: Email Check
     fun registerUser(userRegisterRequest: UserRegisterRequest): ResponseEntity<UserRegisterResponse> {
         runCatching {
-            userTemplateRepository.findByUserName(userRegisterRequest.userName)
+            userTemplateRepository.findByUserId(userRegisterRequest.userId)
         }.onSuccess {
             throw ConflictException("User email ${userRegisterRequest.userEmail} already exists!")
         }
 
         userTemplateRepository.save(
             User(
+                userId = userRegisterRequest.userId,
                 userName = userRegisterRequest.userName,
                 userEmail = userRegisterRequest.userEmail,
                 userPassword = userRegisterRequest.userPassword,
@@ -44,7 +45,7 @@ class UserService {
             .body(
                 UserRegisterResponse(
                     registeredEmail = userRegisterRequest.userEmail,
-                    registeredName = userRegisterRequest.userName
+                    registeredId = userRegisterRequest.userId
                 )
             )
     }
@@ -52,7 +53,7 @@ class UserService {
     fun loginUser(userLoginRequest: LoginRequest): ResponseEntity<LoginResponse> {
         lateinit var user: User
         runCatching {
-            userTemplateRepository.findByUserName(userLoginRequest.userName)
+            userTemplateRepository.findByUserId(userLoginRequest.userId)
         }.onSuccess {
             user = it
         }.onFailure {
