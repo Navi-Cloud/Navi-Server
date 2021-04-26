@@ -4,6 +4,7 @@ import com.navi.server.component.FileConfigurationComponent
 import com.navi.server.domain.FileEntity
 import com.navi.server.domain.FileRepository
 import com.navi.server.dto.FileResponseDTO
+import com.navi.server.dto.RootTokenResponseDto
 import com.navi.server.service.FileService
 import org.junit.After
 import org.junit.Test
@@ -94,11 +95,11 @@ class FileApiControllerTest {
     fun testFindRootToken() {
         // Get Api
         val url = "http://localhost:$port/api/navi/root-token"
-        var responseEntity : ResponseEntity<String> = restTemplate.getForEntity(url, String::class.java)
+        val responseEntity : ResponseEntity<RootTokenResponseDto> = restTemplate.getForEntity(url, RootTokenResponseDto::class.java)
 
         // Assert
         assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
-        assertThat(responseEntity.body).isEqualTo(fileService.getSHA256(fileConfigurationComponent.serverRoot))
+        assertThat(responseEntity.body.rootToken).isEqualTo(fileService.getSHA256(fileConfigurationComponent.serverRoot))
     }
 
     @Test

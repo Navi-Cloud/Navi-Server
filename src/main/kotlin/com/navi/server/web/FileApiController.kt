@@ -1,6 +1,7 @@
 package com.navi.server.web
 
 import com.navi.server.dto.FileResponseDTO
+import com.navi.server.dto.RootTokenResponseDto
 import com.navi.server.error.exception.NotFoundException
 import com.navi.server.error.exception.UnknownErrorException
 import com.navi.server.service.FileService
@@ -17,11 +18,11 @@ import java.net.URLEncoder
 class FileApiController (val fileService: FileService){
 
     @GetMapping("/api/navi/root-token")
-    fun findRootToken() : ResponseEntity<String> {
+    fun findRootToken() : ResponseEntity<RootTokenResponseDto> {
         return fileService.rootToken?.let {
             ResponseEntity
                 .status(HttpStatus.OK)
-                .body(fileService.rootToken)
+                .body(RootTokenResponseDto(it))
         } ?: throw UnknownErrorException("serverRoot does not exist!")
     }
 
