@@ -5,10 +5,12 @@ import com.navi.server.domain.FileObject
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
 import com.navi.server.dto.FileResponseDTO
+import org.springframework.boot.test.web.client.exchange
 import com.navi.server.dto.LoginRequest
 import com.navi.server.dto.LoginResponse
 import com.navi.server.dto.UserRegisterRequest
 import com.navi.server.security.JWTTokenProvider
+import com.navi.server.dto.RootTokenResponseDto
 import com.navi.server.service.FileService
 import com.navi.server.service.UserService
 import org.junit.After
@@ -111,7 +113,7 @@ class FileApiControllerTest {
         val url = "http://localhost:$port/api/navi/root-token"
         val headers: HttpHeaders = HttpHeaders()
         headers.add("X-AUTH-TOKEN", loginToken)
-        var responseEntity : ResponseEntity<String> = restTemplate.exchange(url, HttpMethod.GET, HttpEntity<Void>(headers), String::class.java)
+        var responseEntity : ResponseEntity<RootTokenResponseDto> = restTemplate.exchange(url, HttpMethod.GET, HttpEntity<Void>(headers))
 
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/navi/root-token")
@@ -120,11 +122,10 @@ class FileApiControllerTest {
             .andDo(MockMvcResultHandlers.print())
             .andDo{
                 assertThat(it.response.status).isEqualTo(HttpStatus.OK.value())
-                assertThat(it.response.contentAsString).isEqualTo(fileService.getSHA256("/"))
             }
         // Assert
         assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
-        assertThat(responseEntity.body).isEqualTo(fileService.getSHA256("/"))
+        assertThat(responseEntity.body.rootToken).isEqualTo(fileService.getSHA256("/"))
     }
 
     @Test

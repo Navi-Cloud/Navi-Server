@@ -2,6 +2,7 @@ package com.navi.server.web
 
 import com.navi.server.domain.FileObject
 import com.navi.server.dto.FileResponseDTO
+import com.navi.server.dto.RootTokenResponseDto
 import com.navi.server.service.FileService
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
@@ -13,7 +14,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 class FileApiController (val fileService: FileService){
 
     @GetMapping("/api/navi/root-token")
-    fun findRootToken(@RequestHeader httpHeaders: HttpHeaders) : ResponseEntity<String> {
+    fun findRootToken(@RequestHeader httpHeaders: HttpHeaders) : ResponseEntity<RootTokenResponseDto> {
         // Invalid or Non-Token will be filtered through Spring Security.
         val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
         return fileService.findRootToken(tokenList[0])

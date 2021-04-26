@@ -6,6 +6,7 @@ import com.navi.server.domain.FileObject
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
 import com.navi.server.dto.FileResponseDTO
+import com.navi.server.dto.RootTokenResponseDto
 import com.navi.server.error.exception.FileIOException
 import com.navi.server.error.exception.NotFoundException
 import com.navi.server.error.exception.UnknownErrorException
@@ -64,13 +65,13 @@ class FileService {
         return userId
     }
 
-    fun findRootToken(userToken: String): ResponseEntity<String> {
+    fun findRootToken(userToken: String): ResponseEntity<RootTokenResponseDto> {
         val userId: String = convertTokenToUserId(userToken)
         val userFileObject: FileObject = userTemplateRepository.findByToken(userId, getSHA256("/"))
 
         return ResponseEntity
             .status(HttpStatus.OK)
-            .body(userFileObject.token)
+            .body(RootTokenResponseDto(userFileObject.token))
     }
 
     fun findAllDesc(userToken: String): ResponseEntity<List<FileResponseDTO>> {
