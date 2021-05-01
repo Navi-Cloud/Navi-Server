@@ -73,6 +73,7 @@ class FileConfigurationTest {
     fun is_initStructure_works_well_single_users() {
         userTemplateRepository.save(
             User(
+                userId = "KangDroid",
                 userName = "KangDroid",
                 userPassword = "testingPassword"
             )
@@ -93,6 +94,7 @@ class FileConfigurationTest {
     fun is_initStructure_works_well_single_users_multi_file() {
         userTemplateRepository.save(
             User(
+                userId = "KangDroid",
                 userName = "KangDroid",
                 userPassword = "testingPassword"
             )
@@ -120,6 +122,7 @@ class FileConfigurationTest {
     fun is_initStructure_works_well_single_users_multiBig_file() {
         userTemplateRepository.save(
             User(
+                userId = "KangDroid",
                 userName = "KangDroid",
                 userPassword = "testingPassword"
             )
@@ -129,7 +132,6 @@ class FileConfigurationTest {
         userRootFile.mkdirs()
         val testFile: File = File(userRootFile.absolutePath, "test.txt")
         testFile.writeText("TESTING!")
-
 
         fileConfigurationComponent.initStructure()
 
@@ -148,6 +150,7 @@ class FileConfigurationTest {
     fun is_initStructure_works_well_multi_users() {
         userTemplateRepository.save(
             User(
+                userId = "KangDroid",
                 userName = "KangDroid",
                 userPassword = "testingPassword"
             )
@@ -155,6 +158,7 @@ class FileConfigurationTest {
 
         userTemplateRepository.save(
             User(
+                userId = "KangDroid2",
                 userName = "KangDroid2",
                 userPassword = "testingPassword"
             )

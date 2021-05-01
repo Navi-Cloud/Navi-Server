@@ -50,21 +50,21 @@ class FileServiceTest {
 
     private fun registerAndLogin(): String {
         val mockUser: User = User(
-            userId = "kangdroid",
-            userName = "KangDroid",
+            userId = "kangDroid",
+            userName = "Kangdroid",
             userPassword = ""
         )
         // Register
-        userTemplateRepository.save(
-            User(
-                userId = "kangdroid",
-                userName = "KangDroid",
-                userPassword = ""
-            )
+        val user: User = User(
+            userId = "kangDroid",
+            userName = "Kangdroid",
+            userPassword = ""
         )
+        //userTemplateRepository.save(user)
+        fileConfigurationComponent.initNewUserStructure(user)
 
         // Token
-        return jwtTokenProvider.createToken(mockUser.userName, mockUser.roles.toList())
+        return jwtTokenProvider.createToken(mockUser.userId, mockUser.roles.toList())
     }
 
     @Before
@@ -83,6 +83,7 @@ class FileServiceTest {
         userTemplateRepository.clearAll()
     }
 
+    /*
     @Test
     fun is_findRootToken_throws_40x_root_token() {
         val loginToken: String = registerAndLogin()
@@ -94,7 +95,7 @@ class FileServiceTest {
         }.onSuccess {
             fail("INIT did not proceeded, but somehow it succeed?")
         }
-    }
+    }*/
 
     @Test
     fun is_findRootToken_throws_404_unknown_token() {
@@ -104,14 +105,13 @@ class FileServiceTest {
             fail("Wrong token passed but this test passed somehow.")
         }.onFailure {
             assertThat(it is NotFoundException).isEqualTo(true)
-            assertThat(it.message).isEqualTo("Username is NOT Found!")
+            assertThat(it.message).isEqualTo("Userid is NOT Found!")
         }
     }
 
     @Test
     fun is_findRootToken_OK() {
         val loginToken: String = registerAndLogin()
-        fileConfigurationComponent.initStructure()
 
         runCatching {
             fileService.findRootToken(loginToken)
@@ -134,14 +134,13 @@ class FileServiceTest {
             fail("Wrong token passed but this test passed somehow")
         }.onFailure {
             assertThat(it is NotFoundException).isEqualTo(true)
-            assertThat(it.message).isEqualTo("Username is NOT Found!")
+            assertThat(it.message).isEqualTo("Userid is NOT Found!")
         }
     }
 
     @Test
     fun is_findAllDesc_OK() {
         val loginToken: String = registerAndLogin()
-        fileConfigurationComponent.initStructure()
 
         runCatching {
             fileService.findAllDesc(loginToken)
@@ -206,7 +205,6 @@ class FileServiceTest {
     fun is_fileUpload_throws_IOException() {
         // Let
         val loginToken: String = registerAndLogin()
-        fileConfigurationComponent.initStructure()
 
         val multipartFile2 = MockMultipartFile(
             "uploadFileName", "".toByteArray()
@@ -224,7 +222,6 @@ class FileServiceTest {
     fun is_fileUpload_working_well() {
         // Create Server Root Structure
         val loginToken: String = registerAndLogin()
-        fileConfigurationComponent.initStructure()
 
         // make uploadFile
         val uploadFileName: String = "uploadTest-service.txt"
@@ -242,13 +239,13 @@ class FileServiceTest {
         )
 
         // Whether uploaded text file is actually exists
-        val userName: String = jwtTokenProvider.getUserPk(loginToken)
+        val userId: String = jwtTokenProvider.getUserPk(loginToken)
         val uploadedFileObject: File =
-            Paths.get(fileConfigurationComponent.serverRoot, userName, uploadFileName).toFile()
+            Paths.get(fileConfigurationComponent.serverRoot, userId, uploadFileName).toFile()
         assertThat(uploadedFileObject.exists()).isEqualTo(true)
 
         // Now Check DB
-        val user: User = userTemplateRepository.findByUserName(userName)
+        val user: User = userTemplateRepository.findByUserId(userId)
         val fileList: MutableList<FileObject> = user.fileList
         assertThat(fileList.size).isEqualTo(2L)
         assertThat(fileList[1].fileName).isEqualTo("/$uploadFileName")
@@ -258,7 +255,7 @@ class FileServiceTest {
     @Test
     fun is_getFileObjectByUserName_returns_404_wrong_user() {
         runCatching {
-            fileService.getFileObjectByUserName("wrong_user", fileService.getSHA256("/"))
+            fileService.getFileObjectByUserId("wrong_user", fileService.getSHA256("/"))
         }.onSuccess {
             fail("Wrong user specified but somehow function succeed?")
         }.onFailure {
@@ -289,7 +286,7 @@ class FileServiceTest {
         userTemplateRepository.save(user)
 
         val responseFileObject: FileObject = runCatching {
-            fileService.getFileObjectByUserName(user.userName, fileObject.token)
+            fileService.getFileObjectByUserId(user.userId, fileObject.token)
         }.getOrElse {
             fail("All things are set-up, so it should not fail!")
         }
@@ -317,7 +314,7 @@ class FileServiceTest {
         )
 
         val loginToken: String = registerAndLogin()
-        val user: User = userTemplateRepository.findByUserName("KangDroid")
+        val user: User = userTemplateRepository.findByUserId("kangDroid")
         user.fileList.add(fileObject)
         userTemplateRepository.save(user)
 
@@ -345,7 +342,7 @@ class FileServiceTest {
         )
 
         val loginToken: String = registerAndLogin()
-        val user: User = userTemplateRepository.findByUserName("KangDroid")
+        val user: User = userTemplateRepository.findByUserId("kangDroid")
         user.fileList.add(fileObject)
         userTemplateRepository.save(user)
         // Write some texts

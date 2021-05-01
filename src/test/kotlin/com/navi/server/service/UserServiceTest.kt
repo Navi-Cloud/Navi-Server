@@ -1,5 +1,6 @@
 package com.navi.server.service
 
+import com.navi.server.component.FileConfigurationComponent
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
 import com.navi.server.dto.LoginRequest
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit4.SpringRunner
+import java.io.File
 
 @SpringBootTest
 @RunWith(SpringRunner::class)
@@ -25,18 +27,32 @@ class UserServiceTest {
     @Autowired
     private lateinit var userTemplateRepository: UserTemplateRepository
 
+    @Autowired
+    private lateinit var fileConfigurationComponent: FileConfigurationComponent
+
+    private lateinit var trashRootObject: File
+
     @Before
+    fun initEnvironment() {
+        fileConfigurationComponent.serverRoot = File(System.getProperty("java.io.tmpdir"), "naviServerTesting").absolutePath
+        // Create trash directory
+        trashRootObject = File(fileConfigurationComponent.serverRoot)
+        trashRootObject.mkdir()
+    }
+
     @After
     fun clearAllDB() {
+        if (trashRootObject.exists()) {
+            trashRootObject.deleteRecursively()
+        }
         userTemplateRepository.clearAll()
     }
 
     @Test
     fun is_registerUser_returns_CONFLICT() {
-
         // Setup Data
         val mockUser: User = User(
-            userId = "kangdroid",
+            userId = "kangDroid",
             userName = "KangDroid",
             userEmail = "user@gmail.com",
             userPassword = "testingPassword",
@@ -45,11 +61,11 @@ class UserServiceTest {
         userTemplateRepository.save(mockUser)
 
         // Save Check
-        assertThat(userTemplateRepository.findByUserName(mockUser.userName)).isNotEqualTo(null)
+        assertThat(userTemplateRepository.findByUserId(mockUser.userId)).isNotEqualTo(null)
 
         // Do work
         val userRegisterRequest: UserRegisterRequest = UserRegisterRequest(
-            userId = "kangdroid",
+            userId = "kangDroid",
             userName = "KangDroid",
             userEmail = "user@gmail.com",
             userPassword = "testingPassword",
@@ -60,7 +76,7 @@ class UserServiceTest {
         }.onSuccess {
             fail("Should return duplicated exception!")
         }.onFailure {
-            assertThat(it.message).isEqualTo("User email ${userRegisterRequest.userEmail} already exists!")
+            assertThat(it.message).isEqualTo("User id ${userRegisterRequest.userId} already exists!")
         }
     }
 
@@ -68,10 +84,10 @@ class UserServiceTest {
     fun is_registerUser_returns_OK() {
         // Do work
         val userRegisterRequest: UserRegisterRequest = UserRegisterRequest(
-            userId = "kangdroid",
+            userId = "kangDroid",
             userName = "KangDroid",
             userPassword = "testingPassword",
-            userEmail = "testingEmail"
+            userEmail = "test@test.com"
         )
 
         runCatching {
