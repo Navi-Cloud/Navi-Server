@@ -48,20 +48,15 @@ class FileServiceTest {
 
     private lateinit var trashRootObject: File
 
+    private val mockUser: User = User(
+        userId = "kangdroid",
+        userName = "Jason Kang",
+        userPassword = ""
+    )
+
     private fun registerAndLogin(): String {
-        val mockUser: User = User(
-            userId = "kangDroid",
-            userName = "Kangdroid",
-            userPassword = ""
-        )
-        // Register
-        val user: User = User(
-            userId = "kangDroid",
-            userName = "Kangdroid",
-            userPassword = ""
-        )
-        //userTemplateRepository.save(user)
-        fileConfigurationComponent.initNewUserStructure(user)
+        // Init User Structure
+        fileConfigurationComponent.initNewUserStructure(mockUser)
 
         // Token
         return jwtTokenProvider.createToken(mockUser.userId, mockUser.roles.toList())
@@ -171,8 +166,8 @@ class FileServiceTest {
     @Test
     fun is_findInsideFiles_ok() {
         val loginToken: String = registerAndLogin()
-        File(fileConfigurationComponent.serverRoot, "KangDroid").mkdir()
-        val path: Path = Paths.get(fileConfigurationComponent.serverRoot, "KangDroid", "test.txt")
+        File(fileConfigurationComponent.serverRoot, mockUser.userId).mkdir()
+        val path: Path = Paths.get(fileConfigurationComponent.serverRoot, mockUser.userId, "test.txt")
         val fileObject: File = path.toFile()
         fileObject.writeText("test")
         fileConfigurationComponent.initStructure()
@@ -314,7 +309,7 @@ class FileServiceTest {
         )
 
         val loginToken: String = registerAndLogin()
-        val user: User = userTemplateRepository.findByUserId("kangDroid")
+        val user: User = userTemplateRepository.findByUserId(mockUser.userId)
         user.fileList.add(fileObject)
         userTemplateRepository.save(user)
 
@@ -342,12 +337,12 @@ class FileServiceTest {
         )
 
         val loginToken: String = registerAndLogin()
-        val user: User = userTemplateRepository.findByUserId("kangDroid")
+        val user: User = userTemplateRepository.findByUserId(mockUser.userId)
         user.fileList.add(fileObject)
         userTemplateRepository.save(user)
         // Write some texts
-        Paths.get(fileConfigurationComponent.serverRoot, "KangDroid").toFile().mkdirs()
-        val file: File = Paths.get(fileConfigurationComponent.serverRoot, "KangDroid", fileObject.fileName).toFile()
+        Paths.get(fileConfigurationComponent.serverRoot, mockUser.userId).toFile().mkdirs()
+        val file: File = Paths.get(fileConfigurationComponent.serverRoot, mockUser.userId, fileObject.fileName).toFile()
         file.writeText("Test!")
 
         runCatching {
