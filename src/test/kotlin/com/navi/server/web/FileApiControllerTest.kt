@@ -83,8 +83,8 @@ class FileApiControllerTest {
 
     private fun registerAndLogin(): String {
         val mockUser: UserRegisterRequest = UserRegisterRequest(
-            userId = "kangdroid",
-            userName = "KangDroid",
+            userId = "kangDroid",
+            userName = "Kangdroid",
             userPassword = "password",
             userEmail = "test@test.com"
         )
@@ -106,7 +106,6 @@ class FileApiControllerTest {
     @Test
     fun testFindRootToken() {
         val loginToken: String = registerAndLogin()
-        fileConfigurationComponent.initStructure()
 
         // Get Api
         val url = "http://localhost:$port/api/navi/root-token"
@@ -131,7 +130,6 @@ class FileApiControllerTest {
     @Test
     fun testFindAllDesc_ok() {
         val loginToken: String = registerAndLogin()
-        fileConfigurationComponent.initStructure()
 
         //send api request
         val url = "http://localhost:$port/api/navi/files/list"
@@ -149,8 +147,8 @@ class FileApiControllerTest {
     @Test
     fun testFindInsideFiles_ok() {
         val loginToken: String = registerAndLogin()
-        File(fileConfigurationComponent.serverRoot, "KangDroid").mkdir()
-        val path: Path = Paths.get(fileConfigurationComponent.serverRoot, "KangDroid", "test.txt")
+        File(fileConfigurationComponent.serverRoot, "kangDroid").mkdir()
+        val path: Path = Paths.get(fileConfigurationComponent.serverRoot, "kangDroid", "test.txt")
         val fileObject: File = path.toFile()
         fileObject.writeText("test")
         fileConfigurationComponent.initStructure()
@@ -223,7 +221,7 @@ class FileApiControllerTest {
             )
         )
         userTemplateRepository.save(testUser)
-        val loginToken = jwtTokenProvider.createToken(testUser.userName, testUser.roles.toList())
+        val loginToken = jwtTokenProvider.createToken(testUser.userId, testUser.roles.toList())
 
         // Perform
         mockMvc.perform(
@@ -241,7 +239,6 @@ class FileApiControllerTest {
     fun testFileUpload_ok(){
         // Create Server Root Structure
         val loginToken: String = registerAndLogin()
-        fileConfigurationComponent.initStructure()
 
         // make uploadFile
         val uploadFileName: String = "uploadTest-service.txt"
@@ -268,13 +265,13 @@ class FileApiControllerTest {
 
         // Assert
         // Whether uploaded text file is actually exists
-        val userName: String = jwtTokenProvider.getUserPk(loginToken)
+        val userId: String = jwtTokenProvider.getUserPk(loginToken)
         val uploadedFileObject: File =
-            Paths.get(fileConfigurationComponent.serverRoot, userName, uploadFileName).toFile()
+            Paths.get(fileConfigurationComponent.serverRoot, userId, uploadFileName).toFile()
         assertThat(uploadedFileObject.exists()).isEqualTo(true)
 
         // Now Check DB
-        val user: User = userTemplateRepository.findByUserName(userName)
+        val user: User = userTemplateRepository.findByUserId(userId)
         val fileList: MutableList<FileObject> = user.fileList
         assertThat(fileList.size).isEqualTo(2L)
         assertThat(fileList[1].fileName).isEqualTo("/$uploadFileName")
@@ -312,13 +309,13 @@ class FileApiControllerTest {
 
         // Assert
         // Whether uploaded text file is actually exists
-        val userName: String = jwtTokenProvider.getUserPk(loginToken)
+        val userId: String = jwtTokenProvider.getUserPk(loginToken)
         val uploadedFileObject: File =
-            Paths.get(fileConfigurationComponent.serverRoot, userName, uploadFileName).toFile()
+            Paths.get(fileConfigurationComponent.serverRoot, userId, uploadFileName).toFile()
         assertThat(uploadedFileObject.exists()).isEqualTo(true)
 
         // Now Check DB
-        val user: User = userTemplateRepository.findByUserName(userName)
+        val user: User = userTemplateRepository.findByUserId(userId)
         val fileList: MutableList<FileObject> = user.fileList
         assertThat(fileList.size).isEqualTo(2L)
         assertThat(fileList[1].fileName).isEqualTo("/$uploadFileName")
@@ -387,12 +384,12 @@ class FileApiControllerTest {
         )
 
         val loginToken: String = registerAndLogin()
-        val user: User = userTemplateRepository.findByUserName("KangDroid")
+        val user: User = userTemplateRepository.findByUserId("kangDroid")
         user.fileList.add(fileObject)
         userTemplateRepository.save(user)
         // Write some texts
-        Paths.get(fileConfigurationComponent.serverRoot, "KangDroid").toFile().mkdirs()
-        val file: File = Paths.get(fileConfigurationComponent.serverRoot, "KangDroid", fileObject.fileName).toFile()
+        Paths.get(fileConfigurationComponent.serverRoot, "kangDroid").toFile().mkdirs()
+        val file: File = Paths.get(fileConfigurationComponent.serverRoot, "kangDroid", fileObject.fileName).toFile()
         file.writeText("Test!")
 
 
@@ -436,7 +433,7 @@ class FileApiControllerTest {
 
         // invalid file Download 2 : FileNotFoundException (no such file at server)
         // save to (only) DB
-        val user: User = userTemplateRepository.findByUserName("KangDroid")
+        val user: User = userTemplateRepository.findByUserId("kangDroid")
         user.fileList.add(fileObject)
         userTemplateRepository.save(user)
 

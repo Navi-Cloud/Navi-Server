@@ -51,22 +51,22 @@ class FileService {
 
     private val tika = Tika()
 
-    private fun convertTokenToUserName(inputToken: String): String {
-        var userName: String = ""
+    private fun convertTokenToUserId(inputToken: String): String {
+        var userId: String = ""
         runCatching {
             jwtTokenProvider.getUserPk(inputToken)
         }.onSuccess {
-            userName = it
+            userId = it
         }.onFailure {
-            throw NotFoundException("Username is NOT Found!")
+            throw NotFoundException("Userid is NOT Found!")
         }
 
-        return userName
+        return userId
     }
 
     fun findRootToken(userToken: String): ResponseEntity<String> {
-        val userName: String = convertTokenToUserName(userToken)
-        val userFileObject: FileObject = userTemplateRepository.findByToken(userName, getSHA256("/"))
+        val userId: String = convertTokenToUserId(userToken)
+        val userFileObject: FileObject = userTemplateRepository.findByToken(userId, getSHA256("/"))
 
         return ResponseEntity
             .status(HttpStatus.OK)
@@ -74,9 +74,9 @@ class FileService {
     }
 
     fun findAllDesc(userToken: String): ResponseEntity<List<FileResponseDTO>> {
-        val userName: String = convertTokenToUserName(userToken)
+        val userId: String = convertTokenToUserId(userToken)
 
-        val fileList: List<FileObject> = userTemplateRepository.findAllFileList(userName)
+        val fileList: List<FileObject> = userTemplateRepository.findAllFileList(userId)
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(fileList.stream()
@@ -85,14 +85,14 @@ class FileService {
     }
 
     fun findInsideFiles(userToken: String, prevToken: String): ResponseEntity<List<FileResponseDTO>> {
-        val userName: String = convertTokenToUserName(userToken)
+        val userId: String = convertTokenToUserId(userToken)
 
         // Check if token is actually exists!
-        userTemplateRepository.findByToken(userName, prevToken) // It will throw error when token is not acutally exists
+        userTemplateRepository.findByToken(userId, prevToken) // It will throw error when token is not acutally exists
 
         // Since User Name and prevToken is verified by above statement, any error from here will be
         // Internal Server error.
-        val result: List<FileObject> = userTemplateRepository.findAllByPrevToken(userName, prevToken)
+        val result: List<FileObject> = userTemplateRepository.findAllByPrevToken(userId, prevToken)
 
         return ResponseEntity
             .status(HttpStatus.OK)
@@ -102,13 +102,13 @@ class FileService {
     }
 
     fun fileUpload(userToken: String, uploadFolderToken: String, files: MultipartFile): ResponseEntity<FileObject> {
-        val userName:String = convertTokenToUserName(userToken)
+        val userId:String = convertTokenToUserId(userToken)
 
         // find absolutePath from token
-        val fileObject: FileObject = userTemplateRepository.findByToken(userName, uploadFolderToken)
+        val fileObject: FileObject = userTemplateRepository.findByToken(userId, uploadFolderToken)
 
         // Need to Con-cat string to real path
-        val uploadFolderPath: String = filePathResolver.convertFileNameToFullPath(userName, fileObject.fileName)
+        val uploadFolderPath: String = filePathResolver.convertFileNameToFullPath(userId, fileObject.fileName)
 
         // upload
         // If the destination file already exists, it will be deleted first.
@@ -129,10 +129,10 @@ class FileService {
         val simpleDateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd-HH:mm:ss")
 
         // Windows Implementation
-        val dbTargetFilename: String = filePathResolver.convertPhysicsPathToServerPath(uploadFile.absolutePath, userName)
+        val dbTargetFilename: String = filePathResolver.convertPhysicsPathToServerPath(uploadFile.absolutePath, userId)
 
         // Get Prev Token
-        val prevTokenString: String = filePathResolver.convertPhysicsPathToPrevServerPath(uploadFile.absolutePath, userName)
+        val prevTokenString: String = filePathResolver.convertPhysicsPathToPrevServerPath(uploadFile.absolutePath, userId)
 
         val saveFileObject: FileObject = FileObject(
             fileName = dbTargetFilename,
@@ -153,7 +153,7 @@ class FileService {
         )
 
         // Since above findByToken works, it means there is an user name.
-        val user: User = userTemplateRepository.findByUserName(userName)
+        val user: User = userTemplateRepository.findByUserId(userId)
         user.fileList.add(saveFileObject)
 
         // TODO: Since loading whole user and re-saving whole user might be resource-heavy. Maybe creating another Query function to reduce them?
@@ -164,19 +164,19 @@ class FileService {
             .body(saveFileObject)
     }
 
-    fun getFileObjectByUserName(userName: String, fileToken: String): FileObject {
+    fun getFileObjectByUserId(userId: String, fileToken: String): FileObject {
         return runCatching {
-            userTemplateRepository.findByToken(userName, fileToken)
+            userTemplateRepository.findByToken(userId, fileToken)
         }.getOrThrow()
     }
 
     fun fileDownload(userToken: String, fileToken: String): ResponseEntity<StreamingResponseBody> {
-        val inputUserName: String = convertTokenToUserName(userToken)
+        val inputUserId: String = convertTokenToUserId(userToken)
 
-        val file: FileObject = getFileObjectByUserName(inputUserName, fileToken)
+        val file: FileObject = getFileObjectByUserId(inputUserId, fileToken)
         val realFilePath: Path = Paths.get(
             fileConfigurationComponent.serverRoot,
-            inputUserName,
+            inputUserId,
             file.fileName
         )
 

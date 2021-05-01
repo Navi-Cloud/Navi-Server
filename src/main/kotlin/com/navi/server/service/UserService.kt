@@ -1,5 +1,6 @@
 package com.navi.server.service
 
+import com.navi.server.component.FileConfigurationComponent
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
 import com.navi.server.dto.LoginRequest
@@ -22,6 +23,9 @@ class UserService {
     @Autowired
     private lateinit var jwtTokenProvider: JWTTokenProvider
 
+    @Autowired
+    private lateinit var fileConfigurationComponent: FileConfigurationComponent
+
     // TODO: Email Check
     fun registerUser(userRegisterRequest: UserRegisterRequest): ResponseEntity<UserRegisterResponse> {
         runCatching {
@@ -30,15 +34,15 @@ class UserService {
             throw ConflictException("User id ${userRegisterRequest.userId} already exists!")
         }
 
-        userTemplateRepository.save(
-            User(
-                userId = userRegisterRequest.userId,
-                userName = userRegisterRequest.userName,
-                userEmail = userRegisterRequest.userEmail,
-                userPassword = userRegisterRequest.userPassword,
-                roles = setOf("ROLE_USER")
-            )
+        val user: User = User(
+            userId = userRegisterRequest.userId,
+            userName = userRegisterRequest.userName,
+            userEmail = userRegisterRequest.userEmail,
+            userPassword = userRegisterRequest.userPassword,
+            roles = setOf("ROLE_USER")
         )
+        //userTemplateRepository.save(user)
+        fileConfigurationComponent.initNewUserStructure(user)
 
         return ResponseEntity
             .status(HttpStatus.OK)
@@ -68,7 +72,7 @@ class UserService {
             .status(HttpStatus.OK)
             .body(
                 LoginResponse(
-                    userToken = jwtTokenProvider.createToken(user.userName, user.roles.toList())
+                    userToken = jwtTokenProvider.createToken(user.userId, user.roles.toList())
                 )
             )
     }
