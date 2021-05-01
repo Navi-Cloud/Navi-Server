@@ -113,8 +113,9 @@ class FileConfigurationComponent {
 
     fun initNewUserStructure(user: User){
         // Make Root Directory to New user
-        val userRootFile: File = File(serverRoot, user.userId)
-        userRootFile.mkdir()
+        val userRootFile: File = File(serverRoot, user.userId).apply {
+            mkdir()
+        }
 
         // Insert to DB
         val basicFileAttribute: BasicFileAttributes =
