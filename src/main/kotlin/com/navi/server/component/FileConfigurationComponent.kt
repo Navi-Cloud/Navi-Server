@@ -43,7 +43,7 @@ class FileConfigurationComponent {
 
         for (user in userList) {
             // Append Directory
-            val userRootFile: File = File(serverRoot, user.userName)
+            val userRootFile: File = File(serverRoot, user.userId)
             userRootFile.mkdir()
 
             // For Each User, update and insert to DB
@@ -109,5 +109,30 @@ class FileConfigurationComponent {
             // Save Back User
             userTemplateRepository.save(user)
         }
+    }
+
+    fun initNewUserStructure(user: User){
+        // Make Root Directory to New user
+        val userRootFile: File = File(serverRoot, user.userId)
+        userRootFile.mkdir()
+
+        // Insert to DB
+        val basicFileAttribute: BasicFileAttributes =
+            Files.readAttributes(userRootFile.toPath(), BasicFileAttributes::class.java)
+        val simpleDateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd-HH:mm:ss")
+
+        user.fileList.add(
+            FileObject(
+                fileName = "/",
+                fileType = "Folder",
+                mimeType = "Folder",
+                token = fileService.getSHA256("/"),
+                prevToken = "" ,
+                lastModifiedTime = userRootFile.lastModified(),
+                fileCreatedDate = simpleDateFormat.format(basicFileAttribute.creationTime().toMillis()),
+                fileSize = fileService.convertSize(basicFileAttribute.size())
+            )
+        )
+        userTemplateRepository.save(user)
     }
 }

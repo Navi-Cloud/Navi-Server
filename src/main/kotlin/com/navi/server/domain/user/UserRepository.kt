@@ -56,12 +56,12 @@ class UserTemplateRepository {
     }
 
     /**
-     * findAllFileList(inputUserName: String): List<FileObject>
-     * Find all file list based on inputUserName
+     * findAllFileList(inputUserId: String): List<FileObject>
+     * Find all file list based on inputUserId
      */
-    fun findAllFileList(inputUserName: String): List<FileObject> {
-        val user: User = findByUserName(inputUserName) ?: run {
-            throw NotFoundException("Cannot find username with: $inputUserName")
+    fun findAllFileList(inputUserId: String): List<FileObject> {
+        val user: User = findByUserId(inputUserId) ?: run {
+            throw NotFoundException("Cannot find userid with: $inputUserId")
         }
 
         return user.fileList.toList()
@@ -85,13 +85,13 @@ class UserTemplateRepository {
      * function results vary, depdends on inputSerachKey && inputSearchValue.
      */
     private fun innerFileListSearch(
-        inputUserName: String,
+        inputUserId: String,
         inputSearchKey: String,
         inputSearchValue: String
     ): AggregationResults<User> {
-        // Match user name [Filter username first]
-        val userNameMatchCriteria: Criteria = Criteria.where(userNameField).`is`(inputUserName)
-        val matchOperation: MatchOperation = Aggregation.match(userNameMatchCriteria)
+        // Match user name [Filter userid first]
+        val userIdMatchCriteria: Criteria = Criteria.where(userIdField).`is`(inputUserId)
+        val matchOperation: MatchOperation = Aggregation.match(userIdMatchCriteria)
 
         // Unwind
         val unwindOperation: UnwindOperation = Aggregation.unwind(fileListField)
@@ -119,30 +119,30 @@ class UserTemplateRepository {
     }
 
     /**
-     * findAllByPrevToken(inputUserName: String, inputPrevToken: String): List<FileObject>?
-     * Search inputUserName's fileList where fileList.prevToken = inputPrevToken
+     * findAllByPrevToken(inputUserId: String, inputPrevToken: String): List<FileObject>?
+     * Search inputUserId's fileList where fileList.prevToken = inputPrevToken
      * Also, it only returns object corresponding search query.
      *
      * Warning:
      * Do not attempt to re-save this functions result to db. Re-Saving will blow up user's other fileList.
      */
-    fun findAllByPrevToken(inputUserName: String, inputPrevToken: String): List<FileObject> {
-        val results: AggregationResults<User> = innerFileListSearch(inputUserName, "$fileListField.$fileListPrevTokenField", inputPrevToken)
+    fun findAllByPrevToken(inputUserId: String, inputPrevToken: String): List<FileObject> {
+        val results: AggregationResults<User> = innerFileListSearch(inputUserId, "$fileListField.$fileListPrevTokenField", inputPrevToken)
         return results.mappedResults[0].fileList
     }
 
     /**
-     * findByToken(inputUserName: String, inputToken: String): FileObject?
+     * findByToken(inputUserId: String, inputToken: String): FileObject?
      * Mostly same as findAllByPrevToken, but the query is token = inputToken.
      *
      * Warning:
      * As Same as findAllByPrevToken, do not attempt to re-save this function result to db.
      */
-    fun findByToken(inputUserName: String, inputToken: String): FileObject {
-        val results: AggregationResults<User> = innerFileListSearch(inputUserName, "$fileListField.$fileListTokenField", inputToken)
+    fun findByToken(inputUserId: String, inputToken: String): FileObject {
+        val results: AggregationResults<User> = innerFileListSearch(inputUserId, "$fileListField.$fileListTokenField", inputToken)
         if (results.mappedResults.size != 1 ) {
             throw NotFoundException("""
-                Input username was: $inputUserName, requested file token was: $inputToken.
+                Input userid was: $inputUserId, requested file token was: $inputToken.
                 Perhaps invalid user or requested with non-existence token?
             """.trimIndent())
         }
@@ -187,8 +187,8 @@ class UserTemplateRepository {
     }
 
     /**
-     * findByUserName(inputUserName: String): User?
-     * Returns user document[full document] where user name = inputUserName.
+     * findByUserId(inputUserId: String): User?
+     * Returns user document[full document] where user userId = inputUserId.
      */
     fun findByUserId(inputUserId: String): User {
         val findNameQuery: Query = Query()
@@ -203,7 +203,7 @@ class UserTemplateRepository {
             if (it != null) {
                 user = it
             } else {
-                throw NotFoundException("Cannot find user with username: $inputUserId")
+                throw NotFoundException("Cannot find user with userid: $inputUserId")
             }
         }
 
@@ -227,7 +227,7 @@ class UserTemplateRepository {
             if (it != null) {
                 user = it
             } else {
-                throw NotFoundException("Cannot find user with username: $inputUserEmail")
+                throw NotFoundException("Cannot find user with useremail: $inputUserEmail")
             }
         }
 
@@ -235,13 +235,13 @@ class UserTemplateRepository {
     }
 
     /**
-     * deleteByToken(inputUserName: String, inputToken: String): UpdateResult
-     * Delete inputUserName's specific fileList, where fileList.token = inputToken.
+     * deleteByToken(inputUserId: String, inputToken: String): UpdateResult
+     * Delete inputUserId's specific fileList, where fileList.token = inputToken.
      */
-    fun deleteByToken(inputUserName: String, inputToken: String): UpdateResult {
+    fun deleteByToken(inputUserId: String, inputToken: String): UpdateResult {
         val updateQuery: Query = Query().apply {
             addCriteria(
-                Criteria.where(userNameField).`is`(inputUserName)
+                Criteria.where(userIdField).`is`(inputUserId)
             )
         }
 

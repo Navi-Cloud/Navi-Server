@@ -11,17 +11,17 @@ class FilePathResolver {
     private lateinit var fileConfigurationComponent: FileConfigurationComponent
 
     // Convert Windows physical path to server-using path
-    fun convertPhysicsPathToServerPath(physicsPath: String, userName: String): String {
+    fun convertPhysicsPathToServerPath(physicsPath: String, userId: String): String {
         // DB File name should starts from '/'
-        val serverRootUserName: String = "${fileConfigurationComponent.serverRoot}/$userName"
+        val serverRootUserName: String = "${fileConfigurationComponent.serverRoot}/$userId"
         val userRootPath: String = physicsPath.substring(serverRootUserName.length, physicsPath.length)
 
         return userRootPath.replace("\\", "/")
     }
 
-    fun convertPhysicsPathToPrevServerPath(physicsPath: String, userName: String): String {
+    fun convertPhysicsPathToPrevServerPath(physicsPath: String, userId: String): String {
         val prevPath: Path = Paths.get(physicsPath).parent
-        val convertedPath: String = convertPhysicsPathToServerPath(prevPath.toString(), userName)
+        val convertedPath: String = convertPhysicsPathToServerPath(prevPath.toString(), userId)
 
         return if (convertedPath.isEmpty()) {
             "/"
