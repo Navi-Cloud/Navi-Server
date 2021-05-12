@@ -128,7 +128,11 @@ class UserTemplateRepository {
      */
     fun findAllByPrevToken(inputUserId: String, inputPrevToken: String): List<FileObject> {
         val results: AggregationResults<User> = innerFileListSearch(inputUserId, "$fileListField.$fileListPrevTokenField", inputPrevToken)
-        return results.mappedResults[0].fileList
+        return if (results.mappedResults.isEmpty()) {
+            listOf()
+        } else {
+            results.mappedResults[0].fileList
+        }
     }
 
     /**

@@ -175,12 +175,28 @@ class FileServiceTest {
         runCatching {
             fileService.findInsideFiles(loginToken, fileService.getSHA256("/"))
         }.onFailure {
+            println(it.stackTraceToString())
             fail("This test should be succeed!")
         }.onSuccess {
             assertThat(it.statusCode).isEqualTo(HttpStatus.OK)
             assertThat(it.hasBody()).isEqualTo(true)
             assertThat(it.body!!.size).isEqualTo(1L)
             assertThat(it.body!![0].fileName).isEqualTo("/test.txt")
+        }
+    }
+
+    @Test
+    fun is_findInsideFiles_empty_ok() {
+        val loginToken: String = registerAndLogin()
+
+        runCatching {
+            fileService.findInsideFiles(loginToken, fileService.getSHA256("/"))
+        }.onFailure {
+            println(it.stackTraceToString())
+            fail("This test should be succeed!")
+        }.onSuccess {
+            assertThat(it.statusCode).isEqualTo(HttpStatus.OK)
+            assertThat(it.hasBody()).isEqualTo(true)
         }
     }
 
