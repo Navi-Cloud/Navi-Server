@@ -17,7 +17,10 @@ import javax.annotation.PostConstruct
 @Component
 @ConfigurationProperties("navi")
 class FileConfigurationComponent {
-    lateinit var serverRoot: String
+
+    var serverRoot: String = File(System.getProperty("java.io.tmpdir"), "naviServerTesting").also {
+        it.mkdirs()
+    }.absolutePath
 
     @Autowired
     private lateinit var userTemplateRepository: UserTemplateRepository
