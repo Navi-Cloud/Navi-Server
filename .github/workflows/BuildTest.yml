@@ -26,27 +26,39 @@ jobs:
         run: |
           ./gradlew clean test --info --stacktrace
 
+      # Build Artifact
+      - name: Building Artifact
+        run: |
+          ./gradlew clean bootJar
+
+      # Upload Build Artifact
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ServerJarFile
+          path: build/libs/NavIServer-1.0-SNAPSHOT.jar
+
   BuildWindows:
-      # Name the Job
-      name: Build on Windows
+    # Name the Job
+    name: Build on Windows
 
-      # Set the type of machine to run on
-      runs-on: windows-latest
+    # Set the type of machine to run on
+    runs-on: windows-latest
 
-      steps:
-        # Checks out a copy of your repository on the ubuntu-latest machine
-        - name: Checkout code
-          uses: actions/checkout@v2
+    steps:
+      # Checks out a copy of your repository on the ubuntu-latest machine
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-        # Run Build operation
-        - name: Compiling Code
-          run: |
-             ./gradlew.bat clean build --info --stacktrace
+      # Run Build operation
+      - name: Compiling Code
+        run: |
+          ./gradlew.bat clean build --info --stacktrace
 
-        # Run Test operation
-        - name: Testing Code
-          run: |
-            ./gradlew.bat clean test --info --stacktrace
+      # Run Test operation
+      - name: Testing Code
+        run: |
+          ./gradlew.bat clean test --info --stacktrace
 
   BuildmacOS:
     # Name the Job
@@ -69,3 +81,39 @@ jobs:
       - name: Testing Code
         run: |
           ./gradlew clean test --info --stacktrace
+
+  uploadRelease:
+    name: Upload Build artifact to release
+    needs: BuildLinux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: ServerJarFile
+      - name: Set an output
+        id: get-date
+        run: |
+          echo ::set-output name=date::$(/bin/date "+%Y%m%d%H%M%S")
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ steps.get-date.outputs.date }}
+          release_name: Release ${{ steps.get-date.outputs.date }}
+          body: |
+            Github action automated release
+          draft: false
+          prerelease: false
+      - name: Upload Asset
+        id: upload_release_asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          asset_path: ./NavIServer-1.0-SNAPSHOT.jar
+          asset_name: serverExecutionFile.jar
+          asset_content_type: application/zip
