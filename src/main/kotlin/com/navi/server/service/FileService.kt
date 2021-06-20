@@ -7,6 +7,7 @@ import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
 import com.navi.server.dto.FileResponseDTO
 import com.navi.server.dto.RootTokenResponseDto
+import com.navi.server.error.exception.ConflictException
 import com.navi.server.error.exception.FileIOException
 import com.navi.server.error.exception.NotFoundException
 import com.navi.server.error.exception.UnknownErrorException
@@ -197,6 +198,59 @@ class FileService {
             .contentType(MediaType.parseMediaType("application/octet-stream"))
             .header(HttpHeaders.CONTENT_DISPOSITION, again)
             .body(responseBody)
+    }
+
+    fun createNewFolder(userToken: String, parentFolderToken: String, newFolderName: String): ResponseEntity<FileObject> {
+        // Step 1) Make new folder to server
+        val userId: String = convertTokenToUserId(userToken)
+
+        // find absolutePath from token
+        val parentFolderObject: FileObject = userTemplateRepository.findByToken(userId, parentFolderToken)
+
+        // Need to Con-cat string to real path
+        val parentFolderPath: String = filePathResolver.convertFileNameToFullPath(userId, parentFolderObject.fileName)
+
+        // Create folder
+        // If the destination folder already exists, it throw ConflictException
+        val newFolder: File = File(parentFolderPath, newFolderName)
+        if(newFolder.exists()){
+            throw ConflictException("Folder $newFolderName already exists!")
+        } else {
+            newFolder.mkdir()
+        }
+
+        // Step 2) upload to DB
+        val basicFileAttribute: BasicFileAttributes =
+            Files.readAttributes(newFolder.toPath(), BasicFileAttributes::class.java)
+        val simpleDateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd-HH:mm:ss")
+
+        // Windows Implementation
+        val dbTargetFolderName: String = filePathResolver.convertPhysicsPathToServerPath(newFolder.absolutePath, userId)
+
+        // Get Prev Token
+        val prevTokenString: String = filePathResolver.convertPhysicsPathToPrevServerPath(newFolder.absolutePath, userId)
+
+        val newFolderObject: FileObject = FileObject(
+            fileName = dbTargetFolderName,
+            fileType = "Folder",
+            mimeType = "Folder",
+            token = getSHA256(dbTargetFolderName),
+            prevToken = getSHA256(prevTokenString),
+            lastModifiedTime = newFolder.lastModified(),
+            fileCreatedDate = simpleDateFormat.format(basicFileAttribute.creationTime().toMillis()),
+            fileSize = convertSize(basicFileAttribute.size())
+        )
+
+        // Since above findByToken works, it means there is an user name.
+        val user: User = userTemplateRepository.findByUserId(userId)
+        user.fileList.add(newFolderObject)
+
+        // TODO: Since loading whole user and re-saving whole user might be resource-heavy. Maybe creating another Query function to reduce them?
+        userTemplateRepository.save(user) // Save to user!
+
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(newFolderObject)
     }
 
     fun getSHA256(input: String): String {
