@@ -368,6 +368,69 @@ class FileServiceTest {
         }
     }
 
+
+    /* create new folder Test */
+
+    @Test
+    fun is_createNewFolder_working_well() {
+        val newFolderName: String = "je"
+
+        // Create Server Root Structure
+        val loginToken: String = registerAndLogin()
+
+        // create new folder to root directory
+        val parentFolderToken = fileService.getSHA256("/")
+        fileService.createNewFolder(
+            userToken = loginToken,
+            parentFolderToken = parentFolderToken,
+            newFolderName = newFolderName
+        )
+
+        // Whether uploaded text file is actually exists
+        val userId: String = jwtTokenProvider.getUserPk(loginToken)
+        val uploadedFileObject: File =
+            Paths.get(fileConfigurationComponent.serverRoot, userId, newFolderName).toFile()
+        assertThat(uploadedFileObject.exists()).isEqualTo(true)
+
+        // Now Check DB
+        val user: User = userTemplateRepository.findByUserId(userId)
+        val fileList: MutableList<FileObject> = user.fileList
+        assertThat(fileList.size).isEqualTo(2L)
+        assertThat(fileList[1].fileName).isEqualTo("/$newFolderName")
+        assertThat(fileList[1].fileType).isEqualTo("Folder")
+    }
+
+    @Test
+    fun is_createNewFolder_throws_ConflictException() {
+        val newFolderName: String = "je"
+
+        // Create Server Root Structure
+        val loginToken: String = registerAndLogin()
+
+        val parentFolderToken = fileService.getSHA256("/")
+
+        // Create new folder to root directory named $newFolderName
+        fileService.createNewFolder(
+            userToken = loginToken,
+            parentFolderToken = parentFolderToken,
+            newFolderName = newFolderName
+        )
+
+        // Try to create new folder with the same name $newFolderName
+        // This will throw ConflictException
+        runCatching {
+            fileService.createNewFolder(
+                userToken = loginToken,
+                parentFolderToken = parentFolderToken,
+                newFolderName = newFolderName
+            )
+        }.onSuccess {
+            fail("This Should be failed,....")
+        }.onFailure {
+            assertThat(it.message).isEqualTo("Folder $newFolderName already exists!")
+        }
+    }
+
     @Test
     fun isConvertingCorrect() {
         val testFileSizeMib: Long = 1024 * 1024 * 2 // 2 Mib
