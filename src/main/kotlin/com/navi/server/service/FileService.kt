@@ -200,10 +200,7 @@ class FileService {
             .body(responseBody)
     }
 
-    fun createNewFolder(userToken: String, parentFolderToken: String, newFolderName: String): ResponseEntity<FileObject> {
-        // Step 1) Make new folder to server
-        val userId: String = convertTokenToUserId(userToken)
-
+    private fun createPhysicalFolder(userId: String, parentFolderToken: String, newFolderName: String): File {
         // find absolutePath from token
         val parentFolderObject: FileObject = userTemplateRepository.findByToken(userId, parentFolderToken)
 
@@ -219,7 +216,10 @@ class FileService {
             newFolder.mkdir()
         }
 
-        // Step 2) upload to DB
+        return newFolder
+    }
+
+    private fun createLogicalFolder(userId: String, newFolder: File): FileObject {
         val basicFileAttribute: BasicFileAttributes =
             Files.readAttributes(newFolder.toPath(), BasicFileAttributes::class.java)
         val simpleDateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd-HH:mm:ss")
@@ -230,7 +230,7 @@ class FileService {
         // Get Prev Token
         val prevTokenString: String = filePathResolver.convertPhysicsPathToPrevServerPath(newFolder.absolutePath, userId)
 
-        val newFolderObject: FileObject = FileObject(
+        return FileObject(
             fileName = dbTargetFolderName,
             fileType = "Folder",
             mimeType = "Folder",
@@ -240,13 +240,26 @@ class FileService {
             fileCreatedDate = simpleDateFormat.format(basicFileAttribute.creationTime().toMillis()),
             fileSize = convertSize(basicFileAttribute.size())
         )
+    }
 
-        // Since above findByToken works, it means there is an user name.
-        val user: User = userTemplateRepository.findByUserId(userId)
-        user.fileList.add(newFolderObject)
+    fun createNewFolder(userToken: String, parentFolderToken: String, newFolderName: String): ResponseEntity<FileObject> {
+        val userId: String = convertTokenToUserId(userToken)
 
-        // TODO: Since loading whole user and re-saving whole user might be resource-heavy. Maybe creating another Query function to reduce them?
-        userTemplateRepository.save(user) // Save to user!
+        // Step 1) Make new folder to server
+        val newFolder: File = createPhysicalFolder(
+            userId = userId,
+            parentFolderToken = parentFolderToken,
+            newFolderName = newFolderName
+        )
+
+        // Step 2) upload to DB
+        val newFolderObject: FileObject = createLogicalFolder(userId, newFolder)
+
+        // Step 3) Post-Process[Save logical folder data to DB]
+        userTemplateRepository.findByUserId(userId).apply {
+            fileList.add(newFolderObject)
+            userTemplateRepository.save(this)
+        }
 
         return ResponseEntity
             .status(HttpStatus.OK)
