@@ -1,16 +1,13 @@
 package com.navi.server.web
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.navi.server.component.FileConfigurationComponent
 import com.navi.server.domain.FileObject
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
-import com.navi.server.dto.FileResponseDTO
+import com.navi.server.dto.*
 import org.springframework.boot.test.web.client.exchange
-import com.navi.server.dto.LoginRequest
-import com.navi.server.dto.LoginResponse
-import com.navi.server.dto.UserRegisterRequest
 import com.navi.server.security.JWTTokenProvider
-import com.navi.server.dto.RootTokenResponseDto
 import com.navi.server.service.FileService
 import com.navi.server.service.UserService
 import org.junit.After
@@ -61,6 +58,9 @@ class FileApiControllerTest {
 
     @Autowired
     private lateinit var userService: UserService
+
+    @Autowired
+    private lateinit var objectMapper: ObjectMapper
 
     private lateinit var trashRootObject: File
 
@@ -445,6 +445,84 @@ class FileApiControllerTest {
             .andDo(MockMvcResultHandlers.print())
             .andDo{
                 assertThat(it.response.status).isEqualTo(HttpStatus.NOT_FOUND.value())
+            }
+    }
+
+    /* create new folder test */
+    @Test
+    fun testCreateNewFolder_ok(){
+        val newFolderName: String = "je"
+
+        // Create Server Root Structure
+        val loginToken: String = registerAndLogin()
+
+        val parentFolderToken = fileService.getSHA256("/")
+        val createFolderRequestDTO: CreateFolderRequestDTO = CreateFolderRequestDTO(
+            parentFolderToken = parentFolderToken,
+            newFolderName = newFolderName
+        )
+        val content: String = objectMapper.writeValueAsString(createFolderRequestDTO)
+
+        // Perform
+        mockMvc.perform(
+            MockMvcRequestBuilders.post("/api/navi/folder")
+                .header("X-AUTH-TOKEN", loginToken)
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(content)
+        ).andExpect { status(HttpStatus.NO_CONTENT) }
+            .andDo(MockMvcResultHandlers.print())
+            .andDo{
+                assertThat(it.response.status).isEqualTo(HttpStatus.NO_CONTENT.value())
+            }
+
+        // Assert
+        // Whether new folder is actually exists
+        val userId: String = jwtTokenProvider.getUserPk(loginToken)
+        val folderObject: File =
+            Paths.get(fileConfigurationComponent.serverRoot, userId, newFolderName).toFile()
+        assertThat(folderObject.exists()).isEqualTo(true)
+
+        // Now Check DB
+        val user: User = userTemplateRepository.findByUserId(userId)
+        val fileList: MutableList<FileObject> = user.fileList
+        assertThat(fileList.size).isEqualTo(2L)
+        assertThat(fileList[1].fileName).isEqualTo("/$newFolderName")
+        assertThat(fileList[1].fileType).isEqualTo("Folder")
+    }
+
+    @Test
+    fun testCreateNewFolder_ConflictException() {
+        val newFolderName: String = "je"
+
+        // Create Server Root Structure
+        val loginToken: String = registerAndLogin()
+
+        val parentFolderToken = fileService.getSHA256("/")
+
+        // Create new folder to root directory named $newFolderName
+        fileService.createNewFolder(
+            userToken = loginToken,
+            parentFolderToken = parentFolderToken,
+            newFolderName = newFolderName
+        )
+
+        // Try to create new folder with the same name $newFolderName
+        // This will throw ConflictException
+        val createFolderRequestDTO: CreateFolderRequestDTO = CreateFolderRequestDTO(
+            parentFolderToken = parentFolderToken,
+            newFolderName = newFolderName
+        )
+        val content: String = objectMapper.writeValueAsString(createFolderRequestDTO)
+
+        mockMvc.perform(
+            MockMvcRequestBuilders.post("/api/navi/folder")
+                .header("X-AUTH-TOKEN", loginToken)
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(content)
+        ).andExpect { status(HttpStatus.OK) }
+            .andDo(MockMvcResultHandlers.print())
+            .andDo{
+                assertThat(it.response.status).isEqualTo(HttpStatus.CONFLICT.value())
             }
     }
 }
