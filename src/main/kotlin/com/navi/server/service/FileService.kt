@@ -242,7 +242,7 @@ class FileService {
         )
     }
 
-    fun createNewFolder(userToken: String, parentFolderToken: String, newFolderName: String): ResponseEntity<FileObject> {
+    fun createNewFolder(userToken: String, parentFolderToken: String, newFolderName: String){
         val userId: String = convertTokenToUserId(userToken)
 
         // Step 1) Make new folder to server
@@ -260,10 +260,6 @@ class FileService {
             fileList.add(newFolderObject)
             userTemplateRepository.save(this)
         }
-
-        return ResponseEntity
-            .status(HttpStatus.OK)
-            .body(newFolderObject)
     }
 
     fun getSHA256(input: String): String {
