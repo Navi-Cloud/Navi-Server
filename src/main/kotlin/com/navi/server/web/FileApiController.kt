@@ -1,6 +1,7 @@
 package com.navi.server.web
 
 import com.navi.server.domain.FileObject
+import com.navi.server.dto.CreateFolderRequestDTO
 import com.navi.server.dto.FileResponseDTO
 import com.navi.server.dto.RootTokenResponseDto
 import com.navi.server.service.FileService
@@ -54,5 +55,17 @@ class FileApiController (val fileService: FileService){
         val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
 
         return fileService.fileDownload(tokenList[0], token)
+    }
+
+    @PostMapping("/api/navi/folder")
+    fun createNewFolder(@RequestHeader httpHeaders: HttpHeaders, @RequestBody createFolderRequest: CreateFolderRequestDTO)
+            : ResponseEntity<Unit>{
+        val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
+        fileService.createNewFolder(
+            userToken = tokenList[0],
+            parentFolderToken = createFolderRequest.parentFolderToken,
+            newFolderName = createFolderRequest.newFolderName
+        )
+        return ResponseEntity.noContent().build()
     }
 }

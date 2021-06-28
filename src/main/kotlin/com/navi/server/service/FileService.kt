@@ -7,6 +7,7 @@ import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
 import com.navi.server.dto.FileResponseDTO
 import com.navi.server.dto.RootTokenResponseDto
+import com.navi.server.error.exception.ConflictException
 import com.navi.server.error.exception.FileIOException
 import com.navi.server.error.exception.NotFoundException
 import com.navi.server.error.exception.UnknownErrorException
@@ -197,6 +198,68 @@ class FileService {
             .contentType(MediaType.parseMediaType("application/octet-stream"))
             .header(HttpHeaders.CONTENT_DISPOSITION, again)
             .body(responseBody)
+    }
+
+    private fun createPhysicalFolder(userId: String, parentFolderToken: String, newFolderName: String): File {
+        // find absolutePath from token
+        val parentFolderObject: FileObject = userTemplateRepository.findByToken(userId, parentFolderToken)
+
+        // Need to Con-cat string to real path
+        val parentFolderPath: String = filePathResolver.convertFileNameToFullPath(userId, parentFolderObject.fileName)
+
+        // Create folder
+        // If the destination folder already exists, it throw ConflictException
+        val newFolder: File = File(parentFolderPath, newFolderName)
+        if(newFolder.exists()){
+            throw ConflictException("Folder $newFolderName already exists!")
+        } else {
+            newFolder.mkdir()
+        }
+
+        return newFolder
+    }
+
+    private fun createLogicalFolder(userId: String, newFolder: File): FileObject {
+        val basicFileAttribute: BasicFileAttributes =
+            Files.readAttributes(newFolder.toPath(), BasicFileAttributes::class.java)
+        val simpleDateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd-HH:mm:ss")
+
+        // Windows Implementation
+        val dbTargetFolderName: String = filePathResolver.convertPhysicsPathToServerPath(newFolder.absolutePath, userId)
+
+        // Get Prev Token
+        val prevTokenString: String = filePathResolver.convertPhysicsPathToPrevServerPath(newFolder.absolutePath, userId)
+
+        return FileObject(
+            fileName = dbTargetFolderName,
+            fileType = "Folder",
+            mimeType = "Folder",
+            token = getSHA256(dbTargetFolderName),
+            prevToken = getSHA256(prevTokenString),
+            lastModifiedTime = newFolder.lastModified(),
+            fileCreatedDate = simpleDateFormat.format(basicFileAttribute.creationTime().toMillis()),
+            fileSize = convertSize(basicFileAttribute.size())
+        )
+    }
+
+    fun createNewFolder(userToken: String, parentFolderToken: String, newFolderName: String){
+        val userId: String = convertTokenToUserId(userToken)
+
+        // Step 1) Make new folder to server
+        val newFolder: File = createPhysicalFolder(
+            userId = userId,
+            parentFolderToken = parentFolderToken,
+            newFolderName = newFolderName
+        )
+
+        // Step 2) upload to DB
+        val newFolderObject: FileObject = createLogicalFolder(userId, newFolder)
+
+        // Step 3) Post-Process[Save logical folder data to DB]
+        userTemplateRepository.findByUserId(userId).apply {
+            fileList.add(newFolderObject)
+            userTemplateRepository.save(this)
+        }
     }
 
     fun getSHA256(input: String): String {
