@@ -1,5 +1,15 @@
 spring:
+  profiles:
+    active: default
   servlet:
     multipart:
       max-file-size: 200MB
       max-request-size: 200MB
+
+---
+spring:
+  profiles: Navi-Set1
+
+---
+spring:
+  profiles: Navi-Set2
