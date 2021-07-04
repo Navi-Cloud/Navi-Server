@@ -170,4 +170,16 @@ class FileServiceTest {
             assertThat(it.prevToken).isEqualTo(rootToken)
         }
     }
+
+    @Test
+    fun is_convertSize_works_well() {
+        val testFileSizeMib: Long = 1024 * 1024 * 2 // 2 Mib
+        val testFileSizeKib: Long = 1024 * 4 // 4.0Kib
+        val testFileSizeB: Long = 800 //800B
+        val testFileSizeZero: Long = 0
+        assertThat(fileService.convertSize(testFileSizeMib)).isEqualTo("2.0MiB")
+        assertThat(fileService.convertSize(testFileSizeKib)).isEqualTo("4.0KiB")
+        assertThat(fileService.convertSize(testFileSizeB)).isEqualTo("800B")
+        assertThat(fileService.convertSize(testFileSizeZero)).isEqualTo("0B")
+    }
 }
