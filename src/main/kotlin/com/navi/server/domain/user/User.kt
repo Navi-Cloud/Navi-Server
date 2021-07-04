@@ -18,7 +18,6 @@ class User(
     var userEmail: String = "",
     var userPassword: String = "",
     val roles: Set<String> = setOf(),
-    val fileList: MutableList<FileObject> = mutableListOf()
 ) : UserDetails {
 
     override fun getAuthorities(): Collection<GrantedAuthority?>? {

@@ -1,6 +1,7 @@
 package com.navi.server.service
 
 import com.navi.server.component.FileConfigurationComponent
+import com.navi.server.domain.GridFSRepository
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
 import com.navi.server.dto.LoginRequest
@@ -26,6 +27,12 @@ class UserService {
     @Autowired
     private lateinit var fileConfigurationComponent: FileConfigurationComponent
 
+    @Autowired
+    private lateinit var gridFSRepository: GridFSRepository
+
+    @Autowired
+    private lateinit var fileService: FileService
+
     // TODO: Email Check
     fun registerUser(userRegisterRequest: UserRegisterRequest): ResponseEntity<UserRegisterResponse> {
         runCatching {
@@ -34,15 +41,19 @@ class UserService {
             throw ConflictException("User id ${userRegisterRequest.userId} already exists!")
         }
 
-        val user: User = User(
-            userId = userRegisterRequest.userId,
-            userName = userRegisterRequest.userName,
-            userEmail = userRegisterRequest.userEmail,
-            userPassword = userRegisterRequest.userPassword,
-            roles = setOf("ROLE_USER")
+        // Save to User Repository
+        userTemplateRepository.save(
+            User(
+                userId = userRegisterRequest.userId,
+                userName = userRegisterRequest.userName,
+                userEmail = userRegisterRequest.userEmail,
+                userPassword = userRegisterRequest.userPassword,
+                roles = setOf("ROLE_USER")
+            )
         )
-        //userTemplateRepository.save(user)
-        fileConfigurationComponent.initNewUserStructure(user)
+
+        // Add Root folder to initial user.
+        fileService.createRootUser(userRegisterRequest.userId)
 
         return ResponseEntity
             .status(HttpStatus.OK)
