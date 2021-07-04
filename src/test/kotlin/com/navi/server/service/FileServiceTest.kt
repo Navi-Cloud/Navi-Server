@@ -82,6 +82,17 @@ class FileServiceTest {
     }
 
     @Test
+    fun is_findRootToken_fails_wrong_token() {
+        runCatching {
+            fileService.findRootToken("")
+        }.onSuccess {
+            fail("No token but succeed!")
+        }.onFailure {
+            assertThat(it is NotFoundException).isEqualTo(true)
+        }
+    }
+
+    @Test
     fun is_findInsideFiles_works_well() {
         val userToken: String = registerUser()
         val rootToken: String = fileService.findRootToken(userToken).rootToken
