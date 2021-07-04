@@ -17,6 +17,8 @@ class PathService {
         return String(Base64.getDecoder().decode(encodedString.toByteArray()))
     }
 
+    fun getRootToken(): String = encodeString("/")
+
     // Append input file name to prevToken and return encoded token.
     fun appendPath(fileName: String, prevToken: String): String {
         val decodedPrevPath: String = decodeString(prevToken)
