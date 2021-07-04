@@ -154,4 +154,20 @@ class FileServiceTest {
         // Compare results
         assertThat(byteArrayOutputStream.toByteArray()).isEqualTo(uploadFileContent)
     }
+
+    @Test
+    fun is_createNewFolder_works_well() {
+        val userToken: String = registerUser()
+        val rootToken: String = fileService.findRootToken(userToken).rootToken
+
+        // Create it
+        fileService.createNewFolder(userToken, rootToken, "Testing")
+
+        // Check
+        gridFSRepository.getMetadataSpecific(userRegisterRequest.userId, fileService.getSHA256("Testing"), rootToken).also {
+            assertThat(it.fileName).isEqualTo("Testing")
+            assertThat(it.fileType).isEqualTo("Folder")
+            assertThat(it.prevToken).isEqualTo(rootToken)
+        }
+    }
 }
