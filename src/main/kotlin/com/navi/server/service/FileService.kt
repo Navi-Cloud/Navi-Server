@@ -65,6 +65,11 @@ class FileService {
 
     fun fileUpload(userToken: String, uploadFolderToken: String, files: MultipartFile): FileObject {
         val userId:String = convertTokenToUserId(userToken)
+
+        // Check whether upload target exists
+        checkExists(userId, uploadFolderToken, files.originalFilename, "File")
+
+        // Now Save
         val tmpFileObject: FileObject = FileObject(
             userId = userId,
             token = pathService.appendPath(files.originalFilename, uploadFolderToken),
@@ -121,14 +126,14 @@ class FileService {
         return fileObject
     }
 
-    private fun checkFolderExists(userId: String, parentFolderToken: String, newFolderName: String) {
+    private fun checkExists(userId: String, parentFolderToken: String, targetName: String, fileType: String) {
         val insideFolder: List<FileObject> = gridFSRepository.getMetadataInsideFolder(userId, parentFolderToken)
         val findResult: FileObject? = insideFolder.find {
-            it.fileType == "Folder" && it.fileName == newFolderName
+            it.fileType == fileType && it.fileName == targetName
         }
 
         if (findResult != null) {
-            throw ConflictException("Folder name $newFolderName already exists!")
+            throw ConflictException("$fileType name $targetName already exists!")
         }
     }
 
@@ -136,7 +141,7 @@ class FileService {
         val userId: String = convertTokenToUserId(userToken)
 
         // Step 1) Check whether folder exists on DB
-        checkFolderExists(userId, parentFolderToken, newFolderName)
+        checkExists(userId, parentFolderToken, newFolderName, "Folder")
 
         // Step 2) upload to DB
         return createLogicalFolder(userId, parentFolderToken, newFolderName)

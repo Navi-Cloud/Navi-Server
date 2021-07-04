@@ -136,6 +136,37 @@ class FileServiceTest {
     }
 
     @Test
+    fun is_fileUpload_conflict_duplicated_file() {
+        val userToken: String = registerUser()
+        val rootToken: String = fileService.findRootToken(userToken).rootToken
+
+        // make uploadFile
+        val uploadFileName: String = "uploadTest-service.txt"
+        val uploadFileContent: ByteArray = "file upload test file!".toByteArray()
+        val multipartFile: MockMultipartFile = MockMultipartFile(
+            uploadFileName, uploadFileName, "text/plain", uploadFileContent
+        )
+
+        fileService.fileUpload(
+            userToken = userToken,
+            uploadFolderToken = rootToken,
+            files = multipartFile
+        )
+
+        runCatching {
+            fileService.fileUpload(
+                userToken = userToken,
+                uploadFolderToken = rootToken,
+                files = multipartFile
+            )
+        }.onSuccess {
+            fail("File is already uploaded but succeed?")
+        }.onFailure {
+            assertThat(it is ConflictException).isEqualTo(true)
+        }
+    }
+
+    @Test
     fun is_fileDownload_works_well() {
         val userToken: String = registerUser()
 
