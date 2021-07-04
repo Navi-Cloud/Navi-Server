@@ -2,6 +2,7 @@ package com.navi.server.service
 
 import com.navi.server.component.FileConfigurationComponent
 import com.navi.server.domain.FileObject
+import com.navi.server.domain.GridFSRepository
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
 import com.navi.server.dto.LoginRequest
@@ -39,6 +40,9 @@ class FileServiceTest {
 
     @Autowired
     private lateinit var gridFsTemplate: GridFsTemplate
+
+    @Autowired
+    private lateinit var gridFSRepository: GridFSRepository
 
     @After
     @Before
@@ -101,9 +105,16 @@ class FileServiceTest {
             files = multipartFile
         )
 
+        // Check Response
         with (responseFileObject) {
             assertThat(fileName).isEqualTo(uploadFileName)
             assertThat(prevToken).isEqualTo(rootToken)
+        }
+
+        // Check DB
+        gridFSRepository.getMetadataInsideFolder("kangDroid", responseFileObject.prevToken).also {
+            assertThat(it.isEmpty()).isEqualTo(false)
+            assertThat(it.size).isEqualTo(1)
         }
     }
 }
