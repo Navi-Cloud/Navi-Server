@@ -78,15 +78,11 @@ class FileService {
         return tmpFileObject
     }
 
-    fun getFileObjectByUserId(userId: String, fileToken: String, prevToken: String): FileObject {
-        return gridFSRepository.getMetadataSpecific(userId, fileToken, prevToken)
-    }
-
-    fun fileDownload(userToken: String, fileToken: String, prevToken: String): ResponseEntity<StreamingResponseBody> {
+    fun fileDownload(userToken: String, fileToken: String, prevToken: String): StreamingResponseBody {
         val inputUserId: String = convertTokenToUserId(userToken)
 
         // File Object[MetaData]
-        val file: FileObject = getFileObjectByUserId(inputUserId, fileToken, prevToken)
+        val file: FileObject = gridFSRepository.getMetadataSpecific(inputUserId, fileToken, prevToken)
 
         // Actual file itself[stream]
         val gridFSFile: InputStream = gridFSRepository.getFullTargetStream(inputUserId, file)
@@ -97,10 +93,12 @@ class FileService {
         val again: String =
             String.format("attachment; filename=\"%s\"", URLEncoder.encode(file.fileName, "UTF-8"))
 
-        return ResponseEntity.ok()
-            .contentType(MediaType.parseMediaType("application/octet-stream"))
-            .header(HttpHeaders.CONTENT_DISPOSITION, again)
-            .body(responseBody)
+        return responseBody
+
+//        ResponseEntity.ok()
+//            .contentType(MediaType.parseMediaType("application/octet-stream"))
+//            .header(HttpHeaders.CONTENT_DISPOSITION, again)
+//            .body(responseBody)
     }
 
     private fun createLogicalFolder(userId: String, prevToken: String, newFolderName: String) {

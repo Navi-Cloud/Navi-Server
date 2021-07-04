@@ -22,7 +22,10 @@ import org.springframework.data.mongodb.gridfs.GridFsTemplate
 import org.springframework.http.HttpStatus
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.junit4.SpringRunner
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.nio.charset.Charset
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -117,5 +120,38 @@ class FileServiceTest {
             assertThat(it.isEmpty()).isEqualTo(false)
             assertThat(it.size).isEqualTo(1)
         }
+    }
+
+    @Test
+    fun is_fileDownload_works_well() {
+        val userToken: String = registerUser()
+
+        // First we upload files first to root
+        val rootToken: String = fileService.findRootToken(userToken).rootToken
+
+        // make uploadFile
+        val uploadFileName: String = "uploadTest-service.txt"
+        val uploadFileContent: ByteArray = "file upload test file!".toByteArray()
+        val multipartFile: MockMultipartFile = MockMultipartFile(
+            uploadFileName, uploadFileName, "text/plain", uploadFileContent
+        )
+        val fileObjectUploaded: FileObject = fileService.fileUpload(
+            userToken = userToken,
+            uploadFolderToken = rootToken,
+            files = multipartFile
+        )
+
+        // Now Download
+        val byteArrayOutputStream: ByteArrayOutputStream = ByteArrayOutputStream()
+        fileService.fileDownload(
+            userToken = userToken,
+            fileToken = fileObjectUploaded.token,
+            prevToken = fileObjectUploaded.prevToken
+        ).also {
+            it.writeTo(byteArrayOutputStream)
+        }
+
+        // Compare results
+        assertThat(byteArrayOutputStream.toByteArray()).isEqualTo(uploadFileContent)
     }
 }
