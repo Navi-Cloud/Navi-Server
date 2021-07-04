@@ -162,10 +162,10 @@ class FileServiceTest {
         val rootToken: String = fileService.findRootToken(userToken).rootToken
 
         // Create it
-        fileService.createNewFolder(userToken, rootToken, "Testing")
+        val fileObject: FileObject = fileService.createNewFolder(userToken, rootToken, "Testing")
 
         // Check
-        gridFSRepository.getMetadataSpecific(userRegisterRequest.userId, fileService.getSHA256("Testing"), rootToken).also {
+        gridFSRepository.getMetadataSpecific(userRegisterRequest.userId, fileObject.token, rootToken).also {
             assertThat(it.fileName).isEqualTo("Testing")
             assertThat(it.fileType).isEqualTo("Folder")
             assertThat(it.prevToken).isEqualTo(rootToken)

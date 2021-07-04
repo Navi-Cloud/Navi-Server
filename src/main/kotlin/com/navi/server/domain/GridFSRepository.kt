@@ -44,12 +44,13 @@ class GridFSRepository(
         return convertMetaDataToFileObject(gridFSFile.metadata)
     }
 
-    fun getRootToken(userId: String, rootToken: String): FileObject {
+    fun getRootToken(userId: String): FileObject {
         val query: Query = Query().apply {
             addCriteria(
                 Criteria().andOperator(
                     Criteria.where("metadata.userId").`is`(userId),
-                    Criteria.where("metadata.token").`is`(rootToken)
+                    Criteria.where("metadata.fileName").`is`("/"),
+                    Criteria.where("metadata.fileType").`is`("Folder")
                 )
             )
         }

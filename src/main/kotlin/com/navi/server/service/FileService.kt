@@ -29,6 +29,9 @@ class FileService {
     @Autowired
     private lateinit var gridFSRepository: GridFSRepository
 
+    @Autowired
+    private lateinit var pathService: PathService
+
     private fun convertTokenToUserId(inputToken: String): String {
         var userId: String = ""
         runCatching {
@@ -44,7 +47,7 @@ class FileService {
 
     fun findRootToken(userToken: String): RootTokenResponseDto {
         val userId: String = convertTokenToUserId(userToken)
-        val userFileObject: FileObject = gridFSRepository.getRootToken(userId, getSHA256("/"))
+        val userFileObject: FileObject = gridFSRepository.getRootToken(userId)
 
         return RootTokenResponseDto(userFileObject.token)
     }
@@ -63,7 +66,7 @@ class FileService {
         val userId:String = convertTokenToUserId(userToken)
         val tmpFileObject: FileObject = FileObject(
             userId = userId,
-            token = getSHA256(files.originalFilename),
+            token = pathService.appendPath(files.originalFilename, uploadFolderToken),
             prevToken = uploadFolderToken,
             fileName = files.originalFilename,
             fileType = "File"
@@ -101,24 +104,27 @@ class FileService {
 //            .body(responseBody)
     }
 
-    private fun createLogicalFolder(userId: String, prevToken: String, newFolderName: String) {
+    private fun createLogicalFolder(userId: String, prevToken: String, newFolderName: String): FileObject {
+        val fileObject: FileObject = FileObject(
+            userId = userId,
+            fileName = newFolderName,
+            fileType = "Folder",
+            token = pathService.appendPath(newFolderName, prevToken),
+            prevToken = prevToken
+        )
         gridFSRepository.saveToGridFS(
-            fileObject = FileObject(
-                userId = userId,
-                fileName = newFolderName,
-                fileType = "Folder",
-                token = getSHA256(newFolderName),
-                prevToken = prevToken
-            ),
+            fileObject = fileObject,
             inputStream = InputStream.nullInputStream()
         )
+
+        return fileObject
     }
 
-    fun createNewFolder(userToken: String, parentFolderToken: String, newFolderName: String){
+    fun createNewFolder(userToken: String, parentFolderToken: String, newFolderName: String): FileObject {
         val userId: String = convertTokenToUserId(userToken)
 
         // Step 2) upload to DB
-        createLogicalFolder(userId, parentFolderToken, newFolderName)
+        return createLogicalFolder(userId, parentFolderToken, newFolderName)
     }
 
     fun createRootUser(userId: String) {
@@ -127,7 +133,7 @@ class FileService {
                 userId = userId,
                 fileName = "/",
                 fileType = "Folder",
-                token = getSHA256("/"),
+                token = pathService.getRootToken(),
                 prevToken = ""
             ),
             inputStream = InputStream.nullInputStream()
