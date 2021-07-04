@@ -44,6 +44,13 @@ class FileServiceTest {
     @Autowired
     private lateinit var gridFSRepository: GridFSRepository
 
+    private val userRegisterRequest: UserRegisterRequest = UserRegisterRequest(
+        userId = "kangDroid",
+        userName = "KangDroid",
+        userPassword = "testingPassword",
+        userEmail = "test@test.com"
+    )
+
     @After
     @Before
     fun clearAll() {
@@ -52,12 +59,6 @@ class FileServiceTest {
     }
 
     fun registerUser(): String {
-        val userRegisterRequest: UserRegisterRequest = UserRegisterRequest(
-            userId = "kangDroid",
-            userName = "KangDroid",
-            userPassword = "testingPassword",
-            userEmail = "test@test.com"
-        )
         userService.registerUser(userRegisterRequest)
 
         return userService.loginUser(
@@ -112,7 +113,7 @@ class FileServiceTest {
         }
 
         // Check DB
-        gridFSRepository.getMetadataInsideFolder("kangDroid", responseFileObject.prevToken).also {
+        gridFSRepository.getMetadataInsideFolder(userRegisterRequest.userId, responseFileObject.prevToken).also {
             assertThat(it.isEmpty()).isEqualTo(false)
             assertThat(it.size).isEqualTo(1)
         }
