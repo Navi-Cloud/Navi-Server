@@ -44,13 +44,13 @@ class FileApiController (val fileService: FileService){
         return ResponseEntity.ok(fileService.fileUpload(tokenList[0], token, file))
     }
 
-//    @GetMapping("/api/navi/files")
-//    fun fileDownload(@RequestHeader httpHeaders: HttpHeaders, @RequestParam("token") token: String, @RequestParam("prevToken") prevToken: String) : ResponseEntity<StreamingResponseBody> {
-//        // Invalid or Non-Token will be filtered through Spring Security.
-//        val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
-//
-//        return fileService.fileDownload(tokenList[0], token, prevToken)
-//    }
+    @GetMapping("/api/navi/files")
+    fun fileDownload(@RequestHeader httpHeaders: HttpHeaders, @RequestParam("token") token: String, @RequestParam("prevToken") prevToken: String) : ResponseEntity<StreamingResponseBody> {
+        // Invalid or Non-Token will be filtered through Spring Security.
+        val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
+
+        return fileService.fileDownload(tokenList[0], token, prevToken)
+    }
 
     @PostMapping("/api/navi/folder")
     fun createNewFolder(@RequestHeader httpHeaders: HttpHeaders, @RequestBody createFolderRequest: CreateFolderRequestDTO)

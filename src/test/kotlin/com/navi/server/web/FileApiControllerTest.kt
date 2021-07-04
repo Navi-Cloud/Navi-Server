@@ -30,10 +30,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
-import java.io.File
 import org.springframework.web.context.WebApplicationContext
-import java.nio.file.Path
-import java.nio.file.Paths
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -219,85 +216,35 @@ class FileApiControllerTest {
     }
 
     // test fileDownload
-//    @Test
-//    fun testFileDownload_ok(){
-//        // Let
-//        val fileObject: FileObject = FileObject(
-//            fileName = "test_file",
-//            fileType = "test_type",
-//            mimeType = "mime_type",
-//            token = "test_token",
-//            prevToken = "prev_token",
-//            lastModifiedTime = System.currentTimeMillis(),
-//            fileCreatedDate = "date",
-//            fileSize = "5m"
-//        )
-//
-//        val loginToken: String = registerAndLogin()
-//        val user: User = userTemplateRepository.findByUserId("kangDroid")
-//        user.fileList.add(fileObject)
-//        userTemplateRepository.save(user)
-//        // Write some texts
-//        Paths.get(fileConfigurationComponent.serverRoot, "kangDroid").toFile().mkdirs()
-//        val file: File = Paths.get(fileConfigurationComponent.serverRoot, "kangDroid", fileObject.fileName).toFile()
-//        file.writeText("Test!")
-//
-//
-//        // Perform and Assert
-//        mockMvc.perform(
-//            MockMvcRequestBuilders.get("/api/navi/files/${fileObject.token}")
-//                .header("X-AUTH-TOKEN", loginToken)
-//        ).andExpect { status(HttpStatus.OK) }
-//            .andDo(MockMvcResultHandlers.print())
-//            .andDo{
-//                assertThat(it.response.status).isEqualTo(HttpStatus.OK.value())
-//            }
-//    }
-//
-//    @Test
-//    fun invalid_FileDownload_NotFound() {
-//        val loginToken: String = registerAndLogin()
-//
-//        // Let
-//        val fileObject: FileObject = FileObject(
-//            fileName = "test_file",
-//            fileType = "test_type",
-//            mimeType = "mime_type",
-//            token = "test_token",
-//            prevToken = "prev_token",
-//            lastModifiedTime = System.currentTimeMillis(),
-//            fileCreatedDate = "date",
-//            fileSize = "5m"
-//        )
-//
-//        // invalid file Download 1 : invalid token
-//        val url = "http://localhost:$port/api/navi/files/${fileObject.token}"
-//        mockMvc.perform(
-//            MockMvcRequestBuilders.get("/api/navi/files/${fileObject.token}")
-//                .header("X-AUTH-TOKEN", loginToken)
-//        ).andExpect { status(HttpStatus.NOT_FOUND) }
-//            .andDo(MockMvcResultHandlers.print())
-//            .andDo{
-//                assertThat(it.response.status).isEqualTo(HttpStatus.NOT_FOUND.value())
-//            }
-//
-//        // invalid file Download 2 : FileNotFoundException (no such file at server)
-//        // save to (only) DB
-//        val user: User = userTemplateRepository.findByUserId("kangDroid")
-//        user.fileList.add(fileObject)
-//        userTemplateRepository.save(user)
-//
-//        mockMvc.perform(
-//            MockMvcRequestBuilders.get("/api/navi/files/${fileObject.token}")
-//                .header("X-AUTH-TOKEN", loginToken)
-//        ).andExpect { status(HttpStatus.NOT_FOUND) }
-//            .andDo(MockMvcResultHandlers.print())
-//            .andDo{
-//                assertThat(it.response.status).isEqualTo(HttpStatus.NOT_FOUND.value())
-//            }
-//    }
-//
-//    /* create new folder test */
+    @Test
+    fun testFileDownload_ok(){
+        val loginToken: String = registerAndLogin()
+        val rootToken: String = fileService.findRootToken(loginToken).rootToken
+
+        // make uploadFile
+        val uploadFileName: String = "uploadTest-service.txt"
+        val uploadFileContent: ByteArray = "file upload test file!".toByteArray()
+        val multipartFile: MockMultipartFile = MockMultipartFile(
+            uploadFileName, uploadFileName, "text/plain", uploadFileContent
+        )
+        val fileObjectUploaded: FileObject = fileService.fileUpload(
+            userToken = loginToken,
+            uploadFolderToken = rootToken,
+            files = multipartFile
+        )
+
+        // Perform and Assert
+        mockMvc.perform(
+            MockMvcRequestBuilders.get("/api/navi/files?token=${fileObjectUploaded.token}&prevToken=${fileObjectUploaded.prevToken}")
+                .header("X-AUTH-TOKEN", loginToken)
+        ).andExpect { status(HttpStatus.OK) }
+            .andDo(MockMvcResultHandlers.print())
+            .andDo{
+                assertThat(it.response.status).isEqualTo(HttpStatus.OK.value())
+            }
+    }
+
+    /* create new folder test */
     @Test
     fun testCreateNewFolder_ok(){
         val newFolderName: String = "je"
