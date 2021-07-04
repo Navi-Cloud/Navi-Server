@@ -119,6 +119,7 @@ class FileServiceTest {
         gridFSRepository.getMetadataInsideFolder(userRegisterRequest.userId, responseFileObject.prevToken).also {
             assertThat(it.isEmpty()).isEqualTo(false)
             assertThat(it.size).isEqualTo(1)
+            assertThat(it[0].fileName).isEqualTo(uploadFileName)
         }
     }
 

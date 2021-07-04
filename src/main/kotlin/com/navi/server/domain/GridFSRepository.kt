@@ -65,16 +65,14 @@ class GridFSRepository(
             addCriteria(
                 Criteria().andOperator(
                     Criteria.where("metadata.userId").`is`(userId),
-                    Criteria.where("metadata.token").`is`(targetPrevToken)
+                    Criteria.where("metadata.prevToken").`is`(targetPrevToken)
                 )
             )
         }
 
         return gridFsTemplate.find(query).map {
             convertMetaDataToFileObject(it.metadata)
-        }.filter {
-            it.token != targetPrevToken
-        }
+        }.toList()
     }
 
     fun getFullTargetStream(userId: String, fileObject: FileObject): InputStream {
