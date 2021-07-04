@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
+import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.URLEncoder
@@ -158,7 +159,7 @@ class FileService {
                 token = pathService.getRootToken(),
                 prevToken = ""
             ),
-            inputStream = InputStream.nullInputStream()
+            inputStream = ByteArrayInputStream("".toByteArray())
         )
     }
 
