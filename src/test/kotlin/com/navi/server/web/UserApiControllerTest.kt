@@ -1,7 +1,6 @@
 package com.navi.server.web
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.navi.server.component.FileConfigurationComponent
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
 import com.navi.server.dto.LoginRequest

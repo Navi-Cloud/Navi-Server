@@ -1,7 +1,6 @@
 package com.navi.server.web
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.navi.server.component.FileConfigurationComponent
 import com.navi.server.domain.FileObject
 import com.navi.server.domain.GridFSRepository
 import com.navi.server.domain.user.User
@@ -45,12 +44,6 @@ class FileApiControllerTest {
 
     @Autowired
     private lateinit var userTemplateRepository: UserTemplateRepository
-
-    @Autowired
-    private lateinit var fileConfigurationComponent: FileConfigurationComponent
-
-    @Autowired
-    private lateinit var jwtTokenProvider: JWTTokenProvider
 
     @Autowired
     private lateinit var webApplicationContext: WebApplicationContext

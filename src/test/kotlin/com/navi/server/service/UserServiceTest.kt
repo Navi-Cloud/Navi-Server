@@ -1,6 +1,5 @@
 package com.navi.server.service
 
-import com.navi.server.component.FileConfigurationComponent
 import com.navi.server.domain.GridFSRepository
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
@@ -29,9 +28,6 @@ class UserServiceTest {
 
     @Autowired
     private lateinit var userTemplateRepository: UserTemplateRepository
-
-    @Autowired
-    private lateinit var fileConfigurationComponent: FileConfigurationComponent
 
     @Autowired
     private lateinit var gridFsTemplate: GridFsTemplate

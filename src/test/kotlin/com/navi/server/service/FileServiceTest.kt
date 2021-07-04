@@ -1,6 +1,5 @@
 package com.navi.server.service
 
-import com.navi.server.component.FileConfigurationComponent
 import com.navi.server.domain.FileObject
 import com.navi.server.domain.GridFSRepository
 import com.navi.server.domain.user.User

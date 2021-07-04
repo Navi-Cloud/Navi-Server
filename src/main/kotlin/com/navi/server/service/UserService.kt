@@ -1,6 +1,5 @@
 package com.navi.server.service
 
-import com.navi.server.component.FileConfigurationComponent
 import com.navi.server.domain.GridFSRepository
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
@@ -23,12 +22,6 @@ class UserService {
 
     @Autowired
     private lateinit var jwtTokenProvider: JWTTokenProvider
-
-    @Autowired
-    private lateinit var fileConfigurationComponent: FileConfigurationComponent
-
-    @Autowired
-    private lateinit var gridFSRepository: GridFSRepository
 
     @Autowired
     private lateinit var fileService: FileService
