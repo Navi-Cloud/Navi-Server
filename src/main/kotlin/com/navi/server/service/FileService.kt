@@ -140,13 +140,6 @@ class FileService {
         )
     }
 
-    fun getSHA256(input: String): String {
-        val messageDigest: MessageDigest = MessageDigest.getInstance("SHA-256").also {
-            it.update(input.toByteArray())
-        }
-        return DatatypeConverter.printHexBinary(messageDigest.digest())
-    }
-
     fun convertSize(fileSize: Long): String {
         val fileUnit: String = "KMGTE"
         val logValue: Int = log(fileSize.toDouble(), 1024.0).toInt()
