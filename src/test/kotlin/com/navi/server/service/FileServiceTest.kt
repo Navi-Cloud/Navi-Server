@@ -7,6 +7,7 @@ import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
 import com.navi.server.dto.LoginRequest
 import com.navi.server.dto.UserRegisterRequest
+import com.navi.server.error.exception.ConflictException
 import com.navi.server.error.exception.NotFoundException
 import com.navi.server.security.JWTTokenProvider
 import org.assertj.core.api.Assertions.assertThat
@@ -180,6 +181,24 @@ class FileServiceTest {
             assertThat(it.fileName).isEqualTo("Testing")
             assertThat(it.fileType).isEqualTo("Folder")
             assertThat(it.prevToken).isEqualTo(rootToken)
+        }
+    }
+
+    @Test
+    fun is_createNewFolder_duplicated_conflict() {
+        val userToken: String = registerUser()
+        val rootToken: String = fileService.findRootToken(userToken).rootToken
+
+        // Create it
+        fileService.createNewFolder(userToken, rootToken, "Testing")
+
+        // Check
+        runCatching {
+            fileService.createNewFolder(userToken, rootToken, "Testing")
+        }.onSuccess {
+            fail("We created folder, but it succeed?")
+        }.onFailure {
+            assertThat(it is ConflictException).isEqualTo(true)
         }
     }
 

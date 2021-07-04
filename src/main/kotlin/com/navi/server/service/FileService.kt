@@ -3,6 +3,7 @@ package com.navi.server.service
 import com.navi.server.domain.FileObject
 import com.navi.server.domain.GridFSRepository
 import com.navi.server.dto.RootTokenResponseDto
+import com.navi.server.error.exception.ConflictException
 import com.navi.server.error.exception.NotFoundException
 import com.navi.server.security.JWTTokenProvider
 import org.springframework.beans.factory.annotation.Autowired
@@ -120,8 +121,22 @@ class FileService {
         return fileObject
     }
 
+    private fun checkFolderExists(userId: String, parentFolderToken: String, newFolderName: String) {
+        val insideFolder: List<FileObject> = gridFSRepository.getMetadataInsideFolder(userId, parentFolderToken)
+        val findResult: FileObject? = insideFolder.find {
+            it.fileType == "Folder" && it.fileName == newFolderName
+        }
+
+        if (findResult != null) {
+            throw ConflictException("Folder name $newFolderName already exists!")
+        }
+    }
+
     fun createNewFolder(userToken: String, parentFolderToken: String, newFolderName: String): FileObject {
         val userId: String = convertTokenToUserId(userToken)
+
+        // Step 1) Check whether folder exists on DB
+        checkFolderExists(userId, parentFolderToken, newFolderName)
 
         // Step 2) upload to DB
         return createLogicalFolder(userId, parentFolderToken, newFolderName)
