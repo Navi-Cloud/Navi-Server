@@ -65,7 +65,7 @@ class GridFSRepository(
             addCriteria(
                 Criteria().andOperator(
                     Criteria.where("metadata.userId").`is`(userId),
-                    Criteria.where("metadata.targetToken").`is`(targetPrevToken)
+                    Criteria.where("metadata.token").`is`(targetPrevToken)
                 )
             )
         }
@@ -81,7 +81,7 @@ class GridFSRepository(
                 Criteria().andOperator(
                     Criteria.where("metadata.userId").`is`(userId),
                     Criteria.where("metadata.prevToken").`is`(fileObject.prevToken),
-                    Criteria.where("metadata.targetToken").`is`(fileObject.token),
+                    Criteria.where("metadata.token").`is`(fileObject.token),
                 )
             )
         }
