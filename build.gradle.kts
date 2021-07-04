@@ -66,7 +66,8 @@ tasks.jacocoTestCoverageVerification {
                 "com.navi.server.domain.FileEntity",
                 "com.navi.server.service.FileService.fileDownload.responseBody.1",
                 "com.navi.server.service.PathService",
-                "com.navi.server.error.**"
+                "com.navi.server.error.**",
+                "com.navi.server.domain.GridFSRepository"
             )
         }
     }
