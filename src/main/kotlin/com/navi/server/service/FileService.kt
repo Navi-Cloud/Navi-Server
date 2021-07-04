@@ -6,6 +6,7 @@ import com.navi.server.dto.RootTokenResponseDto
 import com.navi.server.error.exception.ConflictException
 import com.navi.server.error.exception.NotFoundException
 import com.navi.server.security.JWTTokenProvider
+import org.apache.commons.io.IOUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -102,7 +103,7 @@ class FileService {
         val gridFSFile: InputStream = gridFSRepository.getFullTargetStream(inputUserId, file)
 
         // Streaming ResponseBody
-        val responseBody = StreamingResponseBody { outputStream: OutputStream? -> gridFSFile.transferTo(outputStream) }
+        val responseBody = StreamingResponseBody { outputStream: OutputStream? -> IOUtils.copy(gridFSFile, outputStream)}
 
         val again: String =
             String.format("attachment; filename=\"%s\"", URLEncoder.encode(file.fileName, "UTF-8"))
@@ -123,7 +124,7 @@ class FileService {
         )
         gridFSRepository.saveToGridFS(
             fileObject = fileObject,
-            inputStream = InputStream.nullInputStream()
+            inputStream = ByteArrayInputStream("".toByteArray())
         )
 
         return fileObject
