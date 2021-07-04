@@ -72,7 +72,9 @@ class GridFSRepository(
 
         return gridFsTemplate.find(query).map {
             convertMetaDataToFileObject(it.metadata)
-        }.toList()
+        }.filter {
+            it.token != targetPrevToken
+        }
     }
 
     fun getFullTargetStream(userId: String, fileObject: FileObject): InputStream {
