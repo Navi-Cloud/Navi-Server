@@ -72,6 +72,13 @@ class FileApiControllerTest {
     @Autowired
     private lateinit var  gridFSRepository: GridFSRepository
 
+    private val mockUser: UserRegisterRequest = UserRegisterRequest(
+        userId = "kangDroid",
+        userName = "Kangdroid",
+        userPassword = "password",
+        userEmail = "test@test.com"
+    )
+
     @Before
     fun initEnvironment() {
         gridFsTemplate.delete(Query())
@@ -85,12 +92,6 @@ class FileApiControllerTest {
     }
 
     private fun registerAndLogin(): String {
-        val mockUser: UserRegisterRequest = UserRegisterRequest(
-            userId = "kangDroid",
-            userName = "Kangdroid",
-            userPassword = "password",
-            userEmail = "test@test.com"
-        )
 
         userService.registerUser(
             mockUser
@@ -360,80 +361,71 @@ class FileApiControllerTest {
 //    }
 //
 //    /* create new folder test */
-//    @Test
-//    fun testCreateNewFolder_ok(){
-//        val newFolderName: String = "je"
-//
-//        // Create Server Root Structure
-//        val loginToken: String = registerAndLogin()
-//
-//        val parentFolderToken = fileService.getSHA256("/")
-//        val createFolderRequestDTO: CreateFolderRequestDTO = CreateFolderRequestDTO(
-//            parentFolderToken = parentFolderToken,
-//            newFolderName = newFolderName
-//        )
-//        val content: String = objectMapper.writeValueAsString(createFolderRequestDTO)
-//
-//        // Perform
-//        mockMvc.perform(
-//            MockMvcRequestBuilders.post("/api/navi/folder")
-//                .header("X-AUTH-TOKEN", loginToken)
-//                .contentType(MediaType.APPLICATION_JSON_UTF8)
-//                .content(content)
-//        ).andExpect { status(HttpStatus.NO_CONTENT) }
-//            .andDo(MockMvcResultHandlers.print())
-//            .andDo{
-//                assertThat(it.response.status).isEqualTo(HttpStatus.NO_CONTENT.value())
-//            }
-//
-//        // Assert
-//        // Whether new folder is actually exists
-//        val userId: String = jwtTokenProvider.getUserPk(loginToken)
-//        val folderObject: File =
-//            Paths.get(fileConfigurationComponent.serverRoot, userId, newFolderName).toFile()
-//        assertThat(folderObject.exists()).isEqualTo(true)
-//
-//        // Now Check DB
-//        val user: User = userTemplateRepository.findByUserId(userId)
-//        val fileList: MutableList<FileObject> = user.fileList
-//        assertThat(fileList.size).isEqualTo(2L)
-//        assertThat(fileList[1].fileName).isEqualTo("/$newFolderName")
-//        assertThat(fileList[1].fileType).isEqualTo("Folder")
-//    }
-//
-//    @Test
-//    fun testCreateNewFolder_ConflictException() {
-//        val newFolderName: String = "je"
-//
-//        // Create Server Root Structure
-//        val loginToken: String = registerAndLogin()
-//
-//        val parentFolderToken = fileService.getSHA256("/")
-//
-//        // Create new folder to root directory named $newFolderName
-//        fileService.createNewFolder(
-//            userToken = loginToken,
-//            parentFolderToken = parentFolderToken,
-//            newFolderName = newFolderName
-//        )
-//
-//        // Try to create new folder with the same name $newFolderName
-//        // This will throw ConflictException
-//        val createFolderRequestDTO: CreateFolderRequestDTO = CreateFolderRequestDTO(
-//            parentFolderToken = parentFolderToken,
-//            newFolderName = newFolderName
-//        )
-//        val content: String = objectMapper.writeValueAsString(createFolderRequestDTO)
-//
-//        mockMvc.perform(
-//            MockMvcRequestBuilders.post("/api/navi/folder")
-//                .header("X-AUTH-TOKEN", loginToken)
-//                .contentType(MediaType.APPLICATION_JSON_UTF8)
-//                .content(content)
-//        ).andExpect { status(HttpStatus.OK) }
-//            .andDo(MockMvcResultHandlers.print())
-//            .andDo{
-//                assertThat(it.response.status).isEqualTo(HttpStatus.CONFLICT.value())
-//            }
-//    }
+    @Test
+    fun testCreateNewFolder_ok(){
+        val newFolderName: String = "je"
+
+        // Create Server Root Structure
+        val loginToken: String = registerAndLogin()
+        val rootToken: String = fileService.findRootToken(loginToken).rootToken
+
+        val createFolderRequestDTO: CreateFolderRequestDTO = CreateFolderRequestDTO(
+            parentFolderToken = rootToken,
+            newFolderName = newFolderName
+        )
+        val content: String = objectMapper.writeValueAsString(createFolderRequestDTO)
+
+        // Perform
+        mockMvc.perform(
+            MockMvcRequestBuilders.post("/api/navi/folder")
+                .header("X-AUTH-TOKEN", loginToken)
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(content)
+        ).andExpect { status(HttpStatus.NO_CONTENT) }
+            .andDo(MockMvcResultHandlers.print())
+            .andDo{
+                assertThat(it.response.status).isEqualTo(HttpStatus.NO_CONTENT.value())
+            }
+
+        // Now Check DB
+        gridFSRepository.getMetadataInsideFolder(mockUser.userId, rootToken).also {
+            assertThat(it.size).isEqualTo(1)
+            assertThat(it[0].fileName).isEqualTo(newFolderName)
+        }
+    }
+
+    @Test
+    fun testCreateNewFolder_ConflictException() {
+        val newFolderName: String = "je"
+
+        // Create Server Root Structure
+        val loginToken: String = registerAndLogin()
+        val rootToken: String = fileService.findRootToken(loginToken).rootToken
+
+        // Create new folder to root directory named $newFolderName
+        fileService.createNewFolder(
+            userToken = loginToken,
+            parentFolderToken = rootToken,
+            newFolderName = newFolderName
+        )
+
+        // Try to create new folder with the same name $newFolderName
+        // This will throw ConflictException
+        val createFolderRequestDTO: CreateFolderRequestDTO = CreateFolderRequestDTO(
+            parentFolderToken = rootToken,
+            newFolderName = newFolderName
+        )
+        val content: String = objectMapper.writeValueAsString(createFolderRequestDTO)
+
+        mockMvc.perform(
+            MockMvcRequestBuilders.post("/api/navi/folder")
+                .header("X-AUTH-TOKEN", loginToken)
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(content)
+        ).andExpect { status(HttpStatus.OK) }
+            .andDo(MockMvcResultHandlers.print())
+            .andDo{
+                assertThat(it.response.status).isEqualTo(HttpStatus.CONFLICT.value())
+            }
+    }
 }
