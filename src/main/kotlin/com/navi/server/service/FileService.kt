@@ -87,11 +87,15 @@ class FileService {
         return tmpFileObject
     }
 
-    fun fileDownload(userToken: String, fileToken: String, prevToken: String): StreamingResponseBody {
+    fun fileDownload(userToken: String, fileToken: String, prevToken: String): ResponseEntity<StreamingResponseBody> {
         val inputUserId: String = convertTokenToUserId(userToken)
 
         // File Object[MetaData]
-        val file: FileObject = gridFSRepository.getMetadataSpecific(inputUserId, fileToken, prevToken)
+        val file: FileObject = runCatching {
+            gridFSRepository.getMetadataSpecific(inputUserId, fileToken, prevToken)
+        }.getOrElse {
+            throw NotFoundException("Cannot find file: ${fileToken}!!")
+        }
 
         // Actual file itself[stream]
         val gridFSFile: InputStream = gridFSRepository.getFullTargetStream(inputUserId, file)
@@ -102,12 +106,10 @@ class FileService {
         val again: String =
             String.format("attachment; filename=\"%s\"", URLEncoder.encode(file.fileName, "UTF-8"))
 
-        return responseBody
-
-//        ResponseEntity.ok()
-//            .contentType(MediaType.parseMediaType("application/octet-stream"))
-//            .header(HttpHeaders.CONTENT_DISPOSITION, again)
-//            .body(responseBody)
+        return ResponseEntity.ok()
+            .contentType(MediaType.parseMediaType("application/octet-stream"))
+            .header(HttpHeaders.CONTENT_DISPOSITION, again)
+            .body(responseBody)
     }
 
     private fun createLogicalFolder(userId: String, prevToken: String, newFolderName: String): FileObject {

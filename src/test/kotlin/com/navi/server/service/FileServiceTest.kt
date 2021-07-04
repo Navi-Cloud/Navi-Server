@@ -192,12 +192,31 @@ class FileServiceTest {
             fileToken = fileObjectUploaded.token,
             prevToken = fileObjectUploaded.prevToken
         ).also {
-            it.writeTo(byteArrayOutputStream)
+            assertThat(it.statusCode).isEqualTo(HttpStatus.OK)
+            val streamBody: StreamingResponseBody = it.body!!
+            streamBody.writeTo(byteArrayOutputStream)
         }
 
         // Compare results
         assertThat(byteArrayOutputStream.toByteArray()).isEqualTo(uploadFileContent)
     }
+
+    @Test
+    fun is_fileDownload_non_exists_not_found() {
+        val userToken: String = registerUser()
+
+        // First we upload files first to root
+        val rootToken: String = fileService.findRootToken(userToken).rootToken
+
+        runCatching {
+            fileService.fileDownload(userToken, "", rootToken)
+        }.onSuccess {
+            fail("Since we are not providing fileToken, but it succeed?")
+        }.onFailure {
+            assertThat(it is NotFoundException).isEqualTo(true)
+        }
+    }
+
 
     @Test
     fun is_createNewFolder_works_well() {
