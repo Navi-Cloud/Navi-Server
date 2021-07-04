@@ -142,22 +142,6 @@ class FileApiControllerTest {
         }
     }
 
-    @Test
-    fun invalid_findInsideFiles_NOTFOUND_no_file(){
-        val loginToken: String = registerAndLogin()
-
-        // invalid find Inside files : invalid token
-        val invalidToken = "token"
-        mockMvc.perform(
-            MockMvcRequestBuilders.get("/api/navi/files/list/${invalidToken}")
-                .header("X-AUTH-TOKEN", loginToken)
-        ).andExpect { status(HttpStatus.NOT_FOUND) }
-            .andDo(MockMvcResultHandlers.print())
-            .andDo{
-                assertThat(it.response.status).isEqualTo(HttpStatus.NOT_FOUND.value())
-            }
-    }
-
     // test upload
     @Test
     fun testFileUpload_ok(){
@@ -191,7 +175,7 @@ class FileApiControllerTest {
         gridFSRepository.getMetadataInsideFolder("kangDroid", rootToken).also {
             assertThat(it.isEmpty()).isEqualTo(false)
             assertThat(it.size).isEqualTo(1)
-            assertThat(it[0].fileName).isEqualTo("uploadPath")
+            assertThat(it[0].fileName).isEqualTo(uploadFileName)
         }
     }
 
@@ -230,55 +214,8 @@ class FileApiControllerTest {
         gridFSRepository.getMetadataInsideFolder("kangDroid", rootToken).also {
             assertThat(it.isEmpty()).isEqualTo(false)
             assertThat(it.size).isEqualTo(1)
-            assertThat(it[0].fileName).isEqualTo("uploadPath")
+            assertThat(it[0].fileName).isEqualTo(uploadFileName)
         }
-    }
-
-    @Test
-    fun invalid_fileUpload_NOTFOUND_and_IOException(){
-        // Create Server Root Structure
-        val loginToken: String = registerAndLogin()
-        val rootToken: String = fileService.findRootToken(loginToken).rootToken
-
-        // make uploadFile
-        val uploadFileName: String = "uploadTest-service.txt"
-        val uploadFileContent: ByteArray = "file upload test file!".toByteArray()
-        val multipartFile: MockMultipartFile = MockMultipartFile(
-            "uploadFile", uploadFileName, "text/plain", uploadFileContent
-        )
-
-        // invalid upload test 1 : invalid token
-        val invalidToken = "token"
-        val uploadFolderPath = MockMultipartFile("uploadPath", "uploadPath", "text/plain", invalidToken.toByteArray())
-        // Perform
-        mockMvc.perform(
-            MockMvcRequestBuilders.multipart("/api/navi/files")
-                .file(multipartFile)
-                .file(uploadFolderPath)
-                .header("X-AUTH-TOKEN", loginToken)
-        ).andExpect { status(HttpStatus.NOT_FOUND) }
-            .andDo(MockMvcResultHandlers.print())
-            .andDo{
-                assertThat(it.response.status).isEqualTo(HttpStatus.NOT_FOUND.value())
-            }
-
-
-        // invalid upload test 2 : invalid multipartFile (IOException)
-        val multipartFile2 = MockMultipartFile(
-            "uploadFile", "".toByteArray()
-        )
-        val uploadFolderPath2 = MockMultipartFile("uploadPath", "uploadPath", "text/plain", rootToken.toByteArray())
-        // Perform
-        mockMvc.perform(
-            MockMvcRequestBuilders.multipart("/api/navi/files")
-                .file(multipartFile2)
-                .file(uploadFolderPath2)
-                .header("X-AUTH-TOKEN", loginToken)
-        ).andExpect { status(HttpStatus.INTERNAL_SERVER_ERROR) }
-            .andDo(MockMvcResultHandlers.print())
-            .andDo{
-                assertThat(it.response.status).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value())
-            }
     }
 
     // test fileDownload
