@@ -27,6 +27,19 @@ class GridFSRepository(
         )
     }
 
+    fun removeFile(userId: String, targetToken: String, targetPrevToken: String) {
+        val query: Query = Query().apply {
+            addCriteria(
+                Criteria().andOperator(
+                    Criteria.where("metadata.userId").`is`(userId),
+                    Criteria.where("metadata.token").`is`(targetToken),
+                    Criteria.where("metadata.prevToken").`is`(targetPrevToken)
+                )
+            )
+        }
+        gridFsTemplate.delete(query)
+    }
+
     // For querying specific file[i.e direct token search]
     fun getMetadataSpecific(userId: String, targetToken: String, targetPrevToken: String?): FileObject {
         val query: Query = Query().apply {

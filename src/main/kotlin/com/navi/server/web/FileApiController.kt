@@ -63,4 +63,14 @@ class FileApiController (val fileService: FileService){
         )
         return ResponseEntity.noContent().build()
     }
+
+    @DeleteMapping("/api/navi/files/{prevToken}/{targetToken}")
+    fun removeFile(@RequestHeader httpHeaders: HttpHeaders, @PathVariable prevToken: String, @PathVariable targetToken: String): ResponseEntity<Unit> {
+        fileService.removeFile(
+            userToken = httpHeaders["X-AUTH-TOKEN"]!![0],
+            targetToken = targetToken,
+            prevToken = prevToken
+        )
+        return ResponseEntity.noContent().build()
+    }
 }
