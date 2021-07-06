@@ -80,11 +80,12 @@ class FileApiController (val fileService: FileService){
         return ResponseEntity.noContent().build()
     }
 
+    // Search param should be encoded with URL - Encoded, UTF-8
     @GetMapping("/api/navi/search")
     fun searchFile(@RequestHeader httpHeaders: HttpHeaders, @RequestParam("searchParam") searchParam: String): ResponseEntity<List<FileObject>> {
         val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
         return ResponseEntity.ok(
-            fileService.searchFile(tokenList[0], searchParam)
+            fileService.searchFile(tokenList[0], URLDecoder.decode(searchParam, StandardCharsets.UTF_8.toString()))
         )
     }
 }

@@ -411,7 +411,8 @@ class FileApiControllerTest {
         )
 
         // Get Api
-        val url = "http://localhost:${port}/api/navi/search?searchParam=${responseFileObject.fileName}"
+        val encodedName: String = URLEncoder.encode(responseFileObject.fileName, StandardCharsets.UTF_8.toString())
+        val url = "http://localhost:${port}/api/navi/search?searchParam=${encodedName}"
         val headers: HttpHeaders = HttpHeaders().apply {
             add("X-AUTH-TOKEN", userToken)
         }
