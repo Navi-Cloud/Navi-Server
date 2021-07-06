@@ -307,7 +307,7 @@ class FileApiControllerTest {
     }
 
     @Test
-    fun is_removeFile_works_well() {
+    fun is_removeFile_with_file_works_well() {
         // First upload
         // Create Server Root Structure
         val loginToken: String = registerAndLogin()
@@ -342,6 +342,42 @@ class FileApiControllerTest {
         mockMvc.perform(
             MockMvcRequestBuilders.delete("/api/navi/files/${targetFileObject.prevToken}/${targetFileObject.token}")
                 .header("X-AUTH-TOKEN", loginToken)
+        ).andExpect { status(HttpStatus.NO_CONTENT) }
+
+        // Check DB
+        val rootFolderList: List<FileObject> =
+            gridFSRepository.getMetadataInsideFolder(mockUser.userId, rootToken)
+        assertThat(rootFolderList.size).isEqualTo(0)
+    }
+
+    @Test
+    fun is_removeFile_with_folder_works_well() {
+        // Upload first
+        val userToken: String = registerAndLogin()
+        val rootToken: String = fileService.findRootToken(userToken).rootToken
+
+        // Create Folder
+        val folderObject: FileObject = fileService.createNewFolder(userToken, rootToken, "TestingFolder")
+
+        // make uploadFile
+        val uploadFileName: String = "uploadTest-service.txt"
+        val uploadFileContent: ByteArray = "file upload test file!".toByteArray()
+        val multipartFile: MockMultipartFile = MockMultipartFile(
+            uploadFileName, uploadFileName, "text/plain", uploadFileContent
+        )
+
+        val responseFileObject: FileObject = fileService.fileUpload(
+            userToken = userToken,
+            uploadFolderToken = folderObject.token,
+            files = multipartFile
+        )
+
+        // Mid-Check
+        assertThat(gridFsTemplate.find(Query()).count()).isEqualTo(3) // root, folder, file
+
+        mockMvc.perform(
+            MockMvcRequestBuilders.delete("/api/navi/files/${folderObject.prevToken}/${folderObject.token}")
+                .header("X-AUTH-TOKEN", userToken)
         ).andExpect { status(HttpStatus.NO_CONTENT) }
 
         // Check DB

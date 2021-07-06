@@ -28,16 +28,11 @@ class GridFSRepository(
     }
 
     fun removeFile(userId: String, targetToken: String, targetPrevToken: String) {
-        val query: Query = Query().apply {
-            addCriteria(
-                Criteria().andOperator(
-                    Criteria.where("metadata.userId").`is`(userId),
-                    Criteria.where("metadata.token").`is`(targetToken),
-                    Criteria.where("metadata.prevToken").`is`(targetPrevToken)
-                )
-            )
+        val targetFileInformation: FileObject = getMetadataSpecific(userId, targetToken, targetPrevToken)
+        when (targetFileInformation.fileType) {
+            "Folder" -> removeFolder(userId, targetFileInformation)
+            "File" -> removeSingleFile(userId, targetToken, targetPrevToken)
         }
-        gridFsTemplate.delete(query)
     }
 
     // For querying specific file[i.e direct token search]
@@ -125,5 +120,35 @@ class GridFSRepository(
             .toMap()
 
         return defaultConstructor.callBy(argument)
+    }
+
+    private fun removeSingleFile(userId: String, targetToken: String, targetPrevToken: String) {
+        val query: Query = Query().apply {
+            addCriteria(
+                Criteria().andOperator(
+                    Criteria.where("metadata.userId").`is`(userId),
+                    Criteria.where("metadata.token").`is`(targetToken),
+                    Criteria.where("metadata.prevToken").`is`(targetPrevToken)
+                )
+            )
+        }
+        gridFsTemplate.delete(query)
+    }
+
+    private fun removeFolder(userId: String, folderInformation: FileObject) {
+        // We are deleting folderInformation itself
+        removeSingleFile(userId, folderInformation.token, folderInformation.prevToken)
+
+        // Now we have to delete where each file.prevToken = folder.token
+        val query: Query = Query().apply {
+            addCriteria(
+                Criteria().andOperator(
+                    Criteria.where("metadata.userId").`is`(userId),
+                    Criteria.where("metadata.prevToken").`is`(folderInformation.token)
+                )
+            )
+        }
+
+        gridFsTemplate.delete(query)
     }
 }
