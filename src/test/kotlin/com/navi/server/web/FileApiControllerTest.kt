@@ -20,6 +20,7 @@ import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.test.context.junit4.SpringRunner
 import org.assertj.core.api.Assertions.assertThat;
 import org.junit.Before
+import org.springframework.boot.test.web.client.getForEntity
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.gridfs.GridFsTemplate
 import org.springframework.http.*
@@ -388,5 +389,37 @@ class FileApiControllerTest {
         val rootFolderList: List<FileObject> =
             gridFSRepository.getMetadataInsideFolder(mockUser.userId, rootToken)
         assertThat(rootFolderList.size).isEqualTo(0)
+    }
+
+    @Test
+    fun is_searchFile_works_well() {
+        // Upload first
+        val userToken: String = registerAndLogin()
+        val rootToken: String = fileService.findRootToken(userToken).rootToken
+
+        // make uploadFile
+        val uploadFileName: String = "test"
+        val uploadFileContent: ByteArray = "file upload test file!".toByteArray()
+        val multipartFile: MockMultipartFile = MockMultipartFile(
+            uploadFileName, uploadFileName, "text/plain", uploadFileContent
+        )
+
+        val responseFileObject: FileObject = fileService.fileUpload(
+            userToken = userToken,
+            uploadFolderToken = rootToken,
+            files = multipartFile
+        )
+
+        // Get Api
+        val url = "http://localhost:${port}/api/navi/search?searchParam=${responseFileObject.fileName}"
+        val headers: HttpHeaders = HttpHeaders().apply {
+            add("X-AUTH-TOKEN", userToken)
+        }
+
+        restTemplate.exchange(url, HttpMethod.GET, HttpEntity<Void>(headers), Array<FileObject>::class.java).also {
+            assertThat(it.statusCode).isEqualTo(HttpStatus.OK)
+            assertThat(it.body!!.size).isEqualTo(1)
+            assertThat(it.body[0].fileName).isEqualTo(uploadFileName)
+        }
     }
 }
