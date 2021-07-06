@@ -35,6 +35,21 @@ class GridFSRepository(
         }
     }
 
+    fun searchFile(userId: String, fileName: String): List<FileObject> {
+        val query: Query = Query().apply {
+            addCriteria(
+                Criteria().andOperator(
+                    Criteria.where("metadata.userId").`is`(userId),
+                    Criteria.where("metadata.fileName").`is`(fileName)
+                )
+            )
+        }
+
+        return gridFsTemplate.find(query).map {
+            convertMetaDataToFileObject(it.metadata)
+        }.toList()
+    }
+
     // For querying specific file[i.e direct token search]
     fun getMetadataSpecific(userId: String, targetToken: String, targetPrevToken: String?): FileObject {
         val query: Query = Query().apply {
