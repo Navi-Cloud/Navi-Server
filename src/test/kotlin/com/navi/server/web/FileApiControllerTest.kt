@@ -30,6 +30,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.web.context.WebApplicationContext
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -81,6 +83,8 @@ class FileApiControllerTest {
         userTemplateRepository.clearAll()
     }
 
+    private fun encodeString(inputString: String): String = URLEncoder.encode(inputString, StandardCharsets.UTF_8.toString())
+
     private fun registerAndLogin(): String {
 
         userService.registerUser(
@@ -120,7 +124,7 @@ class FileApiControllerTest {
         val rootToken: String = fileService.findRootToken(loginToken).rootToken
 
         // in "folderName" folder
-        val url2 = "http://localhost:$port/api/navi/files/list/${rootToken}"
+        val url2 = "http://localhost:$port/api/navi/files/list/${encodeString(rootToken)}"
         val headers: HttpHeaders = HttpHeaders().apply {
             add("X-AUTH-TOKEN", loginToken)
         }
@@ -228,7 +232,7 @@ class FileApiControllerTest {
 
         // Perform and Assert
         mockMvc.perform(
-            MockMvcRequestBuilders.get("/api/navi/files?token=${fileObjectUploaded.token}&prevToken=${fileObjectUploaded.prevToken}")
+            MockMvcRequestBuilders.get("/api/navi/files?token=${encodeString(fileObjectUploaded.token)}&prevToken=${encodeString(fileObjectUploaded.prevToken)}")
                 .header("X-AUTH-TOKEN", loginToken)
         ).andExpect { status(HttpStatus.OK) }
             .andDo(MockMvcResultHandlers.print())
@@ -340,7 +344,7 @@ class FileApiControllerTest {
             gridFSRepository.getMetadataInsideFolder(mockUser.userId, rootToken)[0]
 
         mockMvc.perform(
-            MockMvcRequestBuilders.delete("/api/navi/files/${targetFileObject.prevToken}/${targetFileObject.token}")
+            MockMvcRequestBuilders.delete("/api/navi/files/${encodeString(targetFileObject.prevToken)}/${encodeString(targetFileObject.token)}")
                 .header("X-AUTH-TOKEN", loginToken)
         ).andExpect { status(HttpStatus.NO_CONTENT) }
 
@@ -376,7 +380,7 @@ class FileApiControllerTest {
         assertThat(gridFsTemplate.find(Query()).count()).isEqualTo(3) // root, folder, file
 
         mockMvc.perform(
-            MockMvcRequestBuilders.delete("/api/navi/files/${folderObject.prevToken}/${folderObject.token}")
+            MockMvcRequestBuilders.delete("/api/navi/files/${encodeString(folderObject.prevToken)}/${encodeString(folderObject.token)}")
                 .header("X-AUTH-TOKEN", userToken)
         ).andExpect { status(HttpStatus.NO_CONTENT) }
 
