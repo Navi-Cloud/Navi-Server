@@ -27,4 +27,13 @@ class ETCApiControllerTest {
         assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.OK)
         assertThat(responseEntity.body).isEqualTo("default")
     }
+
+    @Test
+    fun is_removing_all_data_works_well() {
+        val serverUrl: String = "http://localhost:${serverPort}/api/remove"
+
+        restTemplate.getForEntity<String>(serverUrl).also {
+            assertThat(it.statusCode).isEqualTo(HttpStatus.OK)
+        }
+    }
 }
