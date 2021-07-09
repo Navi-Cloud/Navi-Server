@@ -262,4 +262,103 @@ class FileServiceTest {
         assertThat(fileService.convertSize(testFileSizeB)).isEqualTo("800B")
         assertThat(fileService.convertSize(testFileSizeZero)).isEqualTo("0B")
     }
+
+    @Test
+    fun is_removeFile_with_file_works_welll() {
+        // Upload first
+        val userToken: String = registerUser()
+        val rootToken: String = fileService.findRootToken(userToken).rootToken
+
+        // make uploadFile
+        val uploadFileName: String = "uploadTest-service.txt"
+        val uploadFileContent: ByteArray = "file upload test file!".toByteArray()
+        val multipartFile: MockMultipartFile = MockMultipartFile(
+            uploadFileName, uploadFileName, "text/plain", uploadFileContent
+        )
+
+        val responseFileObject: FileObject = fileService.fileUpload(
+            userToken = userToken,
+            uploadFolderToken = rootToken,
+            files = multipartFile
+        )
+
+        gridFSRepository.getMetadataInsideFolder(userRegisterRequest.userId, responseFileObject.prevToken).also {
+            assertThat(it.size).isEqualTo(1)
+        }
+
+        // Remove
+        fileService.removeFile(
+            userToken = userToken,
+            targetToken = responseFileObject.token,
+            prevToken = responseFileObject.prevToken
+        )
+
+        // Check
+        gridFSRepository.getMetadataInsideFolder(userRegisterRequest.userId, responseFileObject.prevToken).also {
+            assertThat(it.size).isEqualTo(0)
+        }
+    }
+
+    @Test
+    fun is_removeFile_with_folder_works_well() {
+        // Upload first
+        val userToken: String = registerUser()
+        val rootToken: String = fileService.findRootToken(userToken).rootToken
+
+        // Create Folder
+        val folderObject: FileObject = fileService.createNewFolder(userToken, rootToken, "TestingFolder")
+
+        // make uploadFile
+        val uploadFileName: String = "uploadTest-service.txt"
+        val uploadFileContent: ByteArray = "file upload test file!".toByteArray()
+        val multipartFile: MockMultipartFile = MockMultipartFile(
+            uploadFileName, uploadFileName, "text/plain", uploadFileContent
+        )
+
+        val responseFileObject: FileObject = fileService.fileUpload(
+            userToken = userToken,
+            uploadFolderToken = folderObject.token,
+            files = multipartFile
+        )
+
+        // Mid-Check
+        assertThat(gridFsTemplate.find(Query()).count()).isEqualTo(3) // root, folder, file
+
+        // Now delete folder
+        fileService.removeFile(
+            userToken = userToken,
+            targetToken = folderObject.token,
+            prevToken = rootToken
+        )
+
+        // Check
+        assertThat(gridFsTemplate.find(Query()).count()).isEqualTo(1) // Only root
+    }
+
+    @Test
+    fun is_searchFile_works_well() {
+        // Upload first
+        val userToken: String = registerUser()
+        val rootToken: String = fileService.findRootToken(userToken).rootToken
+
+        // make uploadFile
+        val uploadFileName: String = "uploadTest-service.txt"
+        val uploadFileContent: ByteArray = "file upload test file!".toByteArray()
+        val multipartFile: MockMultipartFile = MockMultipartFile(
+            uploadFileName, uploadFileName, "text/plain", uploadFileContent
+        )
+
+        val responseFileObject: FileObject = fileService.fileUpload(
+            userToken = userToken,
+            uploadFolderToken = rootToken,
+            files = multipartFile
+        )
+
+        // Search
+        fileService.searchFile(userToken, responseFileObject.fileName).also {
+            assertThat(it.size).isEqualTo(1)
+            assertThat(it[0].fileType).isEqualTo(responseFileObject.fileType)
+            assertThat(it[0].fileName).isEqualTo(responseFileObject.fileName)
+        }
+    }
 }

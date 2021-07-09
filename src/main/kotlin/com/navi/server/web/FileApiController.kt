@@ -9,9 +9,15 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 @RestController
 class FileApiController (val fileService: FileService){
+
+    private fun decodeUrl(inputString: String): String {
+        return URLDecoder.decode(inputString, StandardCharsets.UTF_8.toString())
+    }
 
     @GetMapping("/api/navi/root-token")
     fun findRootToken(@RequestHeader httpHeaders: HttpHeaders) : ResponseEntity<RootTokenResponseDto> {
@@ -28,7 +34,7 @@ class FileApiController (val fileService: FileService){
         val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
 
         return ResponseEntity.ok(
-            fileService.findInsideFiles(tokenList[0], token)
+            fileService.findInsideFiles(tokenList[0], decodeUrl(token))
         )
     }
 
@@ -49,7 +55,7 @@ class FileApiController (val fileService: FileService){
         // Invalid or Non-Token will be filtered through Spring Security.
         val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
 
-        return fileService.fileDownload(tokenList[0], token, prevToken)
+        return fileService.fileDownload(tokenList[0], decodeUrl(token), decodeUrl(prevToken))
     }
 
     @PostMapping("/api/navi/folder")
@@ -62,5 +68,24 @@ class FileApiController (val fileService: FileService){
             newFolderName = createFolderRequest.newFolderName
         )
         return ResponseEntity.noContent().build()
+    }
+
+    @DeleteMapping("/api/navi/files/{prevToken}/{targetToken}")
+    fun removeFile(@RequestHeader httpHeaders: HttpHeaders, @PathVariable prevToken: String, @PathVariable targetToken: String): ResponseEntity<Unit> {
+        fileService.removeFile(
+            userToken = httpHeaders["X-AUTH-TOKEN"]!![0],
+            targetToken = decodeUrl(targetToken),
+            prevToken = decodeUrl(prevToken)
+        )
+        return ResponseEntity.noContent().build()
+    }
+
+    // Search param should be encoded with URL - Encoded, UTF-8
+    @GetMapping("/api/navi/search")
+    fun searchFile(@RequestHeader httpHeaders: HttpHeaders, @RequestParam("searchParam") searchParam: String): ResponseEntity<List<FileObject>> {
+        val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
+        return ResponseEntity.ok(
+            fileService.searchFile(tokenList[0], decodeUrl(searchParam))
+        )
     }
 }

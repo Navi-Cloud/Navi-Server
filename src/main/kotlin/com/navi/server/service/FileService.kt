@@ -48,6 +48,17 @@ class FileService {
         return userId
     }
 
+    fun removeFile(userToken: String, targetToken: String, prevToken: String) {
+        val userId: String = convertTokenToUserId(userToken)
+        gridFSRepository.removeFile(userId, targetToken, prevToken)
+    }
+
+    fun searchFile(userToken: String, fileName: String): List<FileObject> {
+        val userId: String = convertTokenToUserId(userToken)
+
+        return gridFSRepository.searchFile(userId, fileName)
+    }
+
     fun findRootToken(userToken: String): RootTokenResponseDto {
         val userId: String = convertTokenToUserId(userToken)
         val userFileObject: FileObject = gridFSRepository.getRootToken(userId)
