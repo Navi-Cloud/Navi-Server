@@ -2,7 +2,6 @@ package com.navi.server.web
 
 import com.navi.server.domain.FileObject
 import com.navi.server.dto.CreateFolderRequestDTO
-import com.navi.server.dto.FileResponseDTO
 import com.navi.server.dto.RootTokenResponseDto
 import com.navi.server.service.FileService
 import org.springframework.http.HttpHeaders
@@ -18,23 +17,19 @@ class FileApiController (val fileService: FileService){
     fun findRootToken(@RequestHeader httpHeaders: HttpHeaders) : ResponseEntity<RootTokenResponseDto> {
         // Invalid or Non-Token will be filtered through Spring Security.
         val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
-        return fileService.findRootToken(tokenList[0])
-    }
-
-    @GetMapping("/api/navi/files/list")
-    fun findAllDesc(@RequestHeader httpHeaders: HttpHeaders) : ResponseEntity<List<FileResponseDTO>>{
-        // Invalid or Non-Token will be filtered through Spring Security.
-        val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
-
-        return fileService.findAllDesc(tokenList[0])
+        return ResponseEntity.ok(
+            fileService.findRootToken(tokenList[0])
+        )
     }
 
     @GetMapping("/api/navi/files/list/{token}")
-    fun findInsideFiles(@RequestHeader httpHeaders: HttpHeaders, @PathVariable token: String) : ResponseEntity<List<FileResponseDTO>> {
+    fun findInsideFiles(@RequestHeader httpHeaders: HttpHeaders, @PathVariable token: String) : ResponseEntity<List<FileObject>> {
         // Invalid or Non-Token will be filtered through Spring Security.
         val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
 
-        return fileService.findInsideFiles(tokenList[0], token)
+        return ResponseEntity.ok(
+            fileService.findInsideFiles(tokenList[0], token)
+        )
     }
 
     @PostMapping("/api/navi/files")
@@ -45,16 +40,16 @@ class FileApiController (val fileService: FileService){
 
         // when client requests, quotation marks(") are automatically inserted.
         if(token.contains("\""))
-            return fileService.fileUpload(tokenList[0], token.substring(1, token.length - 1), file)
-        return fileService.fileUpload(tokenList[0], token, file)
+            return ResponseEntity.ok(fileService.fileUpload(tokenList[0], token.substring(1, token.length - 1), file))
+        return ResponseEntity.ok(fileService.fileUpload(tokenList[0], token, file))
     }
 
-    @GetMapping("api/navi/files/{token}")
-    fun fileDownload(@RequestHeader httpHeaders: HttpHeaders, @PathVariable token: String) : ResponseEntity<StreamingResponseBody> {
+    @GetMapping("/api/navi/files")
+    fun fileDownload(@RequestHeader httpHeaders: HttpHeaders, @RequestParam("token") token: String, @RequestParam("prevToken") prevToken: String) : ResponseEntity<StreamingResponseBody> {
         // Invalid or Non-Token will be filtered through Spring Security.
         val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
 
-        return fileService.fileDownload(tokenList[0], token)
+        return fileService.fileDownload(tokenList[0], token, prevToken)
     }
 
     @PostMapping("/api/navi/folder")

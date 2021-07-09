@@ -1,6 +1,6 @@
 package com.navi.server.service
 
-import com.navi.server.component.FileConfigurationComponent
+import com.navi.server.domain.GridFSRepository
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
 import com.navi.server.dto.LoginRequest
@@ -14,6 +14,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.data.mongodb.core.query.Query
+import org.springframework.data.mongodb.gridfs.GridFsTemplate
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.File
@@ -28,23 +30,20 @@ class UserServiceTest {
     private lateinit var userTemplateRepository: UserTemplateRepository
 
     @Autowired
-    private lateinit var fileConfigurationComponent: FileConfigurationComponent
+    private lateinit var gridFsTemplate: GridFsTemplate
 
-    private lateinit var trashRootObject: File
+    @Autowired
+    private lateinit var gridFSRepository: GridFSRepository
 
     @Before
     fun initEnvironment() {
-        fileConfigurationComponent.serverRoot = File(System.getProperty("java.io.tmpdir"), "naviServerTesting").absolutePath
-        // Create trash directory
-        trashRootObject = File(fileConfigurationComponent.serverRoot)
-        trashRootObject.mkdir()
+        gridFsTemplate.delete(Query())
+        userTemplateRepository.clearAll()
     }
 
     @After
     fun clearAllDB() {
-        if (trashRootObject.exists()) {
-            trashRootObject.deleteRecursively()
-        }
+        gridFsTemplate.delete(Query())
         userTemplateRepository.clearAll()
     }
 

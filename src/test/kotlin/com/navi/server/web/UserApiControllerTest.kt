@@ -1,7 +1,6 @@
 package com.navi.server.web
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.navi.server.component.FileConfigurationComponent
 import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
 import com.navi.server.dto.LoginRequest
@@ -23,15 +22,13 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.web.context.WebApplicationContext
 import org.springframework.http.ResponseEntity.status
 import org.assertj.core.api.Assertions.assertThat;
+import org.springframework.data.mongodb.core.query.Query
+import org.springframework.data.mongodb.gridfs.GridFsTemplate
 import org.springframework.http.MediaType
-import java.io.File
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class UserApiControllerTest {
-    @Autowired
-    private lateinit var userService: UserService
-
     @Autowired
     private lateinit var userTemplateRepository: UserTemplateRepository
 
@@ -42,27 +39,19 @@ class UserApiControllerTest {
     private lateinit var webApplicationContext: WebApplicationContext
 
     @Autowired
-    private lateinit var fileConfigurationComponent: FileConfigurationComponent
-
-    private lateinit var trashRootObject: File
+    private lateinit var gridFsTemplate: GridFsTemplate
 
     private lateinit var mockMvc : MockMvc
 
     @Before
     fun initEnvironment() {
-        fileConfigurationComponent.serverRoot = File(System.getProperty("java.io.tmpdir"), "naviServerTesting").absolutePath
-        // Create trash directory
-        trashRootObject = File(fileConfigurationComponent.serverRoot)
-        trashRootObject.mkdir()
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build()
     }
 
     @After
     fun clearAllDB() {
-        if (trashRootObject.exists()) {
-            trashRootObject.deleteRecursively()
-        }
         userTemplateRepository.clearAll()
+        gridFsTemplate.delete(Query())
     }
 
     @Test
@@ -207,5 +196,4 @@ class UserApiControllerTest {
                 assertThat(it.response.status).isEqualTo(HttpStatus.FORBIDDEN.value())
             }
     }
-
 }

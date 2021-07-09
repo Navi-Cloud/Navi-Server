@@ -56,18 +56,6 @@ class UserTemplateRepository {
     }
 
     /**
-     * findAllFileList(inputUserId: String): List<FileObject>
-     * Find all file list based on inputUserId
-     */
-    fun findAllFileList(inputUserId: String): List<FileObject> {
-        val user: User = findByUserId(inputUserId) ?: run {
-            throw NotFoundException("Cannot find userid with: $inputUserId")
-        }
-
-        return user.fileList.toList()
-    }
-
-    /**
      * findAll(): List<User>
      * unlike findAllUserOnly, it returns pure-collection to object. Including fileList.
      *
@@ -78,92 +66,6 @@ class UserTemplateRepository {
     fun findAll(): List<User> {
         val findQuery: Query =  Query()
         return mongoTemplate.find(findQuery, User::class.java)
-    }
-
-    /**
-     * Inner function to search inside each user's fileList document.
-     * function results vary, depdends on inputSerachKey && inputSearchValue.
-     */
-    private fun innerFileListSearch(
-        inputUserId: String,
-        inputSearchKey: String,
-        inputSearchValue: String
-    ): AggregationResults<User> {
-        // Match user name [Filter userid first]
-        val userIdMatchCriteria: Criteria = Criteria.where(userIdField).`is`(inputUserId)
-        val matchOperation: MatchOperation = Aggregation.match(userIdMatchCriteria)
-
-        // Unwind
-        val unwindOperation: UnwindOperation = Aggregation.unwind(fileListField)
-
-        // Match Token [Filter token]
-        val fileTokenMatchCriteria: Criteria = Criteria.where(inputSearchKey).`is`(inputSearchValue)
-        val fileTokenMatchOperation: MatchOperation = Aggregation.match(fileTokenMatchCriteria)
-
-        // Group
-        val groupOperation: GroupOperation = Aggregation.group(objectIdField)
-            .push(
-                fileListField
-            ).`as`(fileListField)
-
-        return mongoTemplate.aggregate(
-            Aggregation.newAggregation(
-                matchOperation,
-                unwindOperation,
-                fileTokenMatchOperation,
-                groupOperation
-            ),
-            User::class.java,
-            User::class.java
-        )
-    }
-
-    /**
-     * findAllByPrevToken(inputUserId: String, inputPrevToken: String): List<FileObject>?
-     * Search inputUserId's fileList where fileList.prevToken = inputPrevToken
-     * Also, it only returns object corresponding search query.
-     *
-     * Warning:
-     * Do not attempt to re-save this functions result to db. Re-Saving will blow up user's other fileList.
-     */
-    fun findAllByPrevToken(inputUserId: String, inputPrevToken: String): List<FileObject> {
-        val results: AggregationResults<User> = innerFileListSearch(inputUserId, "$fileListField.$fileListPrevTokenField", inputPrevToken)
-        return if (results.mappedResults.isEmpty()) {
-            listOf()
-        } else {
-            results.mappedResults[0].fileList
-        }
-    }
-
-    /**
-     * findByToken(inputUserId: String, inputToken: String): FileObject?
-     * Mostly same as findAllByPrevToken, but the query is token = inputToken.
-     *
-     * Warning:
-     * As Same as findAllByPrevToken, do not attempt to re-save this function result to db.
-     */
-    fun findByToken(inputUserId: String, inputToken: String): FileObject {
-        val results: AggregationResults<User> = innerFileListSearch(inputUserId, "$fileListField.$fileListTokenField", inputToken)
-        if (results.mappedResults.size != 1 ) {
-            throw NotFoundException("""
-                Input userid was: $inputUserId, requested file token was: $inputToken.
-                Perhaps invalid user or requested with non-existence token?
-            """.trimIndent())
-        }
-
-        if (results.mappedResults[0].fileList.size < 1) {
-            throw NotFoundException("""
-                Requested file was not found!
-            """.trimIndent())
-        }
-
-        if (results.mappedResults[0].fileList.size > 1) {
-            throw UnknownErrorException("""
-                Mapped fileList result should be exactly 1, but somehow its size is more than 1.
-            """.trimIndent())
-        }
-
-        return results.mappedResults[0].fileList[0]
     }
 
     /**
@@ -236,24 +138,5 @@ class UserTemplateRepository {
         }
 
         return user
-    }
-
-    /**
-     * deleteByToken(inputUserId: String, inputToken: String): UpdateResult
-     * Delete inputUserId's specific fileList, where fileList.token = inputToken.
-     */
-    fun deleteByToken(inputUserId: String, inputToken: String): UpdateResult {
-        val updateQuery: Query = Query().apply {
-            addCriteria(
-                Criteria.where(userIdField).`is`(inputUserId)
-            )
-        }
-
-        val update: Update = Update().pull(
-            fileListField,
-            Query.query(Criteria.where(fileListTokenField).`is`(inputToken))
-        )
-
-        return mongoTemplate.updateMulti(updateQuery, update, User::class.java)
     }
 }
