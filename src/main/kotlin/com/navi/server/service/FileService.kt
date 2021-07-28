@@ -66,6 +66,15 @@ class FileService {
         return RootTokenResponseDto(userFileObject.token)
     }
 
+    fun findFolderFromToken(userToken: String, targetToken: String): FileObject {
+        val userId: String = convertTokenToUserId(userToken)
+
+        return gridFSRepository.getMetadataSpecificFromToken(
+            userId = userId,
+            targetToken = targetToken
+        )
+    }
+
     fun findInsideFiles(userToken: String, prevToken: String): List<FileObject> {
         val userId: String = convertTokenToUserId(userToken)
 

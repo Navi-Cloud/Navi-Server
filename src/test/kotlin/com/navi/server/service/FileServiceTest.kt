@@ -388,4 +388,18 @@ class FileServiceTest {
             assertThat(it[0].fileName).isEqualTo(responseFileObject.fileName)
         }
     }
+
+    @Test
+    fun is_findFolderFromToken_works_well() {
+        // Create Folder first
+        val userToken: String = registerUser()
+        val rootToken: String = fileService.findRootToken(userToken).rootToken
+
+        val fileObject: FileObject = fileService.createNewFolder(userToken, rootToken, "Testing")
+
+        // Find Folder From Token and Assert it
+        fileService.findFolderFromToken(userToken, fileObject.token).also {
+            assertThat(it).isEqualToComparingFieldByField(fileObject)
+        }
+    }
 }
