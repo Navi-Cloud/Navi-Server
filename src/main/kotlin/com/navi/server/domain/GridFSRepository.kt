@@ -40,7 +40,7 @@ class GridFSRepository(
             addCriteria(
                 Criteria().andOperator(
                     Criteria.where("metadata.userId").`is`(userId),
-                    Criteria.where("metadata.fileName").`is`(fileName)
+                    Criteria.where("metadata.fileName").regex(fileName)
                 )
             )
         }

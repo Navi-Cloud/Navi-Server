@@ -361,4 +361,31 @@ class FileServiceTest {
             assertThat(it[0].fileName).isEqualTo(responseFileObject.fileName)
         }
     }
+
+    @Test
+    fun is_searchFile_works_well_when_partial_match() {
+        // Upload first
+        val userToken: String = registerUser()
+        val rootToken: String = fileService.findRootToken(userToken).rootToken
+
+        // make uploadFile
+        val uploadFileName: String = "uploadTest-service.txt"
+        val uploadFileContent: ByteArray = "file upload test file!".toByteArray()
+        val multipartFile: MockMultipartFile = MockMultipartFile(
+            uploadFileName, uploadFileName, "text/plain", uploadFileContent
+        )
+
+        val responseFileObject: FileObject = fileService.fileUpload(
+            userToken = userToken,
+            uploadFolderToken = rootToken,
+            files = multipartFile
+        )
+
+        // Search with substring (partial match)
+        fileService.searchFile(userToken, responseFileObject.fileName.substring(2, 5)).also {
+            assertThat(it.size).isEqualTo(1)
+            assertThat(it[0].fileType).isEqualTo(responseFileObject.fileType)
+            assertThat(it[0].fileName).isEqualTo(responseFileObject.fileName)
+        }
+    }
 }
