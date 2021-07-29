@@ -88,4 +88,14 @@ class FileApiController (val fileService: FileService){
             fileService.searchFile(tokenList[0], decodeUrl(searchParam))
         )
     }
+
+    @GetMapping("/api/navi/folder/{token}")
+    fun findFolderFromToken(@RequestHeader httpHeaders: HttpHeaders, @PathVariable token: String) : ResponseEntity<FileObject> {
+        // Invalid or Non-Token will be filtered through Spring Security.
+        val tokenList: List<String> = httpHeaders["X-AUTH-TOKEN"]!!
+
+        return ResponseEntity.ok(
+            fileService.findFolderFromToken(tokenList[0], decodeUrl(token))
+        )
+    }
 }

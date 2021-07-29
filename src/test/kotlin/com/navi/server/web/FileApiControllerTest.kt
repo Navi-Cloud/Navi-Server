@@ -423,4 +423,29 @@ class FileApiControllerTest {
             assertThat(it.body[0].fileName).isEqualTo(uploadFileName)
         }
     }
+
+    @Test
+    fun is_findFolderFromToken_works_well() {
+        // Create Folder first
+        val userToken: String = registerAndLogin()
+        val rootToken: String = fileService.findRootToken(userToken).rootToken
+
+        val fileObject: FileObject = fileService.createNewFolder(userToken, rootToken, "Testing")
+
+        // Find Folder From Token and Assert it
+        fileService.findFolderFromToken(userToken, fileObject.token).also {
+            assertThat(it).isEqualToComparingFieldByField(fileObject)
+        }
+
+        // Get Api
+        val url = "http://localhost:${port}/api/navi/folder/${encodeString(fileObject.token)}"
+        val headers: HttpHeaders = HttpHeaders().apply {
+            add("X-AUTH-TOKEN", userToken)
+        }
+
+        restTemplate.exchange(url, HttpMethod.GET, HttpEntity<Void>(headers), FileObject::class.java).also {
+            assertThat(it.statusCode).isEqualTo(HttpStatus.OK)
+            assertThat(it.body).isEqualToComparingFieldByField(fileObject)
+        }
+    }
 }
