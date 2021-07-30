@@ -21,6 +21,7 @@ import org.springframework.test.context.junit4.SpringRunner
 import org.assertj.core.api.Assertions.assertThat;
 import org.junit.Before
 import org.springframework.boot.test.web.client.getForEntity
+import org.springframework.boot.test.web.client.postForEntity
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.gridfs.GridFsTemplate
 import org.springframework.http.*
@@ -446,6 +447,54 @@ class FileApiControllerTest {
         restTemplate.exchange(url, HttpMethod.GET, HttpEntity<Void>(headers), FileObject::class.java).also {
             assertThat(it.statusCode).isEqualTo(HttpStatus.OK)
             assertThat(it.body).isEqualToComparingFieldByField(fileObject)
+        }
+    }
+
+    @Test
+    fun is_copyFile_works_well() {
+        // First upload
+        // Create Server Root Structure
+        val loginToken: String = registerAndLogin()
+        val rootToken: String = fileService.findRootToken(loginToken).rootToken
+
+        // make uploadFile
+        val uploadFileName: String = "uploadTest-service.txt"
+        val uploadFileContent: ByteArray = "file upload test file!".toByteArray()
+        val multipartFile: MockMultipartFile = MockMultipartFile(
+            "uploadFile", uploadFileName, "text/plain", uploadFileContent
+        )
+
+        // file upload
+        val uploadFolderPath = MockMultipartFile("uploadPath", "uploadPath", "text/plain", rootToken.toByteArray())
+
+        // Perform
+        mockMvc.perform(
+            MockMvcRequestBuilders.multipart("/api/navi/files")
+                .file(multipartFile)
+                .file(uploadFolderPath)
+                .header("X-AUTH-TOKEN", loginToken)
+        ).andExpect { status(HttpStatus.OK) }
+            .andDo(MockMvcResultHandlers.print())
+            .andDo{
+                assertThat(it.response.status).isEqualTo(HttpStatus.OK.value())
+            }
+
+        // Get Information
+        val targetFileObject: FileObject =
+            gridFSRepository.getMetadataInsideFolder(mockUser.userId, rootToken)[0]
+
+        // Do
+        val mockRequest: FileCopyRequest = FileCopyRequest(
+            fromToken = targetFileObject.token,
+            fromPrevToken = targetFileObject.prevToken,
+            toPrevToken = targetFileObject.prevToken,
+            newFileName = "testFileName"
+        )
+        val headers: HttpHeaders = HttpHeaders().apply {
+            add("X-AUTH-TOKEN", loginToken)
+        }
+        restTemplate.exchange("http://localhost:${port}/api/navi/file/duplicate", HttpMethod.POST, HttpEntity<FileCopyRequest>(mockRequest, headers), Unit::class.java).also {
+            assertThat(it.statusCode).isEqualTo(HttpStatus.OK)
         }
     }
 }

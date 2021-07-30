@@ -8,6 +8,7 @@ import org.bson.types.ObjectId
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.gridfs.GridFsOperations
+import org.springframework.data.mongodb.gridfs.GridFsResource
 import org.springframework.data.mongodb.gridfs.GridFsTemplate
 import org.springframework.stereotype.Repository
 import java.io.InputStream
@@ -52,15 +53,7 @@ class GridFSRepository(
 
     // For querying specific file using token & prevToken [i.e direct token search]
     fun getMetadataSpecific(userId: String, targetToken: String, targetPrevToken: String?): FileObject {
-        val query: Query = Query().apply {
-            addCriteria(
-                Criteria().andOperator(
-                    Criteria.where("metadata.userId").`is`(userId),
-                    Criteria.where("metadata.token").`is`(targetToken),
-                    Criteria.where("metadata.prevToken").`is`(targetPrevToken)
-                )
-            )
-        }
+        val query: Query = getSearchQuery(userId, targetToken, targetPrevToken)
 
         val gridFSFile: GridFSFile = gridFsTemplate.findOne(query)
 
@@ -82,6 +75,32 @@ class GridFSRepository(
         val gridFSFile: GridFSFile = gridFsTemplate.findOne(query)
 
         return convertMetaDataToFileObject(gridFSFile.metadata)
+    }
+
+    /**
+     * copyFile Copy fromToken -> toPrevToken
+     * fromToken: Specific file token
+     * toPrevToken: Destination folder
+     * copied file will be placed inside destination folder.
+     */
+    fun copyFile(fileObject: FileObject, fromToken: String, fromPrevToken: String) {
+        val query: Query = getSearchQuery(fileObject.userId, fromToken, fromPrevToken)
+        val gridFSFile: GridFSFile = gridFsTemplate.findOne(query)
+
+        val fileInputStream: InputStream = GridFsResource(gridFSFile).inputStream
+
+        // Save
+        saveToGridFS(fileObject, fileInputStream)
+    }
+
+    private fun getSearchQuery(userId: String, targetToken: String, targetPrevToken: String?): Query = Query().apply {
+        addCriteria(
+            Criteria().andOperator(
+                Criteria.where("metadata.userId").`is`(userId),
+                Criteria.where("metadata.token").`is`(targetToken),
+                Criteria.where("metadata.prevToken").`is`(targetPrevToken)
+            )
+        )
     }
 
     fun getRootToken(userId: String): FileObject {
