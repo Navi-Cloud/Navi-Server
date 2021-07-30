@@ -85,6 +85,24 @@ class FileService {
         )
     }
 
+    fun copyFile(userToken: String, fromToken: String, fromPrevToken: String, toPrevToken: String, newFileName: String) {
+        val userId: String = convertTokenToUserId(userToken)
+
+        // Get File Object First
+        val oldFileObject: FileObject = gridFSRepository.getMetadataSpecific(userId, fromToken, fromPrevToken)
+
+        // Create new object
+        val fileObject: FileObject = FileObject(
+            userId = oldFileObject.userId,
+            token = pathService.appendPath(newFileName, toPrevToken),
+            prevToken = toPrevToken,
+            fileName = newFileName,
+            fileType = oldFileObject.fileType,
+        )
+
+        gridFSRepository.copyFile(fileObject, fromToken, fromPrevToken)
+    }
+
     fun fileUpload(userToken: String, uploadFolderToken: String, files: MultipartFile): FileObject {
         val userId:String = convertTokenToUserId(userToken)
 

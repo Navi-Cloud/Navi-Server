@@ -402,4 +402,35 @@ class FileServiceTest {
             assertThat(it).isEqualToComparingFieldByField(fileObject)
         }
     }
+
+    @Test
+    fun is_copyFile_works_well() {
+        // Upload first
+        val userToken: String = registerUser()
+        val rootToken: String = fileService.findRootToken(userToken).rootToken
+
+        // make uploadFile
+        val uploadFileName: String = "uploadTest-service.txt"
+        val uploadFileContent: ByteArray = "file upload test file!".toByteArray()
+        val multipartFile: MockMultipartFile = MockMultipartFile(
+            uploadFileName, uploadFileName, "text/plain", uploadFileContent
+        )
+
+        val responseFileObject: FileObject = fileService.fileUpload(
+            userToken = userToken,
+            uploadFolderToken = rootToken,
+            files = multipartFile
+        )
+
+        // Copy it
+        fileService.copyFile(userToken, responseFileObject.token, responseFileObject.prevToken, rootToken, "newFileName")
+
+        // Check it
+        val rootList: List<FileObject> = gridFSRepository.getMetadataInsideFolder(userRegisterRequest.userId, rootToken)
+        assertThat(rootList.size).isEqualTo(2)
+
+        (rootList.find { it.fileName == "newFileName"} ?: fail("copied file should not be null!")).also {
+            assertThat(it.fileName).isEqualTo("newFileName")
+        }
+    }
 }
