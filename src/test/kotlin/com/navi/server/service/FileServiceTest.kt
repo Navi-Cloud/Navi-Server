@@ -433,4 +433,178 @@ class FileServiceTest {
             assertThat(it.fileName).isEqualTo("newFileName")
         }
     }
+
+    @Test
+    fun is_copyFolder_works_well_with_folders() {
+        // Upload first
+        val userToken: String = registerUser()
+        val rootToken: String = fileService.findRootToken(userToken).rootToken
+
+        val targetFolder: FileObject = fileService.createNewFolder(userToken, rootToken, "Target")
+        val toFolder: FileObject = fileService.createNewFolder(userToken, rootToken, "To")
+
+        // Make Folders for copy
+        fileService.createNewFolder(userToken, targetFolder.token, "FoldERA")
+        fileService.createNewFolder(userToken, targetFolder.token, "FoldERB")
+
+        // Perform: Copy it
+        fileService.copyFolder(userToken, targetFolder.prevToken, targetFolder.token, toFolder.token)
+
+        // Assert
+        val fromFolderFiles: List<FileObject> = gridFSRepository.getMetadataInsideFolder(userRegisterRequest.userId, targetFolder.token)
+        val copiedFolder: FileObject = gridFSRepository.getMetadataInsideFolder(userRegisterRequest.userId, toFolder.token)
+            .find { it.fileName == targetFolder.fileName} ?: fail("This Should be succeed")
+        val copiedFolderFiles: List<FileObject> =  gridFSRepository.getMetadataInsideFolder(userRegisterRequest.userId, copiedFolder.token)
+
+        assertThat(copiedFolderFiles.size).isEqualTo(fromFolderFiles.size)
+        copiedFolderFiles.filter { it.fileType == "Folder" && it.fileName.contains("FoldER") }.also {
+            assertThat(it.size).isEqualTo(2)
+        }
+    }
+
+    private fun upload_text_file_for_test(userToken: String, folderToken: String, fileName: String, fileContent: String): FileObject{
+        // make uploadFile and upload
+        val uploadFileContent: ByteArray = fileContent.toByteArray()
+        val multipartFile: MockMultipartFile = MockMultipartFile(
+            fileName, fileName, "text/plain", uploadFileContent
+        )
+        return fileService.fileUpload(userToken, folderToken, multipartFile)
+    }
+
+    @Test
+    fun is_copyFolder_works_well_with_files(){
+        // Upload first
+        val userToken: String = registerUser()
+        val rootToken: String = fileService.findRootToken(userToken).rootToken
+
+        val targetFolder: FileObject = fileService.createNewFolder(userToken, rootToken, "Target")
+        val toFolder: FileObject = fileService.createNewFolder(userToken, rootToken, "To")
+
+        // Make Files for copy
+        //fileService.createNewFolder(userToken, targetFolder.token, "TesTA")
+        upload_text_file_for_test(userToken, targetFolder.token, "FilE1", "test")
+        upload_text_file_for_test(userToken, targetFolder.token, "FilE2", "test")
+
+        // Perform: Copy it
+        fileService.copyFolder(userToken, targetFolder.prevToken, targetFolder.token, toFolder.token)
+
+        // Assert
+        val fromFolderFiles: List<FileObject> = gridFSRepository.getMetadataInsideFolder(userRegisterRequest.userId, targetFolder.token)
+        val copiedFolder: FileObject = gridFSRepository.getMetadataInsideFolder(userRegisterRequest.userId, toFolder.token)
+            .find { it.fileName == targetFolder.fileName} ?: fail("This Should be succeed")
+        val copiedFolderFiles: List<FileObject> =  gridFSRepository.getMetadataInsideFolder(userRegisterRequest.userId, copiedFolder.token)
+
+        assertThat(copiedFolderFiles.size).isEqualTo(fromFolderFiles.size)
+        copiedFolderFiles.filter { it.fileType == "File" && it.fileName.contains("FilE") }.also {
+            assertThat(it.size).isEqualTo(2)
+        }
+    }
+
+    @Test
+    fun is_copyFolder_works_well_with_folders_and_files(){
+        // Upload first
+        val userToken: String = registerUser()
+        val rootToken: String = fileService.findRootToken(userToken).rootToken
+
+        val targetFolder: FileObject = fileService.createNewFolder(userToken, rootToken, "Target")
+        val toFolder: FileObject = fileService.createNewFolder(userToken, rootToken, "To")
+
+        // Make folder and files for copy
+        // : Make 1 files under targetFolder
+        upload_text_file_for_test(userToken, targetFolder.token, "Target_FilE1", "test")
+        // : Make 1 child folder and 2 files under it
+        val childFolder1: FileObject = fileService.createNewFolder(userToken, targetFolder.token, "Target_FoldER_A")
+        upload_text_file_for_test(userToken, childFolder1.token, "FilE_AA1", "test")
+        fileService.createNewFolder(userToken, childFolder1.token, "FoldER_AA")
+
+        // Perform: Copy it
+        fileService.copyFolder(userToken, targetFolder.prevToken, targetFolder.token, toFolder.token)
+
+        // Assert
+        val fromFolderFiles: List<FileObject> = gridFSRepository.getMetadataInsideFolder(userRegisterRequest.userId, targetFolder.token)
+        val copiedFolder: FileObject = gridFSRepository.getMetadataInsideFolder(userRegisterRequest.userId, toFolder.token)
+            .find { it.fileName == targetFolder.fileName} ?: fail("This Should be succeed")
+        val copiedFolderFiles: List<FileObject> =  gridFSRepository.getMetadataInsideFolder(userRegisterRequest.userId, copiedFolder.token)
+
+        assertThat(copiedFolderFiles.size).isEqualTo(fromFolderFiles.size)
+        copiedFolderFiles.filter { it.fileName.contains("Target") }.also {
+            assertThat(it.size).isEqualTo(2)
+        }
+
+        // Check Child Folder
+        val copiedChildFolder: FileObject = copiedFolderFiles.find { it.fileType == "Folder" && it.fileName.contains("A")} ?: fail("This Should be succeed")
+        val copiedChildFolderFiles: List<FileObject> =  gridFSRepository.getMetadataInsideFolder(userRegisterRequest.userId, copiedChildFolder.token)
+        assertThat(copiedChildFolderFiles.size).isEqualTo(2)
+        copiedChildFolderFiles.filter { it.fileName.contains("AA") }.also {
+            assertThat(it.size).isEqualTo(2)
+        }
+    }
+
+    @Test
+    fun is_copyFolder_works_well_with_empty_folder() {
+        // Upload first
+        val userToken: String = registerUser()
+        val rootToken: String = fileService.findRootToken(userToken).rootToken
+
+        val targetFolder: FileObject = fileService.createNewFolder(userToken, rootToken, "Target")
+        val toFolder: FileObject = fileService.createNewFolder(userToken, rootToken, "To")
+
+        // Perform: Copy it
+        fileService.copyFolder(userToken, targetFolder.prevToken, targetFolder.token, toFolder.token)
+
+        // Assert
+        val fromFolderFiles: List<FileObject> = gridFSRepository.getMetadataInsideFolder(userRegisterRequest.userId, targetFolder.token)
+        val copiedFolder: FileObject = gridFSRepository.getMetadataInsideFolder(userRegisterRequest.userId, toFolder.token)
+            .find { it.fileName == targetFolder.fileName} ?: fail("This Should be succeed")
+        val copiedFolderFiles: List<FileObject> =  gridFSRepository.getMetadataInsideFolder(userRegisterRequest.userId, copiedFolder.token)
+
+        assertThat(copiedFolderFiles.size).isEqualTo(fromFolderFiles.size)
+    }
+
+    @Test
+    fun is_copyFolder_throw_NotFoundException() {
+        // copyFolder throw NotFoundException when request with "File", not "Folder"
+
+        // Upload first
+        val userToken: String = registerUser()
+        val rootToken: String = fileService.findRootToken(userToken).rootToken
+
+        val toFolder: FileObject = fileService.createNewFolder(userToken, rootToken, "To")
+
+        // Make file: invalid request for copyFolder
+        val invalidRequestFile: FileObject = upload_text_file_for_test(userToken, rootToken, "FilE1", "test")
+
+        // Perform: Copy it
+        runCatching {
+            fileService.copyFolder(userToken, invalidRequestFile.prevToken, invalidRequestFile.token, toFolder.token)
+        }.onSuccess {
+            fail("This should be failed...")
+        }.onFailure {
+            assertThat(it is NotFoundException).isEqualTo(true)
+        }
+    }
+
+    @Test
+    fun is_copyFolder_throw_ConflictException() {
+        // copyFolder throw ConflictException when request folder already exists in toFolder
+
+        // Set
+        val userToken: String = registerUser()
+        val rootToken: String = fileService.findRootToken(userToken).rootToken
+
+        val targetFolder: FileObject = fileService.createNewFolder(userToken, rootToken, "Target")
+        val toFolder: FileObject = fileService.createNewFolder(userToken, rootToken, "To")
+
+        // Create folder in toFolder with the same name as targetFolder
+        fileService.createNewFolder(userToken, toFolder.token, targetFolder.fileName)
+
+        // Perform: Copy it
+        runCatching {
+            fileService.copyFolder(userToken, targetFolder.prevToken, targetFolder.token, toFolder.token)
+        }.onSuccess {
+            fail("This should be failed...")
+        }.onFailure {
+            assertThat(it is ConflictException).isEqualTo(true)
+        }
+    }
 }

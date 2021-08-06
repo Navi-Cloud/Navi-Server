@@ -3,6 +3,7 @@ package com.navi.server.web
 import com.navi.server.domain.FileObject
 import com.navi.server.dto.CreateFolderRequestDTO
 import com.navi.server.dto.FileCopyRequest
+import com.navi.server.dto.FolderCopyRequest
 import com.navi.server.dto.RootTokenResponseDto
 import com.navi.server.service.FileService
 import org.springframework.http.HttpHeaders
@@ -109,6 +110,18 @@ class FileApiController (val fileService: FileService){
             fromPrevToken = fileCopyRequest.fromPrevToken,
             toPrevToken = fileCopyRequest.toPrevToken,
             newFileName = fileCopyRequest.newFileName
+        )
+        return ResponseEntity.ok().build()
+    }
+
+    @PostMapping("/api/navi/folder/duplicate")
+    fun copyFolder(@RequestHeader httpHeaders: HttpHeaders, @RequestBody folderCopyRequest: FolderCopyRequest): ResponseEntity<Unit> {
+        val tokenList: String = httpHeaders["X-AUTH-TOKEN"]!![0]
+        fileService.copyFolder(
+            userToken = tokenList,
+            fromToken = folderCopyRequest.fromToken,
+            fromPrevToken = folderCopyRequest.fromPrevToken,
+            toPrevToken = folderCopyRequest.toPrevToken
         )
         return ResponseEntity.ok().build()
     }

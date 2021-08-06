@@ -497,4 +497,31 @@ class FileApiControllerTest {
             assertThat(it.statusCode).isEqualTo(HttpStatus.OK)
         }
     }
+
+    @Test
+    fun is_copyFolder_works_well() {
+        // First upload
+        // Create Server Root Structure
+        val userToken: String = registerAndLogin()
+        val rootToken: String = fileService.findRootToken(userToken).rootToken
+
+        val targetFolder: FileObject = fileService.createNewFolder(userToken, rootToken, "Target")
+        val toFolder: FileObject = fileService.createNewFolder(userToken, rootToken, "To") // Target Folder
+
+        // Make 1 folder for copy
+        fileService.createNewFolder(userToken, targetFolder.token, "Target_FoldER_A")
+
+        // Do
+        val mockRequest: FolderCopyRequest = FolderCopyRequest(
+            fromToken = targetFolder.token,
+            fromPrevToken = targetFolder.prevToken,
+            toPrevToken = toFolder.token
+        )
+        val headers: HttpHeaders = HttpHeaders().apply {
+            add("X-AUTH-TOKEN", userToken)
+        }
+        restTemplate.exchange("http://localhost:${port}/api/navi/folder/duplicate", HttpMethod.POST, HttpEntity<FolderCopyRequest>(mockRequest, headers), Unit::class.java).also {
+            assertThat(it.statusCode).isEqualTo(HttpStatus.OK)
+        }
+    }
 }
