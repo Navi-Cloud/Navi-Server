@@ -189,6 +189,51 @@ class FileService {
         return createLogicalFolder(userId, parentFolderToken, newFolderName)
     }
 
+    fun copyFolderRecursively(userId: String, fromPrevToken: String, fromToken: String, toPrevToken: String): FileObject {
+        // Step 1) Copy Folder
+        val fromFolder: FileObject = gridFSRepository.getMetadataSpecific(userId, fromToken, fromPrevToken)
+        val toFolder: FileObject = createLogicalFolder(userId, toPrevToken, fromFolder.fileName)
+
+        // Step 2) Copy Inside Files
+        val fromInsideFiles: List<FileObject> = gridFSRepository.getMetadataInsideFolder(userId, fromToken)
+
+        fromInsideFiles.map {
+            // Recursive Copy
+            if(it.fileType == "Folder"){ // Copy Folder
+                copyFolderRecursively(userId, it.prevToken, it.token, toFolder.token)
+            } else { // Copy File
+                // Get File Object First
+                val oldFileObject: FileObject = gridFSRepository.getMetadataSpecific(userId, it.token, it.prevToken)
+
+                // Create new object
+                val fileObject: FileObject = FileObject(
+                    userId = oldFileObject.userId,
+                    token = pathService.appendPath(oldFileObject.fileName, toFolder.token),
+                    prevToken = toFolder.token,
+                    fileName = oldFileObject.fileName,
+                    fileType = oldFileObject.fileType,
+                )
+                gridFSRepository.copyFile(fileObject, it.token, it.prevToken)
+            }
+        }
+        return toFolder
+    }
+
+    // Recursive Copy
+    fun copyFolder(userToken: String, fromPrevToken: String, fromToken: String, toPrevToken: String): FileObject {
+        val userId: String = convertTokenToUserId(userToken)
+
+        // Step 1) Check whether folder exists on DB
+        val fromFolder: FileObject = gridFSRepository.getMetadataSpecific(userId, fromToken, fromPrevToken)
+        if(fromFolder.fileType != "Folder") {
+            throw NotFoundException("Target Folder (${fromFolder.fileName}) not exists!")
+        }
+        checkExists(userId, toPrevToken, fromFolder.fileName, "Folder")
+
+        // Step 2) Copy
+        return copyFolderRecursively(userId, fromPrevToken, fromToken, toPrevToken)
+    }
+
     fun createRootUser(userId: String) {
         gridFSRepository.saveToGridFS(
             fileObject = FileObject(
