@@ -102,14 +102,15 @@ class FileApiController (val fileService: FileService){
     }
 
     @PostMapping("/api/navi/file/duplicate")
-    fun copyFile(@RequestHeader httpHeaders: HttpHeaders, @RequestBody fileCopyRequest: FileCopyRequest): ResponseEntity<Unit> {
+    fun migrateFile(@RequestHeader httpHeaders: HttpHeaders, @RequestBody fileCopyRequest: FileCopyRequest, @RequestParam("preserve") preserveFile: Boolean): ResponseEntity<Unit> {
         val tokenList: String = httpHeaders["X-AUTH-TOKEN"]!![0]
-        fileService.copyFile(
+        fileService.migrateFile(
             userToken = tokenList,
             fromToken = fileCopyRequest.fromToken,
             fromPrevToken = fileCopyRequest.fromPrevToken,
             toPrevToken = fileCopyRequest.toPrevToken,
-            newFileName = fileCopyRequest.newFileName
+            newFileName = fileCopyRequest.newFileName,
+            preserveFile = preserveFile
         )
         return ResponseEntity.ok().build()
     }

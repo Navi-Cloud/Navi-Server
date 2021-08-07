@@ -493,7 +493,55 @@ class FileApiControllerTest {
         val headers: HttpHeaders = HttpHeaders().apply {
             add("X-AUTH-TOKEN", loginToken)
         }
-        restTemplate.exchange("http://localhost:${port}/api/navi/file/duplicate", HttpMethod.POST, HttpEntity<FileCopyRequest>(mockRequest, headers), Unit::class.java).also {
+        restTemplate.exchange("http://localhost:${port}/api/navi/file/duplicate?preserve=true", HttpMethod.POST, HttpEntity<FileCopyRequest>(mockRequest, headers), Unit::class.java).also {
+            assertThat(it.statusCode).isEqualTo(HttpStatus.OK)
+        }
+    }
+
+    @Test
+    fun is_moveFile_works_well() {
+        // First upload
+        // Create Server Root Structure
+        val loginToken: String = registerAndLogin()
+        val rootToken: String = fileService.findRootToken(loginToken).rootToken
+
+        // make uploadFile
+        val uploadFileName: String = "uploadTest-service.txt"
+        val uploadFileContent: ByteArray = "file upload test file!".toByteArray()
+        val multipartFile: MockMultipartFile = MockMultipartFile(
+            "uploadFile", uploadFileName, "text/plain", uploadFileContent
+        )
+
+        // file upload
+        val uploadFolderPath = MockMultipartFile("uploadPath", "uploadPath", "text/plain", rootToken.toByteArray())
+
+        // Perform
+        mockMvc.perform(
+            MockMvcRequestBuilders.multipart("/api/navi/files")
+                .file(multipartFile)
+                .file(uploadFolderPath)
+                .header("X-AUTH-TOKEN", loginToken)
+        ).andExpect { status(HttpStatus.OK) }
+            .andDo(MockMvcResultHandlers.print())
+            .andDo{
+                assertThat(it.response.status).isEqualTo(HttpStatus.OK.value())
+            }
+
+        // Get Information
+        val targetFileObject: FileObject =
+            gridFSRepository.getMetadataInsideFolder(mockUser.userId, rootToken)[0]
+
+        // Do
+        val mockRequest: FileCopyRequest = FileCopyRequest(
+            fromToken = targetFileObject.token,
+            fromPrevToken = targetFileObject.prevToken,
+            toPrevToken = targetFileObject.prevToken,
+            newFileName = "testFileName"
+        )
+        val headers: HttpHeaders = HttpHeaders().apply {
+            add("X-AUTH-TOKEN", loginToken)
+        }
+        restTemplate.exchange("http://localhost:${port}/api/navi/file/duplicate?preserve=false", HttpMethod.POST, HttpEntity<FileCopyRequest>(mockRequest, headers), Unit::class.java).also {
             assertThat(it.statusCode).isEqualTo(HttpStatus.OK)
         }
     }
