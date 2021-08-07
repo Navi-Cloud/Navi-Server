@@ -78,16 +78,21 @@ class GridFSRepository(
     }
 
     /**
-     * copyFile Copy fromToken -> toPrevToken
+     * migrateFile Migrate file, whether original file could be deleted or preserved
+     * In case original file is reserved, it means user wants to copy file, or else => move.
      * fromToken: Specific file token
      * toPrevToken: Destination folder
      * copied file will be placed inside destination folder.
      */
-    fun copyFile(fileObject: FileObject, fromToken: String, fromPrevToken: String) {
+    fun migrateFile(fileObject: FileObject, fromToken: String, fromPrevToken: String, preserveFile: Boolean) {
         val query: Query = getSearchQuery(fileObject.userId, fromToken, fromPrevToken)
         val gridFSFile: GridFSFile = gridFsTemplate.findOne(query)
 
         val fileInputStream: InputStream = GridFsResource(gridFSFile).inputStream
+
+        if (!preserveFile) {
+            removeSingleFile(fileObject.userId, fromToken, fromPrevToken)
+        }
 
         // Save
         saveToGridFS(fileObject, fileInputStream)

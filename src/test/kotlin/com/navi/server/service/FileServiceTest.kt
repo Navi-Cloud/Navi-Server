@@ -2,13 +2,11 @@ package com.navi.server.service
 
 import com.navi.server.domain.FileObject
 import com.navi.server.domain.GridFSRepository
-import com.navi.server.domain.user.User
 import com.navi.server.domain.user.UserTemplateRepository
 import com.navi.server.dto.LoginRequest
 import com.navi.server.dto.UserRegisterRequest
 import com.navi.server.error.exception.ConflictException
 import com.navi.server.error.exception.NotFoundException
-import com.navi.server.security.JWTTokenProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.junit.After
@@ -24,10 +22,6 @@ import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import java.io.ByteArrayOutputStream
-import java.io.File
-import java.nio.charset.Charset
-import java.nio.file.Path
-import java.nio.file.Paths
 
 @RunWith(SpringRunner::class)
 @SpringBootTest
@@ -423,11 +417,42 @@ class FileServiceTest {
         )
 
         // Copy it
-        fileService.copyFile(userToken, responseFileObject.token, responseFileObject.prevToken, rootToken, "newFileName")
+        fileService.migrateFile(userToken, responseFileObject.token, responseFileObject.prevToken, rootToken, "newFileName", true)
 
         // Check it
         val rootList: List<FileObject> = gridFSRepository.getMetadataInsideFolder(userRegisterRequest.userId, rootToken)
         assertThat(rootList.size).isEqualTo(2)
+
+        (rootList.find { it.fileName == "newFileName"} ?: fail("copied file should not be null!")).also {
+            assertThat(it.fileName).isEqualTo("newFileName")
+        }
+    }
+
+    @Test
+    fun is_migrateFile_works_well_move() {
+        // Upload first
+        val userToken: String = registerUser()
+        val rootToken: String = fileService.findRootToken(userToken).rootToken
+
+        // make uploadFile
+        val uploadFileName: String = "uploadTest-service.txt"
+        val uploadFileContent: ByteArray = "file upload test file!".toByteArray()
+        val multipartFile: MockMultipartFile = MockMultipartFile(
+            uploadFileName, uploadFileName, "text/plain", uploadFileContent
+        )
+
+        val responseFileObject: FileObject = fileService.fileUpload(
+            userToken = userToken,
+            uploadFolderToken = rootToken,
+            files = multipartFile
+        )
+
+        // Copy it
+        fileService.migrateFile(userToken, responseFileObject.token, responseFileObject.prevToken, rootToken, "newFileName", false)
+
+        // Check it
+        val rootList: List<FileObject> = gridFSRepository.getMetadataInsideFolder(userRegisterRequest.userId, rootToken)
+        assertThat(rootList.size).isEqualTo(1)
 
         (rootList.find { it.fileName == "newFileName"} ?: fail("copied file should not be null!")).also {
             assertThat(it.fileName).isEqualTo("newFileName")

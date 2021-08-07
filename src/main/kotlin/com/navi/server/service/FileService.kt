@@ -9,7 +9,6 @@ import com.navi.server.security.JWTTokenProvider
 import org.apache.commons.io.IOUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -19,8 +18,6 @@ import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.URLEncoder
-import java.security.MessageDigest
-import javax.xml.bind.DatatypeConverter
 import kotlin.math.log
 import kotlin.math.pow
 
@@ -85,7 +82,7 @@ class FileService {
         )
     }
 
-    fun copyFile(userToken: String, fromToken: String, fromPrevToken: String, toPrevToken: String, newFileName: String) {
+    fun migrateFile(userToken: String, fromToken: String, fromPrevToken: String, toPrevToken: String, newFileName: String, preserveFile: Boolean) {
         val userId: String = convertTokenToUserId(userToken)
 
         // Get File Object First
@@ -100,7 +97,7 @@ class FileService {
             fileType = oldFileObject.fileType,
         )
 
-        gridFSRepository.copyFile(fileObject, fromToken, fromPrevToken)
+        gridFSRepository.migrateFile(fileObject, fromToken, fromPrevToken, preserveFile)
     }
 
     fun fileUpload(userToken: String, uploadFolderToken: String, files: MultipartFile): FileObject {
@@ -213,7 +210,7 @@ class FileService {
                     fileName = oldFileObject.fileName,
                     fileType = oldFileObject.fileType,
                 )
-                gridFSRepository.copyFile(fileObject, it.token, it.prevToken)
+                gridFSRepository.migrateFile(fileObject, it.token, it.prevToken, true)
             }
         }
         return toFolder
