@@ -612,6 +612,7 @@ class FileServiceTest {
     @Test
     fun is_copyFolder_throw_ConflictException() {
         // copyFolder throw ConflictException when request folder already exists in toFolder
+        fail("Failing Test!")
 
         // Set
         val userToken: String = registerUser()
