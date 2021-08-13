@@ -13,3 +13,9 @@ spring:
 ---
 spring:
   profiles: Navi-Set2
+
+---
+spring:
+  data:
+    mongodb:
+      uri: mongodb://mongodb:27017/navi
